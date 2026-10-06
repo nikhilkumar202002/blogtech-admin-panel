@@ -2,13 +2,21 @@ import React, { useState } from 'react';
 import {
   Bold,
   Italic,
+  Underline,
   Heading1,
   Heading2,
+  Heading3,
   List,
   ListOrdered,
   Quote,
   Code,
   Link as LinkIcon,
+  Image as ImageIcon,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Undo,
+  Redo,
   Eye,
   Edit3,
 } from 'lucide-react';
@@ -16,12 +24,11 @@ import {
 export const RichTextEditor = ({
   value = '',
   onChange,
-  placeholder = 'Write blog content or job description details...',
-  minHeight = '220px',
+  placeholder = 'Write article content...',
+  minHeight = '320px',
 }) => {
-  const [mode, setMode] = useState('edit'); // 'edit' | 'preview'
+  const [mode, setMode] = useState('edit');
 
-  // Insert markdown/HTML tags at cursor
   const handleFormat = (tagStart, tagEnd = '') => {
     if (mode === 'preview') return;
     const textarea = document.getElementById('rich-text-input');
@@ -71,68 +78,38 @@ export const RichTextEditor = ({
           gap: '8px',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <ToolbarButton
-            icon={Bold}
-            title="Bold"
-            onClick={() => handleFormat('<strong>', '</strong>')}
-          />
-          <ToolbarButton
-            icon={Italic}
-            title="Italic"
-            onClick={() => handleFormat('<em>', '</em>')}
-          />
-          <div
-            style={{
-              width: '1px',
-              height: '18px',
-              backgroundColor: '#cbd5e1',
-              margin: '0 4px',
-            }}
-          />
-          <ToolbarButton
-            icon={Heading1}
-            title="Heading 1"
-            onClick={() => handleFormat('<h2>', '</h2>')}
-          />
-          <ToolbarButton
-            icon={Heading2}
-            title="Heading 2"
-            onClick={() => handleFormat('<h3>', '</h3>')}
-          />
-          <div
-            style={{
-              width: '1px',
-              height: '18px',
-              backgroundColor: '#cbd5e1',
-              margin: '0 4px',
-            }}
-          />
-          <ToolbarButton
-            icon={List}
-            title="Bullet List"
-            onClick={() => handleFormat('<ul>\n  <li>', '</li>\n</ul>')}
-          />
-          <ToolbarButton
-            icon={ListOrdered}
-            title="Numbered List"
-            onClick={() => handleFormat('<ol>\n  <li>', '</li>\n</ol>')}
-          />
-          <ToolbarButton
-            icon={Quote}
-            title="Quote"
-            onClick={() => handleFormat('<blockquote>', '</blockquote>')}
-          />
-          <ToolbarButton
-            icon={Code}
-            title="Code Block"
-            onClick={() => handleFormat('<code>', '</code>')}
-          />
-          <ToolbarButton
-            icon={LinkIcon}
-            title="Hyperlink"
-            onClick={() => handleFormat('<a href="https://">', '</a>')}
-          />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexWrap: 'wrap' }}>
+          <ToolbarButton icon={Heading1} title="Heading 1" onClick={() => handleFormat('<h1>', '</h1>')} />
+          <ToolbarButton icon={Heading2} title="Heading 2" onClick={() => handleFormat('<h2>', '</h2>')} />
+          <ToolbarButton icon={Heading3} title="Heading 3" onClick={() => handleFormat('<h3>', '</h3>')} />
+
+          <Divider />
+
+          <ToolbarButton icon={Bold} title="Bold" onClick={() => handleFormat('<strong>', '</strong>')} />
+          <ToolbarButton icon={Italic} title="Italic" onClick={() => handleFormat('<em>', '</em>')} />
+          <ToolbarButton icon={Underline} title="Underline" onClick={() => handleFormat('<u>', '</u>')} />
+
+          <Divider />
+
+          <ToolbarButton icon={List} title="Bullet List" onClick={() => handleFormat('<ul>\n  <li>', '</li>\n</ul>')} />
+          <ToolbarButton icon={ListOrdered} title="Numbered List" onClick={() => handleFormat('<ol>\n  <li>', '</li>\n</ol>')} />
+
+          <Divider />
+
+          <ToolbarButton icon={LinkIcon} title="Hyperlink" onClick={() => handleFormat('<a href="https://">', '</a>')} />
+          <ToolbarButton icon={Quote} title="Blockquote" onClick={() => handleFormat('<blockquote>', '</blockquote>')} />
+          <ToolbarButton icon={ImageIcon} title="Insert Image" onClick={() => handleFormat('<img src="https://" alt="', '" />')} />
+
+          <Divider />
+
+          <ToolbarButton icon={AlignLeft} title="Align Left" onClick={() => handleFormat('<div style="text-align:left;">', '</div>')} />
+          <ToolbarButton icon={AlignCenter} title="Align Center" onClick={() => handleFormat('<div style="text-align:center;">', '</div>')} />
+          <ToolbarButton icon={AlignRight} title="Align Right" onClick={() => handleFormat('<div style="text-align:right;">', '</div>')} />
+
+          <Divider />
+
+          <ToolbarButton icon={Undo} title="Undo" onClick={() => {}} />
+          <ToolbarButton icon={Redo} title="Redo" onClick={() => {}} />
         </div>
 
         {/* View mode toggle */}
@@ -200,7 +177,7 @@ export const RichTextEditor = ({
             border: 'none',
             outline: 'none',
             resize: 'vertical',
-            lineHeight: 1.6,
+            lineHeight: 1.65,
           }}
         />
       ) : (
@@ -211,7 +188,7 @@ export const RichTextEditor = ({
             fontSize: '14px',
             color: '#0f172a',
             backgroundColor: '#fafafa',
-            lineHeight: 1.6,
+            lineHeight: 1.65,
           }}
           dangerouslySetInnerHTML={{ __html: value || '<p style="color:#94a3b8;font-style:italic;">Nothing to preview yet.</p>' }}
         />
@@ -237,16 +214,20 @@ export const RichTextEditor = ({
   );
 };
 
+const Divider = () => (
+  <div style={{ width: '1px', height: '18px', backgroundColor: '#cbd5e1', margin: '0 4px' }} />
+);
+
 const ToolbarButton = ({ icon: Icon, title, onClick }) => (
   <button
     type="button"
     onClick={onClick}
     title={title}
     style={{
-      padding: '5px 7px',
+      padding: '4px 6px',
       background: 'none',
       border: 'none',
-      borderRadius: '6px',
+      borderRadius: '4px',
       color: '#475569',
       cursor: 'pointer',
       display: 'flex',
@@ -257,6 +238,7 @@ const ToolbarButton = ({ icon: Icon, title, onClick }) => (
     onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e2e8f0')}
     onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
   >
-    <Icon size={15} />
+    <Icon size={14} />
   </button>
 );
+

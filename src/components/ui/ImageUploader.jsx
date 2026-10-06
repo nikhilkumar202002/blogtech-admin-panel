@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
-import { UploadCloud, Image as ImageIcon, X, RefreshCw } from 'lucide-react';
+import { UploadCloud, Image as ImageIcon, X, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { Button } from './Button';
 
 export const ImageUploader = ({
   value = '',
   onChange,
-  label = 'Cover Image',
+  label = 'Featured Image',
   recommendedSize = '1200 x 630px (Max 5MB)',
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
-  // Preset sample high quality imagery options for demo purposes
   const presetSamples = [
     'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop&q=80',
     'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80',
@@ -21,12 +21,22 @@ export const ImageUploader = ({
 
   const handleSimulatedUpload = () => {
     setIsUploading(true);
-    setTimeout(() => {
-      // Pick random sample or set sample
-      const randomImage = presetSamples[Math.floor(Math.random() * presetSamples.length)];
-      onChange(randomImage);
-      setIsUploading(false);
-    }, 600);
+    setUploadProgress(10);
+    const interval = setInterval(() => {
+      setUploadProgress((prev) => {
+        if (prev >= 90) {
+          clearInterval(interval);
+          setTimeout(() => {
+            const randomImage = presetSamples[Math.floor(Math.random() * presetSamples.length)];
+            onChange(randomImage);
+            setIsUploading(false);
+            setUploadProgress(0);
+          }, 200);
+          return 100;
+        }
+        return prev + 25;
+      });
+    }, 120);
   };
 
   return (
@@ -39,7 +49,7 @@ export const ImageUploader = ({
             border: '1px solid #e2e8f0',
             overflow: 'hidden',
             backgroundColor: '#0f172a',
-            height: '200px',
+            height: '220px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -47,7 +57,7 @@ export const ImageUploader = ({
         >
           <img
             src={value}
-            alt="Preview"
+            alt="Featured Preview"
             style={{
               width: '100%',
               height: '100%',
@@ -69,7 +79,7 @@ export const ImageUploader = ({
               icon={RefreshCw}
               onClick={handleSimulatedUpload}
             >
-              Replace
+              Replace Image
             </Button>
             <Button
               size="sm"
@@ -77,7 +87,7 @@ export const ImageUploader = ({
               icon={X}
               onClick={() => onChange('')}
             >
-              Remove
+              Remove Image
             </Button>
           </div>
         </div>
@@ -96,7 +106,7 @@ export const ImageUploader = ({
           style={{
             border: isDragging ? '2px dashed #4f46e5' : '2px dashed #cbd5e1',
             borderRadius: '12px',
-            padding: '32px 20px',
+            padding: '36px 20px',
             textAlign: 'center',
             backgroundColor: isDragging ? '#eef2ff' : '#f8fafc',
             transition: 'all 0.15s ease',
@@ -110,8 +120,8 @@ export const ImageUploader = ({
         >
           <div
             style={{
-              width: '48px',
-              height: '48px',
+              width: '52px',
+              height: '52px',
               borderRadius: '50%',
               backgroundColor: '#ffffff',
               border: '1px solid #e2e8f0',
@@ -119,32 +129,57 @@ export const ImageUploader = ({
               alignItems: 'center',
               justifyContent: 'center',
               color: '#4f46e5',
-              marginBottom: '12px',
+              marginBottom: '14px',
               boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
             }}
           >
             {isUploading ? (
-              <RefreshCw size={20} className="animate-spin" />
+              <RefreshCw size={22} className="animate-spin" />
             ) : (
-              <UploadCloud size={22} />
+              <UploadCloud size={24} />
             )}
           </div>
-          <p style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a', margin: 0 }}>
-            {isUploading ? 'Uploading Image Asset...' : 'Click or Drag image file to upload'}
-          </p>
-          <p style={{ fontSize: '12px', color: '#64748b', margin: '4px 0 16px 0' }}>
-            Supports PNG, JPG, WebP up to 5MB ({recommendedSize})
-          </p>
-          <Button
-            size="sm"
-            variant="secondary"
-            icon={ImageIcon}
-            isLoading={isUploading}
-          >
-            Choose File from Computer
-          </Button>
+
+          {isUploading ? (
+            <div style={{ width: '100%', maxWidth: '240px' }}>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '8px' }}>
+                Uploading asset... ({uploadProgress}%)
+              </div>
+              <div
+                style={{
+                  height: '6px',
+                  width: '100%',
+                  backgroundColor: '#e2e8f0',
+                  borderRadius: '9999px',
+                  overflow: 'hidden',
+                }}
+              >
+                <div
+                  style={{
+                    height: '100%',
+                    width: `${uploadProgress}%`,
+                    backgroundColor: '#4f46e5',
+                    transition: 'width 0.15s ease',
+                  }}
+                />
+              </div>
+            </div>
+          ) : (
+            <>
+              <p style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', margin: 0 }}>
+                Drag & drop image here
+              </p>
+              <p style={{ fontSize: '13px', color: '#4f46e5', fontWeight: 500, margin: '4px 0 12px 0' }}>
+                or Browse files
+              </p>
+              <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>
+                Supports PNG, JPG, WebP up to 5MB ({recommendedSize})
+              </p>
+            </>
+          )}
         </div>
       )}
     </div>
   );
 };
+
