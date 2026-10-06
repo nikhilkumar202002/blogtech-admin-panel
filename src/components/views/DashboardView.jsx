@@ -2,327 +2,490 @@ import React, { useState } from 'react';
 import {
   Briefcase,
   FileText,
-  Mail,
-  Send,
   Plus,
   ArrowUpRight,
   Clock,
   CheckCircle2,
-  AlertCircle,
   TrendingUp,
-  Globe,
-  Sparkles,
-  ExternalLink,
+  Archive,
+  Edit2,
+  Eye,
+  RefreshCw,
+  FolderOpen,
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
+import { DataTable } from '../ui/DataTable';
+import { Skeleton } from '../ui/Skeleton';
 import { useToast } from '../ui/ToastContext';
 
 export const DashboardView = ({
   stats,
-  jobs,
-  blogs,
-  enquiries,
-  publishingLogs,
-  activityLog,
+  jobs = [],
+  blogs = [],
+  activityLog = [],
   onNavigate,
   onOpenNewJobModal,
   onOpenNewBlogModal,
-  onOpenPublishModal,
+  isLoading = false,
 }) => {
   const { addToast } = useToast();
-  const [quickDraftTitle, setQuickDraftTitle] = useState('');
-  const [quickDraftContent, setQuickDraftContent] = useState('');
 
-  const handleSaveQuickDraft = (e) => {
-    e.preventDefault();
-    if (!quickDraftTitle.trim()) return;
-    addToast({
-      title: 'Draft Saved',
-      message: `Blog draft "${quickDraftTitle}" saved successfully.`,
-      type: 'success',
-    });
-    setQuickDraftTitle('');
-    setQuickDraftContent('');
-  };
+  // Metrics computation according to prompt specifications
+  const activeJobsCount = jobs.filter((j) => j.status === 'Active').length;
+  const closedJobsCount = jobs.filter((j) => j.status === 'Closed').length;
+  const publishedBlogsCount = blogs.filter((b) => b.status === 'Published').length;
+  const draftBlogsCount = blogs.filter((b) => b.status === 'Draft').length;
 
-  const unreadEnquiriesList = enquiries.filter((e) => e.status === 'Unread').slice(0, 3);
+  // Slice recent items for tables
+  const recentJobs = jobs.slice(0, 5);
+  const recentBlogs = blogs.slice(0, 5);
+
+  // Job Table Columns
+  const jobColumns = [
+    {
+      header: 'Position',
+      key: 'title',
+      sortable: true,
+      render: (row) => (
+        <div>
+          <div style={{ fontSize: '13.5px', fontWeight: 600, color: '#0f172a' }}>{row.title}</div>
+          <div style={{ fontSize: '11px', color: '#64748b', marginTop: '1px' }}>
+            {row.id} • {row.department}
+          </div>
+        </div>
+      ),
+    },
+    {
+      header: 'Location',
+      key: 'location',
+      sortable: true,
+      render: (row) => <span style={{ fontSize: '13px', color: '#334155' }}>{row.location}</span>,
+    },
+    {
+      header: 'Experience',
+      key: 'experience',
+      sortable: true,
+      render: (row) => <span style={{ fontSize: '12.5px', color: '#475569' }}>{row.experience}</span>,
+    },
+    {
+      header: 'Status',
+      key: 'status',
+      sortable: true,
+      render: (row) => <Badge status={row.status}>{row.status}</Badge>,
+    },
+    {
+      header: 'Updated',
+      key: 'publishedAt',
+      sortable: true,
+      render: (row) => <span style={{ fontSize: '12px', color: '#64748b' }}>{row.publishedAt}</span>,
+    },
+    {
+      header: 'Action',
+      key: 'action',
+      align: 'right',
+      render: (row) => (
+        <Button
+          size="sm"
+          variant="ghost"
+          icon={Edit2}
+          onClick={() => onNavigate('careers')}
+        >
+          Manage
+        </Button>
+      ),
+    },
+  ];
+
+  // Blog Table Columns
+  const blogColumns = [
+    {
+      header: 'Article Title',
+      key: 'title',
+      sortable: true,
+      render: (row) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <img
+            src={row.coverImage}
+            alt={row.title}
+            style={{
+              width: '40px',
+              height: '30px',
+              borderRadius: '6px',
+              objectFit: 'cover',
+              border: '1px solid #e2e8f0',
+              flexShrink: 0,
+            }}
+          />
+          <div style={{ minWidth: 0 }}>
+            <div
+              style={{
+                fontSize: '13.5px',
+                fontWeight: 600,
+                color: '#0f172a',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                maxWidth: '280px',
+              }}
+            >
+              {row.title}
+            </div>
+            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '1px' }}>
+              Category: {row.category}
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      header: 'Publication Date',
+      key: 'publishedAt',
+      sortable: true,
+      render: (row) => <span style={{ fontSize: '12.5px', color: '#334155' }}>{row.publishedAt}</span>,
+    },
+    {
+      header: 'Status',
+      key: 'status',
+      sortable: true,
+      render: (row) => <Badge status={row.status}>{row.status}</Badge>,
+    },
+    {
+      header: 'Updated',
+      key: 'updated',
+      sortable: true,
+      render: (row) => <span style={{ fontSize: '12px', color: '#64748b' }}>Recently</span>,
+    },
+    {
+      header: 'Action',
+      key: 'action',
+      align: 'right',
+      render: (row) => (
+        <Button
+          size="sm"
+          variant="ghost"
+          icon={Edit2}
+          onClick={() => onNavigate('blogs')}
+        >
+          Manage
+        </Button>
+      ),
+    },
+  ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Top Banner / Quick Actions */}
-      <div
-        style={{
-          backgroundColor: '#ffffff',
-          borderRadius: '16px',
-          border: '1px solid #e2e8f0',
-          padding: '24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          boxShadow: '0 1px 3px 0 rgba(16, 24, 40, 0.04)',
-          flexWrap: 'wrap',
-          gap: '16px',
-        }}
-      >
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-              Welcome back, Sarah
-            </h2>
-            <Badge status="active">Super Admin</Badge>
-          </div>
-          <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0 0' }}>
-            ApexCorp CMS is fully synchronized. You have <strong>{stats.pendingPublishCount}</strong> changes ready for production deployment.
-          </p>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Button variant="secondary" icon={Plus} onClick={onOpenNewJobModal}>
-            Post Job Opening
-          </Button>
-          <Button variant="secondary" icon={Plus} onClick={onOpenNewBlogModal}>
-            Write Article
-          </Button>
-          <Button variant="accent" icon={Send} onClick={onOpenPublishModal}>
-            Publish Changes
-          </Button>
-        </div>
+      {/* HEADER */}
+      <div>
+        <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
+          Dashboard
+        </h1>
+        <p style={{ fontSize: '13.5px', color: '#64748b', margin: '4px 0 0 0' }}>
+          Overview of your website content and activity.
+        </p>
       </div>
 
-      {/* Metrics Grid */}
+      {/* TOP STATISTICS (Four Premium Cards) */}
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
           gap: '16px',
         }}
       >
-        {/* Metric 1: Careers */}
-        <div
-          className="card card-padded"
-          onClick={() => onNavigate('careers')}
-          style={{ cursor: 'pointer' }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>Active Job Openings</span>
-            <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: '#ecfdf5', color: '#047857', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Briefcase size={18} />
-            </div>
-          </div>
-          <div style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a', lineHeight: 1 }}>
-            {stats.activeJobs}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '12px', fontSize: '12px', color: '#64748b' }}>
-            <span>{stats.totalJobs} total postings</span>
-            <span style={{ color: '#047857', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '2px' }}>
-              <TrendingUp size={13} /> +3 this month
-            </span>
-          </div>
-        </div>
-
-        {/* Metric 2: Blogs */}
-        <div
-          className="card card-padded"
-          onClick={() => onNavigate('blogs')}
-          style={{ cursor: 'pointer' }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>Published Blog Posts</span>
-            <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: '#eef2ff', color: '#4338ca', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <FileText size={18} />
-            </div>
-          </div>
-          <div style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a', lineHeight: 1 }}>
-            {stats.publishedBlogs}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '12px', fontSize: '12px', color: '#64748b' }}>
-            <span>{stats.draftBlogs} drafts pending</span>
-            <span style={{ color: '#4338ca', fontWeight: 600 }}>13.2k readers</span>
-          </div>
-        </div>
-
-        {/* Metric 3: Enquiries */}
-        <div
-          className="card card-padded"
-          onClick={() => onNavigate('enquiries')}
-          style={{ cursor: 'pointer' }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>Unread Enquiries</span>
-            <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: '#fef2f2', color: '#b91c1c', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Mail size={18} />
-            </div>
-          </div>
-          <div style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a', lineHeight: 1 }}>
-            {stats.unreadEnquiries}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '12px', fontSize: '12px', color: '#64748b' }}>
-            <span>{stats.totalEnquiries} total received</span>
-            <span style={{ color: '#b91c1c', fontWeight: 600 }}>Needs attention</span>
-          </div>
-        </div>
-
-        {/* Metric 4: Website Sync Status */}
+        {/* Card 1: Active Careers */}
         <div className="card card-padded">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>Publishing Engine</span>
-            <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: '#f8fafc', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #e2e8f0' }}>
-              <Globe size={18} />
+          {isLoading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <Skeleton width="40%" height="14px" />
+              <Skeleton width="60%" height="32px" />
             </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Badge status={stats.publishingStatus}>{stats.publishingStatus}</Badge>
-          </div>
-          <div style={{ fontSize: '12px', color: '#64748b', marginTop: '14px', lineHeight: 1.4 }}>
-            Last build: <strong>{stats.lastPublishedAt}</strong>
-          </div>
+          ) : (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>Active Careers</span>
+                <div
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '8px',
+                    backgroundColor: '#ecfdf5',
+                    color: '#047857',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Briefcase size={18} />
+                </div>
+              </div>
+              <div style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a', lineHeight: 1 }}>
+                {activeJobsCount}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '12px', fontSize: '12px', color: '#047857', fontWeight: 500 }}>
+                <TrendingUp size={13} />
+                <span>Currently accepting applicants</span>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Card 2: Closed Careers */}
+        <div className="card card-padded">
+          {isLoading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <Skeleton width="40%" height="14px" />
+              <Skeleton width="60%" height="32px" />
+            </div>
+          ) : (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>Closed Careers</span>
+                <div
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '8px',
+                    backgroundColor: '#f1f5f9',
+                    color: '#475569',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Archive size={18} />
+                </div>
+              </div>
+              <div style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a', lineHeight: 1 }}>
+                {closedJobsCount}
+              </div>
+              <div style={{ fontSize: '12px', color: '#64748b', marginTop: '12px' }}>
+                Withdrawn or filled positions
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Card 3: Published Blogs */}
+        <div className="card card-padded">
+          {isLoading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <Skeleton width="40%" height="14px" />
+              <Skeleton width="60%" height="32px" />
+            </div>
+          ) : (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>Published Blogs</span>
+                <div
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '8px',
+                    backgroundColor: '#eef2ff',
+                    color: '#4338ca',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <FileText size={18} />
+                </div>
+              </div>
+              <div style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a', lineHeight: 1 }}>
+                {publishedBlogsCount}
+              </div>
+              <div style={{ fontSize: '12px', color: '#4338ca', fontWeight: 500, marginTop: '12px' }}>
+                Live on public website
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Card 4: Draft Blogs */}
+        <div className="card card-padded">
+          {isLoading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <Skeleton width="40%" height="14px" />
+              <Skeleton width="60%" height="32px" />
+            </div>
+          ) : (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>Draft Blogs</span>
+                <div
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '8px',
+                    backgroundColor: '#fffbeb',
+                    color: '#b45309',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Clock size={18} />
+                </div>
+              </div>
+              <div style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a', lineHeight: 1 }}>
+                {draftBlogsCount}
+              </div>
+              <div style={{ fontSize: '12px', color: '#b45309', fontWeight: 500, marginTop: '12px' }}>
+                Unpublished draft articles
+              </div>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Main Content Layout (Two Columns) */}
+      {/* TWO COLUMN DASHBOARD LAYOUT */}
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)',
+          gridTemplateColumns: 'minmax(0, 2.3fr) minmax(0, 1fr)',
           gap: '24px',
         }}
       >
-        {/* Left Column */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {/* Recent Unread Mail / Enquiries Card */}
-          <div className="card card-padded">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+        {/* LEFT / MAIN TABLES AREA */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+          {/* Section 1: Recent Job Openings */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a', margin: 0 }}>
-                  Recent Contact Enquiries
-                </h3>
+                <h2 style={{ fontSize: '17px', fontWeight: 600, color: '#0f172a', margin: 0 }}>
+                  Recent Job Openings
+                </h2>
                 <p style={{ fontSize: '12px', color: '#64748b', margin: '2px 0 0 0' }}>
-                  Unread messages received from official site forms
+                  Latest postings published or modified in Careers
                 </p>
               </div>
-              <Button size="sm" variant="ghost" icon={ArrowUpRight} iconPosition="right" onClick={() => onNavigate('enquiries')}>
-                View All ({stats.unreadEnquiries})
+              <Button
+                size="sm"
+                variant="ghost"
+                icon={ArrowUpRight}
+                iconPosition="right"
+                onClick={() => onNavigate('careers')}
+              >
+                View All Careers
               </Button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {unreadEnquiriesList.map((enq) => (
-                <div
-                  key={enq.id}
-                  onClick={() => onNavigate('enquiries')}
-                  style={{
-                    padding: '12px 16px',
-                    borderRadius: '10px',
-                    border: '1px solid #f1f5f9',
-                    backgroundColor: '#fafafa',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f5f9')}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#fafafa')}
-                >
-                  <div style={{ minWidth: 0, paddingRight: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '13.5px', fontWeight: 600, color: '#0f172a' }}>
-                        {enq.senderName}
-                      </span>
-                      <span style={{ fontSize: '12px', color: '#64748b' }}>({enq.company})</span>
-                    </div>
-                    <div style={{ fontSize: '13px', color: '#334155', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {enq.subject}
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
-                    <Badge status="unread">{enq.category}</Badge>
-                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>{enq.receivedAt.split(' ')[1]}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <DataTable
+              columns={jobColumns}
+              data={recentJobs}
+              selectable={false}
+              pagination={false}
+              isLoading={isLoading}
+              emptyTitle="No Job Openings"
+              emptyDescription="No job postings created yet. Add your first job opening to start receiving candidates."
+              onEmptyAction={onOpenNewJobModal}
+              emptyActionLabel="Add Job Opening"
+            />
           </div>
 
-          {/* Quick Draft Blog Widget */}
-          <div className="card card-padded">
-            <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a', margin: '0 0 4px 0' }}>
-              Quick Article Draft
-            </h3>
-            <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 16px 0' }}>
-              Jot down quick article thoughts to refine and publish later
-            </p>
-            <form onSubmit={handleSaveQuickDraft} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <input
-                type="text"
-                placeholder="Article Headline Title..."
-                value={quickDraftTitle}
-                onChange={(e) => setQuickDraftTitle(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '10px 14px',
-                  fontSize: '13.5px',
-                  borderRadius: '8px',
-                  border: '1px solid #e2e8f0',
-                  outline: 'none',
-                }}
-              />
-              <textarea
-                placeholder="Key bullet points or summary..."
-                value={quickDraftContent}
-                onChange={(e) => setQuickDraftContent(e.target.value)}
-                rows={3}
-                style={{
-                  width: '100%',
-                  padding: '10px 14px',
-                  fontSize: '13.5px',
-                  borderRadius: '8px',
-                  border: '1px solid #e2e8f0',
-                  outline: 'none',
-                  fontFamily: 'Inter, sans-serif',
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <Button type="submit" size="sm" variant="secondary" isDisabled={!quickDraftTitle.trim()}>
-                  Save as Draft
-                </Button>
+          {/* Section 2: Recent Blog Articles */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <h2 style={{ fontSize: '17px', fontWeight: 600, color: '#0f172a', margin: 0 }}>
+                  Recent Blog Articles
+                </h2>
+                <p style={{ fontSize: '12px', color: '#64748b', margin: '2px 0 0 0' }}>
+                  Latest articles drafted, scheduled, or published on the blog
+                </p>
               </div>
-            </form>
+              <Button
+                size="sm"
+                variant="ghost"
+                icon={ArrowUpRight}
+                iconPosition="right"
+                onClick={() => onNavigate('blogs')}
+              >
+                View All Blogs
+              </Button>
+            </div>
+
+            <DataTable
+              columns={blogColumns}
+              data={recentBlogs}
+              selectable={false}
+              pagination={false}
+              isLoading={isLoading}
+              emptyTitle="No Blog Articles"
+              emptyDescription="No blog posts found. Create your first article to publish on your website."
+              onEmptyAction={onOpenNewBlogModal}
+              emptyActionLabel="Create Blog Article"
+            />
           </div>
         </div>
 
-        {/* Right Column: Activity Timeline */}
+        {/* RIGHT / SECONDARY AREA */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* Quick Actions Card */}
           <div className="card card-padded">
-            <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a', margin: '0 0 16px 0' }}>
-              Recent Activity Log
+            <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: '0 0 4px 0' }}>
+              Quick Actions
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {activityLog.map((act) => (
-                <div key={act.id} style={{ display: 'flex', gap: '12px', fontSize: '13px' }}>
-                  <div
-                    style={{
-                      width: '8px',
-                      height: '8px',
-                      borderRadius: '50%',
-                      backgroundColor: '#4f46e5',
-                      marginTop: '6px',
-                      flexShrink: 0,
-                    }}
-                  />
-                  <div>
-                    <div style={{ color: '#0f172a', fontWeight: 500 }}>
-                      <strong>{act.user}</strong> {act.action}{' '}
-                      <span style={{ color: '#4338ca' }}>"{act.target}"</span>
-                    </div>
-                    <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
-                      {act.time}
+            <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 16px 0' }}>
+              Frequently used publishing controls
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <Button variant="primary" icon={Plus} onClick={onOpenNewJobModal} fullWidth>
+                Add Job Opening
+              </Button>
+              <Button variant="secondary" icon={Plus} onClick={onOpenNewBlogModal} fullWidth>
+                Create Blog Article
+              </Button>
+            </div>
+          </div>
+
+          {/* Compact Recent Activity Section */}
+          <div className="card card-padded">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: 0 }}>
+                Recent Activity
+              </h3>
+              <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 500 }}>Live Feed</span>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {activityLog.length === 0 ? (
+                <div style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'center', padding: '12px 0' }}>
+                  No recent activity recorded.
+                </div>
+              ) : (
+                activityLog.map((item) => (
+                  <div key={item.id} style={{ display: 'flex', gap: '10px', fontSize: '12.5px' }}>
+                    <div
+                      style={{
+                        width: '8px',
+                        height: '8px',
+                        borderRadius: '50%',
+                        backgroundColor:
+                          item.action.includes('created')
+                            ? '#10b981'
+                            : item.action.includes('published')
+                            ? '#4f46e5'
+                            : item.action.includes('closed')
+                            ? '#64748b'
+                            : '#f59e0b',
+                        marginTop: '5px',
+                        flexShrink: 0,
+                      }}
+                    />
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ color: '#0f172a', fontWeight: 500, lineHeight: 1.4 }}>
+                        <strong>{item.user}</strong> {item.action}{' '}
+                        <span style={{ color: '#4338ca' }}>"{item.target}"</span>
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
+                        {item.time}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>

@@ -13,6 +13,7 @@ import { CareersView } from './components/views/CareersView';
 import { BlogsView } from './components/views/BlogsView';
 import { EnquiriesView } from './components/views/EnquiriesView';
 import { SettingsView } from './components/views/SettingsView';
+import { LoginView } from './components/views/LoginView';
 
 import {
   INITIAL_STATS,
@@ -28,6 +29,9 @@ import {
 
 const MainApp = () => {
   const { addToast } = useToast();
+
+  // Authentication State
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
 
   // Navigation & Layout State
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -165,6 +169,21 @@ const MainApp = () => {
       setIsPublishModalOpen(true);
     }
   };
+
+  if (!isAuthenticated) {
+    return (
+      <LoginView
+        onLoginSuccess={() => {
+          setIsAuthenticated(true);
+          addToast({
+            title: 'Welcome Back',
+            message: 'Signed in as Sarah Jenkins (Super Admin).',
+            type: 'success',
+          });
+        }}
+      />
+    );
+  }
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f8fafc' }}>
@@ -320,6 +339,7 @@ const MainApp = () => {
         onClose={() => setIsLogoutConfirmOpen(false)}
         onConfirm={() => {
           setIsLogoutConfirmOpen(false);
+          setIsAuthenticated(false);
           addToast({ title: 'Logged Out', message: 'You have been safely signed out.', type: 'info' });
         }}
         title="Sign Out of ApexCMS?"
