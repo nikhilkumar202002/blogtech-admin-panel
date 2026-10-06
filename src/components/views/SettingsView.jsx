@@ -1,418 +1,516 @@
 import React, { useState } from 'react';
 import {
-  Globe,
-  Send,
-  CheckCircle2,
-  Clock,
+  User,
   Shield,
-  UserPlus,
-  RefreshCw,
-  Sliders,
-  Code,
-  FileSpreadsheet,
   Key,
-  Database,
-  Search,
+  Camera,
+  LogOut,
+  Eye,
+  EyeOff,
+  CheckCircle2,
+  AlertTriangle,
 } from 'lucide-react';
 import { Button } from '../ui/Button';
-import { Badge } from '../ui/Badge';
 import { FormField } from '../ui/FormField';
-import { DataTable } from '../ui/DataTable';
-import { Modal } from '../ui/Modal';
-import { Select } from '../ui/Select';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { useToast } from '../ui/ToastContext';
 
 export const SettingsView = ({
-  publishingLogs = [],
-  users = [],
-  onPublishTrigger,
-  onAddUser,
+  user = {
+    name: 'Sarah Jenkins',
+    email: 'sarah.jenkins@apexcorp.com',
+    phone: '+1 (555) 019-2834',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80',
+  },
+  onLogoutAll,
 }) => {
   const { addToast } = useToast();
-  const [activeSubTab, setActiveSubTab] = useState('publishing'); // 'publishing' | 'general' | 'seo' | 'users' | 'security'
 
-  // Publishing Trigger demo
-  const [isDeploying, setIsDeploying] = useState(false);
+  // Simple Settings Navigation: 'profile' | 'security'
+  const [activeSection, setActiveSection] = useState('profile');
 
-  // Invite User Modal
-  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
-  const [newUser, setNewUser] = useState({ name: '', email: '', role: 'Content Editor' });
-
-  // Settings form states
-  const [generalSettings, setGeneralSettings] = useState({
-    companyName: 'ApexCorp Software Solutions Inc.',
-    contactEmail: 'contact@apexcorp.com',
-    supportPhone: '+1 (800) 555-0199',
-    copyrightText: '© 2026 ApexCorp Inc. All rights reserved.',
+  // Profile Form State
+  const [profileData, setProfileData] = useState({
+    name: user.name || 'Sarah Jenkins',
+    email: user.email || 'sarah.jenkins@apexcorp.com',
+    phone: user.phone || '+1 (555) 019-2834',
+    avatar: user.avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80',
   });
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
 
-  const [seoSettings, setSeoSettings] = useState({
-    globalTitle: 'ApexCorp — Enterprise B2B SaaS Platform',
-    globalDescription: 'Empowering digital transformations through scalable cloud infrastructure.',
-    analyticsId: 'G-7X9102831',
-    sitemapAuto: true,
+  // Security Form State
+  const [securityData, setSecurityData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
   });
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
 
-  const handleTriggerDeploy = () => {
-    setIsDeploying(true);
-    addToast({ title: 'Build Queued', message: 'Production deployment build #8f2a10 initiated.', type: 'info' });
-    setTimeout(() => {
-      setIsDeploying(false);
-      onPublishTrigger();
-      addToast({ title: 'Deploy Successful', message: 'Website changes live on global edge CDN.', type: 'success' });
-    }, 2000);
-  };
+  // Logout Confirm Modal
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
-  const handleInviteUserSubmit = (e) => {
+  // Save Profile Handler
+  const handleSaveProfile = (e) => {
     e.preventDefault();
-    if (!newUser.name || !newUser.email) return;
-
-    onAddUser({
-      id: `USR-${Math.floor(10 + Math.random() * 90)}`,
-      ...newUser,
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
-      status: 'Active',
-      lastActive: 'Just invited',
-    });
-
-    setIsUserModalOpen(false);
-    setNewUser({ name: '', email: '', role: 'Content Editor' });
-    addToast({ title: 'Invitation Sent', message: `Admin invite sent to ${newUser.email}.`, type: 'success' });
+    setIsSavingProfile(true);
+    setTimeout(() => {
+      setIsSavingProfile(false);
+      addToast({
+        title: 'Profile Updated',
+        message: 'Your profile information has been saved successfully.',
+        type: 'success',
+      });
+    }, 400);
   };
 
-  // User table columns
-  const userColumns = [
-    {
-      header: 'Admin User',
-      key: 'name',
-      render: (row) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <img src={row.avatar} alt={row.name} style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
-          <div>
-            <div style={{ fontSize: '13.5px', fontWeight: 600, color: '#0f172a' }}>{row.name}</div>
-            <div style={{ fontSize: '11px', color: '#64748b' }}>{row.email}</div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      header: 'Role Permission',
-      key: 'role',
-      render: (row) => <Badge status="accent">{row.role}</Badge>,
-    },
-    {
-      header: 'Status',
-      key: 'status',
-      render: (row) => <Badge status={row.status}>{row.status}</Badge>,
-    },
-    {
-      header: 'Last Active',
-      key: 'lastActive',
-      render: (row) => <span style={{ fontSize: '12px', color: '#64748b' }}>{row.lastActive}</span>,
-    },
-  ];
+  // Change Password Handler
+  const handleChangePassword = (e) => {
+    e.preventDefault();
+    setPasswordError('');
 
-  // Publishing history columns
-  const pubColumns = [
-    {
-      header: 'Event / Release Target',
-      key: 'event',
-      render: (row) => (
-        <div>
-          <div style={{ fontSize: '13.5px', fontWeight: 600, color: '#0f172a' }}>{row.event}</div>
-          <div style={{ fontSize: '11px', color: '#64748b' }}>Commit #{row.commitHash}</div>
-        </div>
-      ),
-    },
-    {
-      header: 'Changes Summary',
-      key: 'changes',
-      render: (row) => <span style={{ fontSize: '13px', color: '#334155' }}>{row.changes}</span>,
-    },
-    {
-      header: 'Triggered By',
-      key: 'author',
-      render: (row) => <span style={{ fontSize: '12.5px', color: '#475569' }}>{row.author}</span>,
-    },
-    {
-      header: 'Timestamp',
-      key: 'timestamp',
-      render: (row) => <span style={{ fontSize: '12px', color: '#64748b' }}>{row.timestamp}</span>,
-    },
-    {
-      header: 'Status',
-      key: 'status',
-      render: (row) => <Badge status="active">{row.status}</Badge>,
-    },
-  ];
+    if (!securityData.currentPassword) {
+      setPasswordError('Please enter your current password.');
+      addToast({ title: 'Validation Error', message: 'Please enter your current password.', type: 'error' });
+      return;
+    }
+    if (!securityData.newPassword) {
+      setPasswordError('Please enter a new password.');
+      addToast({ title: 'Validation Error', message: 'Please enter a new password.', type: 'error' });
+      return;
+    }
+    if (securityData.newPassword.length < 8) {
+      setPasswordError('New password must be at least 8 characters long.');
+      addToast({ title: 'Validation Error', message: 'New password must be at least 8 characters long.', type: 'error' });
+      return;
+    }
+    if (securityData.newPassword !== securityData.confirmPassword) {
+      setPasswordError('New passwords do not match.');
+      addToast({ title: 'Validation Error', message: 'New passwords do not match.', type: 'error' });
+      return;
+    }
+
+    setIsChangingPassword(true);
+    setTimeout(() => {
+      setIsChangingPassword(false);
+      setSecurityData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      addToast({
+        title: 'Password Changed',
+        message: 'Your admin account password was updated successfully.',
+        type: 'success',
+      });
+    }, 400);
+  };
+
+  // Profile Photo Change Demo
+  const handlePhotoUpload = () => {
+    addToast({
+      title: 'Photo Upload',
+      message: 'Select an image file to update your profile photo.',
+      type: 'info',
+    });
+  };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Sub-Nav Tabs */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '720px' }} className="animate-fade-in">
+      {/* HEADER */}
+      <div>
+        <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
+          Settings
+        </h1>
+        <p style={{ fontSize: '13.5px', color: '#64748b', margin: '4px 0 0 0' }}>
+          Manage your account preferences and security credentials.
+        </p>
+      </div>
+
+      {/* SIMPLE SETTINGS NAVIGATION */}
       <div
         style={{
           display: 'flex',
-          gap: '4px',
+          gap: '6px',
           backgroundColor: '#ffffff',
           padding: '4px',
           borderRadius: '10px',
           border: '1px solid #e2e8f0',
           width: 'fit-content',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
         }}
       >
-        {[
-          { id: 'publishing', label: 'Website Publishing', icon: Globe },
-          { id: 'general', label: 'General Info', icon: Sliders },
-          { id: 'seo', label: 'SEO & Analytics', icon: Search },
-          { id: 'users', label: 'Admin Team & Roles', icon: UserPlus },
-          { id: 'security', label: 'Security & Audit', icon: Shield },
-        ].map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeSubTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveSubTab(tab.id)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '8px 14px',
-                borderRadius: '8px',
-                border: 'none',
-                backgroundColor: isActive ? '#eef2ff' : 'transparent',
-                color: isActive ? '#4f46e5' : '#475569',
-                fontSize: '13px',
-                fontWeight: isActive ? 600 : 500,
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              <Icon size={15} />
-              {tab.label}
-            </button>
-          );
-        })}
+        <button
+          type="button"
+          onClick={() => setActiveSection('profile')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '8px 18px',
+            borderRadius: '8px',
+            border: 'none',
+            backgroundColor: activeSection === 'profile' ? '#4f46e5' : 'transparent',
+            color: activeSection === 'profile' ? '#ffffff' : '#64748b',
+            fontSize: '13px',
+            fontWeight: activeSection === 'profile' ? 600 : 500,
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          <User size={15} />
+          Profile
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveSection('security')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '8px 18px',
+            borderRadius: '8px',
+            border: 'none',
+            backgroundColor: activeSection === 'security' ? '#4f46e5' : 'transparent',
+            color: activeSection === 'security' ? '#ffffff' : '#64748b',
+            fontSize: '13px',
+            fontWeight: activeSection === 'security' ? 600 : 500,
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          <Shield size={15} />
+          Security
+        </button>
       </div>
 
-      {/* Sub-Tab 1: Website Publishing & Deploy */}
-      {activeSubTab === 'publishing' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <div className="card card-padded" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-                  Production Deployment Engine
-                </h3>
-                <Badge status="active">Vercel Edge Live</Badge>
+      {/* SECTION 1: PROFILE */}
+      {activeSection === 'profile' && (
+        <div className="card card-padded" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+            Profile Details
+          </h2>
+
+          <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {/* Profile Photo */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', paddingBottom: '12px', borderBottom: '1px solid #f1f5f9' }}>
+              <div style={{ position: 'relative' }}>
+                <img
+                  src={profileData.avatar}
+                  alt={profileData.name}
+                  style={{
+                    width: '80px',
+                    height: '80px',
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '2px solid #e2e8f0',
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handlePhotoUpload}
+                  style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    right: 0,
+                    backgroundColor: '#4f46e5',
+                    color: '#ffffff',
+                    border: '2px solid #ffffff',
+                    borderRadius: '50%',
+                    width: '28px',
+                    height: '28px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                  }}
+                  title="Change Profile Photo"
+                >
+                  <Camera size={14} />
+                </button>
               </div>
-              <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0 0' }}>
-                Trigger instant static site generator rebuilds for new Job Openings & Blog articles.
-              </p>
+
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>Profile Photo</div>
+                <div style={{ fontSize: '12px', color: '#64748b', margin: '2px 0 8px 0' }}>
+                  JPG or PNG, max size 5MB
+                </div>
+                <Button type="button" variant="secondary" size="sm" onClick={handlePhotoUpload}>
+                  Change Photo
+                </Button>
+              </div>
             </div>
 
-            <Button
-              variant="accent"
-              size="lg"
-              icon={isDeploying ? RefreshCw : Send}
-              isLoading={isDeploying}
-              onClick={handleTriggerDeploy}
-            >
-              {isDeploying ? 'Building Production Bundle...' : 'Trigger Production Deploy'}
-            </Button>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <h4 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: 0 }}>
-              Recent Deployment History
-            </h4>
-            <DataTable columns={pubColumns} data={publishingLogs} selectable={false} pagination={false} />
-          </div>
-        </div>
-      )}
-
-      {/* Sub-Tab 2: General Website Content */}
-      {activeSubTab === 'general' && (
-        <div className="card card-padded" style={{ maxWidth: '640px' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a', margin: '0 0 16px 0' }}>
-            General Corporate Website Information
-          </h3>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              addToast({ title: 'Settings Saved', message: 'General settings updated.', type: 'success' });
-            }}
-          >
-            <FormField label="Official Company Legal Name">
+            {/* Admin Name */}
+            <FormField label="Admin Name" required>
               <input
                 type="text"
-                value={generalSettings.companyName}
-                onChange={(e) => setGeneralSettings({ ...generalSettings, companyName: e.target.value })}
-                style={{ width: '100%', padding: '8px 12px', fontSize: '13.5px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
+                value={profileData.name}
+                onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+                placeholder="Enter admin name"
+                style={{
+                  width: '100%',
+                  padding: '10px 14px',
+                  fontSize: '14px',
+                  color: '#0f172a',
+                  borderRadius: '8px',
+                  border: '1px solid #e2e8f0',
+                  outline: 'none',
+                }}
               />
             </FormField>
 
-            <FormField label="Primary Contact Email (Forms destination)">
+            {/* Email */}
+            <FormField label="Email Address" required>
               <input
                 type="email"
-                value={generalSettings.contactEmail}
-                onChange={(e) => setGeneralSettings({ ...generalSettings, contactEmail: e.target.value })}
-                style={{ width: '100%', padding: '8px 12px', fontSize: '13.5px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
+                value={profileData.email}
+                onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                placeholder="admin@example.com"
+                style={{
+                  width: '100%',
+                  padding: '10px 14px',
+                  fontSize: '14px',
+                  color: '#0f172a',
+                  borderRadius: '8px',
+                  border: '1px solid #e2e8f0',
+                  outline: 'none',
+                }}
               />
             </FormField>
 
-            <FormField label="Footer Copyright Text">
+            {/* Phone */}
+            <FormField label="Phone Number">
               <input
-                type="text"
-                value={generalSettings.copyrightText}
-                onChange={(e) => setGeneralSettings({ ...generalSettings, copyrightText: e.target.value })}
-                style={{ width: '100%', padding: '8px 12px', fontSize: '13.5px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
+                type="tel"
+                value={profileData.phone}
+                onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                placeholder="+1 (555) 000-0000"
+                style={{
+                  width: '100%',
+                  padding: '10px 14px',
+                  fontSize: '14px',
+                  color: '#0f172a',
+                  borderRadius: '8px',
+                  border: '1px solid #e2e8f0',
+                  outline: 'none',
+                }}
               />
             </FormField>
 
-            <Button type="submit" variant="primary">Save General Settings</Button>
+            {/* Save Button */}
+            <div style={{ display: 'flex', justifyContent: 'flex-start', paddingTop: '8px' }}>
+              <Button type="submit" variant="primary" isLoading={isSavingProfile}>
+                Save Changes
+              </Button>
+            </div>
           </form>
         </div>
       )}
 
-      {/* Sub-Tab 3: SEO & Analytics */}
-      {activeSubTab === 'seo' && (
-        <div className="card card-padded" style={{ maxWidth: '640px' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a', margin: '0 0 16px 0' }}>
-            Global SEO & Analytics Tag Config
-          </h3>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              addToast({ title: 'SEO Saved', message: 'Global SEO metadata updated.', type: 'success' });
+      {/* SECTION 2: SECURITY */}
+      {activeSection === 'security' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* Change Password Card */}
+          <div className="card card-padded" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+              Change Password
+            </h2>
+
+            {passwordError && (
+              <div
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: '8px',
+                  backgroundColor: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  color: '#dc2626',
+                  fontSize: '13px',
+                }}
+              >
+                {passwordError}
+              </div>
+            )}
+
+            <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Current Password */}
+              <FormField label="Current Password" required>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showCurrentPassword ? 'text' : 'password'}
+                    value={securityData.currentPassword}
+                    onChange={(e) => setSecurityData({ ...securityData, currentPassword: e.target.value })}
+                    placeholder="Enter current password"
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      paddingRight: '40px',
+                      fontSize: '14px',
+                      color: '#0f172a',
+                      borderRadius: '8px',
+                      border: '1px solid #e2e8f0',
+                      outline: 'none',
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      color: '#64748b',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </FormField>
+
+              {/* New Password */}
+              <FormField label="New Password" required helperText="Must be at least 8 characters long">
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    value={securityData.newPassword}
+                    onChange={(e) => setSecurityData({ ...securityData, newPassword: e.target.value })}
+                    placeholder="Enter new password"
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      paddingRight: '40px',
+                      fontSize: '14px',
+                      color: '#0f172a',
+                      borderRadius: '8px',
+                      border: '1px solid #e2e8f0',
+                      outline: 'none',
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      color: '#64748b',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </FormField>
+
+              {/* Confirm New Password */}
+              <FormField label="Confirm New Password" required>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={securityData.confirmPassword}
+                    onChange={(e) => setSecurityData({ ...securityData, confirmPassword: e.target.value })}
+                    placeholder="Re-enter new password"
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      paddingRight: '40px',
+                      fontSize: '14px',
+                      color: '#0f172a',
+                      borderRadius: '8px',
+                      border: '1px solid #e2e8f0',
+                      outline: 'none',
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      color: '#64748b',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </FormField>
+
+              {/* Button */}
+              <div style={{ display: 'flex', justifyContent: 'flex-start', paddingTop: '8px' }}>
+                <Button type="submit" variant="primary" isLoading={isChangingPassword}>
+                  Change Password
+                </Button>
+              </div>
+            </form>
+          </div>
+
+          {/* DANGER ZONE */}
+          <div
+            style={{
+              backgroundColor: '#ffffff',
+              borderRadius: '12px',
+              border: '1px solid #fecaca',
+              padding: '24px',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
             }}
           >
-            <FormField label="Global Title Tag Pattern">
-              <input
-                type="text"
-                value={seoSettings.globalTitle}
-                onChange={(e) => setSeoSettings({ ...seoSettings, globalTitle: e.target.value })}
-                style={{ width: '100%', padding: '8px 12px', fontSize: '13.5px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
-              />
-            </FormField>
-
-            <FormField label="Global Meta Description">
-              <textarea
-                value={seoSettings.globalDescription}
-                onChange={(e) => setSeoSettings({ ...seoSettings, globalDescription: e.target.value })}
-                rows={3}
-                style={{ width: '100%', padding: '8px 12px', fontSize: '13.5px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', fontFamily: 'Inter, sans-serif' }}
-              />
-            </FormField>
-
-            <FormField label="Google Analytics Measurement ID">
-              <input
-                type="text"
-                value={seoSettings.analyticsId}
-                onChange={(e) => setSeoSettings({ ...seoSettings, analyticsId: e.target.value })}
-                style={{ width: '100%', padding: '8px 12px', fontSize: '13.5px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
-              />
-            </FormField>
-
-            <Button type="submit" variant="primary">Save SEO Configurations</Button>
-          </form>
-        </div>
-      )}
-
-      {/* Sub-Tab 4: Admin Team & Roles */}
-      {activeSubTab === 'users' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a', margin: 0 }}>
-                Admin Users & Access Control
-              </h3>
-              <p style={{ fontSize: '12px', color: '#64748b', margin: '2px 0 0 0' }}>
-                Manage team members who can create job postings, write blog posts, and handle mail.
-              </p>
-            </div>
-            <Button variant="primary" icon={UserPlus} onClick={() => setIsUserModalOpen(true)}>
-              Invite Team Member
-            </Button>
-          </div>
-
-          <DataTable columns={userColumns} data={users} selectable={false} pagination={false} />
-        </div>
-      )}
-
-      {/* Sub-Tab 5: Security & Audit */}
-      {activeSubTab === 'security' && (
-        <div className="card card-padded" style={{ maxWidth: '640px' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a', margin: '0 0 16px 0' }}>
-            Security Controls & 2FA Enforcement
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#fafafa', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
               <div>
-                <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>Two-Factor Authentication (2FA)</div>
-                <div style={{ fontSize: '12px', color: '#64748b' }}>Require TOTP authenticator for all admin sign-ins</div>
+                <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#dc2626', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <AlertTriangle size={18} />
+                  Danger Zone
+                </h3>
+                <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0 0' }}>
+                  Logout from all active browser sessions and revoke access tokens.
+                </p>
               </div>
-              <Badge status="active">Enforced</Badge>
-            </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#fafafa', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
-              <div>
-                <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>Admin Session Inactivity Timeout</div>
-                <div style={{ fontSize: '12px', color: '#64748b' }}>Auto logout after 30 mins of idle time</div>
-              </div>
-              <Badge status="active">30 Minutes</Badge>
+              <Button
+                variant="danger"
+                icon={LogOut}
+                onClick={() => setIsLogoutModalOpen(true)}
+              >
+                Logout from all sessions
+              </Button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Invite User Modal */}
-      <Modal
-        isOpen={isUserModalOpen}
-        onClose={() => setIsUserModalOpen(false)}
-        title="Invite New Admin Team Member"
-        subtitle="Send an invitation link with assigned permission roles"
-        maxWidth="480px"
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setIsUserModalOpen(false)}>Cancel</Button>
-            <Button variant="primary" onClick={handleInviteUserSubmit}>Send Invite</Button>
-          </>
-        }
-      >
-        <form onSubmit={handleInviteUserSubmit}>
-          <FormField label="Full Name" required>
-            <input
-              type="text"
-              value={newUser.name}
-              onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-              placeholder="e.g. David Kim"
-              style={{ width: '100%', padding: '8px 12px', fontSize: '13.5px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
-            />
-          </FormField>
-
-          <FormField label="Work Email Address" required>
-            <input
-              type="email"
-              value={newUser.email}
-              onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-              placeholder="david.kim@apexcorp.com"
-              style={{ width: '100%', padding: '8px 12px', fontSize: '13.5px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
-            />
-          </FormField>
-
-          <FormField label="Permission Role" required>
-            <Select
-              fullWidth
-              value={newUser.role}
-              onChange={(val) => setNewUser({ ...newUser, role: val })}
-              options={['Super Admin / Lead Editor', 'Content Editor', 'Careers Manager', 'Viewer']}
-            />
-          </FormField>
-        </form>
-      </Modal>
+      {/* CONFIRM LOGOUT ALL SESSIONS DIALOG */}
+      <ConfirmDialog
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={() => {
+          setIsLogoutModalOpen(false);
+          if (onLogoutAll) {
+            onLogoutAll();
+          } else {
+            addToast({
+              title: 'Sessions Terminated',
+              message: 'You have been logged out from all active sessions.',
+              type: 'info',
+            });
+          }
+        }}
+        title="Logout from all sessions?"
+        message="Are you sure you want to invalidate all active browser tokens and log out across all devices?"
+        confirmLabel="Confirm Logout All"
+        cancelLabel="Cancel"
+        type="danger"
+      />
     </div>
   );
 };

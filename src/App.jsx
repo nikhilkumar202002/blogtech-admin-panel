@@ -283,10 +283,8 @@ const MainApp = () => {
 
           {activeTab === 'settings' && (
             <SettingsView
-              publishingLogs={publishingLogs}
-              users={users}
-              onPublishTrigger={handlePublishAll}
-              onAddUser={handleAddUser}
+              user={currentUser}
+              onLogoutAll={() => setIsLogoutConfirmOpen(true)}
             />
           )}
         </main>
