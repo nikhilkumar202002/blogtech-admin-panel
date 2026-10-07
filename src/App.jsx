@@ -29,6 +29,8 @@ import {
 const VALID_TABS = ['dashboard', 'careers', 'blogs', 'enquiries', 'settings'];
 
 const getInitialTab = () => {
+  const path = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
+  if (VALID_TABS.includes(path)) return path;
   const hash = window.location.hash.replace('#', '').toLowerCase();
   if (VALID_TABS.includes(hash)) return hash;
   const stored = localStorage.getItem('blogtech_active_tab');
@@ -42,27 +44,37 @@ const MainApp = () => {
   // Authentication State
   const [isAuthenticated, setIsAuthenticated] = useState(true);
 
-  // Navigation & Layout State (Synced with URL hash and localStorage)
+  // Navigation & Layout State (Synced with clean URL pathnames and localStorage)
   const [activeTab, setActiveTabState] = useState(getInitialTab);
 
   const setActiveTab = (tab) => {
     if (VALID_TABS.includes(tab)) {
       setActiveTabState(tab);
-      window.location.hash = tab;
+      const targetPath = tab === 'dashboard' ? '/' : `/${tab}`;
+      if (window.location.pathname !== targetPath) {
+        window.history.pushState({}, '', targetPath);
+      }
       localStorage.setItem('blogtech_active_tab', tab);
     }
   };
 
   useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash.replace('#', '').toLowerCase();
-      if (VALID_TABS.includes(hash)) {
-        setActiveTabState(hash);
-        localStorage.setItem('blogtech_active_tab', hash);
-      }
+    // Sync initial pathname on load if root or hashed
+    const initial = getInitialTab();
+    const targetPath = initial === 'dashboard' ? '/' : `/${initial}`;
+    if (window.location.hash) {
+      window.history.replaceState({}, '', targetPath);
+    }
+
+    const handlePopState = () => {
+      const path = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase() || 'dashboard';
+      const active = VALID_TABS.includes(path) ? path : 'dashboard';
+      setActiveTabState(active);
+      localStorage.setItem('blogtech_active_tab', active);
     };
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
