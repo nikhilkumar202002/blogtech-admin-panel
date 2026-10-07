@@ -344,6 +344,7 @@ export const DashboardView = ({
 
       {/* TWO COLUMN DASHBOARD LAYOUT */}
       <div
+        className="mobile-grid-1"
         style={{
           display: 'grid',
           gridTemplateColumns: 'minmax(0, 2.3fr) minmax(0, 1fr)',

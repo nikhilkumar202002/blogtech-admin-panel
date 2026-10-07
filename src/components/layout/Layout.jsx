@@ -37,13 +37,12 @@ export const Layout = ({
 
       {/* Main Wrapper for Header and Dynamic Page Content */}
       <div
+        className={`layout-main-container ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}
         style={{
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
           minWidth: 0,
-          marginLeft: sidebarCollapsed ? '72px' : '256px',
-          transition: 'margin-left 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
         {/* Common Sticky Header */}

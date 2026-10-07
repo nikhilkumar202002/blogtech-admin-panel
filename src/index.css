@@ -218,8 +218,22 @@ h1, h2, h3, h4, h5, h6 {
   display: none !important;
 }
 
+.layout-main-container {
+  margin-left: 256px;
+  transition: margin-left 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.layout-main-container.sidebar-collapsed {
+  margin-left: 72px;
+}
+
 /* Touch Friendly Controls & Responsive Utilities */
 @media (max-width: 768px) {
+  .layout-main-container,
+  .layout-main-container.sidebar-collapsed {
+    margin-left: 0 !important;
+  }
+
   aside {
     transform: translateX(-100%);
     width: 280px !important;
