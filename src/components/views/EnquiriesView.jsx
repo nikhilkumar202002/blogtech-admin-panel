@@ -23,6 +23,7 @@ import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { SearchInput } from '../ui/SearchInput';
 import { Select } from '../ui/Select';
+import { Breadcrumb } from '../ui/Breadcrumb';
 import { DataTable } from '../ui/DataTable';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { DropdownMenu } from '../ui/DropdownMenu';
@@ -336,7 +337,8 @@ export const EnquiriesView = ({
         }}
       >
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
+          <Breadcrumb items={[{ label: 'Dashboard' }, { label: 'Enquiries' }]} />
+          <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a', margin: '8px 0 0 0', letterSpacing: '-0.02em' }}>
             Enquiries
           </h1>
           <p style={{ fontSize: '13.5px', color: '#64748b', margin: '4px 0 0 0' }}>

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Sidebar } from './components/layout/Sidebar';
-import { Header } from './components/layout/Header';
+import { Layout } from './components/layout/Layout';
 import { ToastProvider, useToast } from './components/ui/ToastContext';
 import { CommandPalette } from './components/ui/CommandPalette';
 import { Modal } from './components/ui/Modal';
@@ -187,116 +186,91 @@ const MainApp = () => {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f8fafc' }}>
-      {/* Sidebar Navigation */}
-      <Sidebar
+    <>
+      <Layout
         activeTab={activeTab}
         onTabChange={(tab) => {
           setActiveTab(tab);
           setIsMobileOpen(false);
         }}
-        isCollapsed={sidebarCollapsed}
+        sidebarCollapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
         isMobileOpen={isMobileOpen}
         onCloseMobile={() => setIsMobileOpen(false)}
         badgeCounts={badgeCounts}
         user={currentUser}
         onLogoutClick={() => setIsLogoutConfirmOpen(true)}
-      />
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+        notifications={notifications}
+        onNotificationClick={(notif) => {
+          if (notif.type === 'enquiry') setActiveTab('enquiries');
+          if (notif.type === 'career') setActiveTab('careers');
+          if (notif.type === 'blog') setActiveTab('blogs');
+          setIsMobileOpen(false);
+        }}
+        onPublishClick={() => setIsPublishModalOpen(true)}
+        publishingStatus={stats.publishingStatus}
+        onToggleMobileSidebar={() => setIsMobileOpen(!isMobileOpen)}
+      >
+        {activeTab === 'dashboard' && (
+          <DashboardView
+            stats={stats}
+            jobs={jobs}
+            blogs={blogs}
+            enquiries={enquiries}
+            publishingLogs={publishingLogs}
+            activityLog={activityLog}
+            onNavigate={setActiveTab}
+            onOpenNewJobModal={() => {
+              setActiveTab('careers');
+              setQuickCreateJob(true);
+            }}
+            onOpenNewBlogModal={() => {
+              setActiveTab('blogs');
+              setQuickCreateBlog(true);
+            }}
+            onOpenPublishModal={() => setIsPublishModalOpen(true)}
+          />
+        )}
 
-      {/* Main App Container */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        {/* Sticky Top Header */}
-        <Header
-          activeTab={activeTab}
-          sidebarCollapsed={sidebarCollapsed}
-          onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
-          notifications={notifications}
-          onNotificationClick={(notif) => {
-            if (notif.type === 'enquiry') setActiveTab('enquiries');
-            if (notif.type === 'career') setActiveTab('careers');
-            if (notif.type === 'blog') setActiveTab('blogs');
-            setIsMobileOpen(false);
-          }}
-          user={currentUser}
-          onLogoutClick={() => setIsLogoutConfirmOpen(true)}
-          onPublishClick={() => setIsPublishModalOpen(true)}
-          publishingStatus={stats.publishingStatus}
-          onToggleMobileSidebar={() => setIsMobileOpen(!isMobileOpen)}
-        />
+        {activeTab === 'careers' && (
+          <CareersView
+            jobs={jobs}
+            applicants={applicants}
+            onAddJob={handleAddJob}
+            onUpdateJob={handleUpdateJob}
+            onDeleteJob={handleDeleteJob}
+            isCreateOpen={quickCreateJob}
+            onCloseCreateOpen={() => setQuickCreateJob(false)}
+          />
+        )}
 
-        {/* View Main Content Area */}
-        <main
-          className="main-content-area"
-          style={{
-            flex: 1,
-            padding: '24px 32px 48px 32px',
-            marginLeft: sidebarCollapsed ? '72px' : '256px',
-            transition: 'margin-left 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-            width: '100%',
-            boxSizing: 'border-box',
-          }}
-        >
-          {activeTab === 'dashboard' && (
-            <DashboardView
-              stats={stats}
-              jobs={jobs}
-              blogs={blogs}
-              enquiries={enquiries}
-              publishingLogs={publishingLogs}
-              activityLog={activityLog}
-              onNavigate={setActiveTab}
-              onOpenNewJobModal={() => {
-                setActiveTab('careers');
-                setQuickCreateJob(true);
-              }}
-              onOpenNewBlogModal={() => {
-                setActiveTab('blogs');
-                setQuickCreateBlog(true);
-              }}
-              onOpenPublishModal={() => setIsPublishModalOpen(true)}
-            />
-          )}
+        {activeTab === 'blogs' && (
+          <BlogsView
+            blogs={blogs}
+            onAddBlog={handleAddBlog}
+            onUpdateBlog={handleUpdateBlog}
+            onDeleteBlog={handleDeleteBlog}
+            isCreateOpen={quickCreateBlog}
+            onCloseCreateOpen={() => setQuickCreateBlog(false)}
+          />
+        )}
 
-          {activeTab === 'careers' && (
-            <CareersView
-              jobs={jobs}
-              applicants={applicants}
-              onAddJob={handleAddJob}
-              onUpdateJob={handleUpdateJob}
-              onDeleteJob={handleDeleteJob}
-              isCreateOpen={quickCreateJob}
-              onCloseCreateOpen={() => setQuickCreateJob(false)}
-            />
-          )}
+        {activeTab === 'enquiries' && (
+          <EnquiriesView
+            enquiries={enquiries}
+            onUpdateEnquiry={handleUpdateEnquiry}
+            onDeleteEnquiry={handleDeleteEnquiry}
+          />
+        )}
 
-          {activeTab === 'blogs' && (
-            <BlogsView
-              blogs={blogs}
-              onAddBlog={handleAddBlog}
-              onUpdateBlog={handleUpdateBlog}
-              onDeleteBlog={handleDeleteBlog}
-              isCreateOpen={quickCreateBlog}
-              onCloseCreateOpen={() => setQuickCreateBlog(false)}
-            />
-          )}
-
-          {activeTab === 'enquiries' && (
-            <EnquiriesView
-              enquiries={enquiries}
-              onUpdateEnquiry={handleUpdateEnquiry}
-              onDeleteEnquiry={handleDeleteEnquiry}
-            />
-          )}
-
-          {activeTab === 'settings' && (
-            <SettingsView
-              user={currentUser}
-              onLogoutAll={() => setIsLogoutConfirmOpen(true)}
-            />
-          )}
-        </main>
-      </div>
+        {activeTab === 'settings' && (
+          <SettingsView
+            user={currentUser}
+            onLogoutAll={() => setIsLogoutConfirmOpen(true)}
+          />
+        )}
+      </Layout>
 
       {/* Global Command Palette (Cmd + K) */}
       <CommandPalette
@@ -353,7 +327,7 @@ const MainApp = () => {
         confirmLabel="Logout Now"
         type="warning"
       />
-    </div>
+    </>
   );
 };
 

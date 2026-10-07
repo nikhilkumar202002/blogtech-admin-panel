@@ -28,8 +28,9 @@ import { RichTextEditor } from '../ui/RichTextEditor';
 import { ImageUploader } from '../ui/ImageUploader';
 import { DatePicker } from '../ui/DatePicker';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
-import { DropdownMenu } from '../ui/DropdownMenu';
 import { useToast } from '../ui/ToastContext';
+import { Breadcrumb } from '../ui/Breadcrumb';
+import { DropdownMenu } from '../ui/DropdownMenu';
 import { BLOG_CATEGORIES } from '../../mockData';
 
 export const BlogsView = ({
@@ -585,27 +586,14 @@ export const BlogsView = ({
           }}
         >
           <div>
-            {/* Breadcrumb */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>
-              <button
-                type="button"
-                onClick={() => {
-                  setViewMode('list');
-                  onCloseCreateOpen && onCloseCreateOpen();
-                }}
-                style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: 0 }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = '#0f172a')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
-              >
-                Blogs
-              </button>
-              <span>/</span>
-              <span style={{ color: '#0f172a', fontWeight: 500 }}>
-                {editingBlog ? 'Edit Article' : 'Create Article'}
-              </span>
-            </div>
-
-            <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
+            <Breadcrumb
+              items={[
+                { label: 'Dashboard', onClick: () => setViewMode('list') },
+                { label: 'Blogs', onClick: () => setViewMode('list') },
+                { label: editingBlog ? 'Edit Article' : 'Create Article' },
+              ]}
+            />
+            <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a', margin: '8px 0 0 0', letterSpacing: '-0.02em' }}>
               {editingBlog ? 'Edit Article' : 'Create Article'}
             </h1>
           </div>
@@ -914,8 +902,14 @@ export const BlogsView = ({
         }}
       >
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
-            Blog Management
+          <Breadcrumb
+            items={[
+              { label: 'Dashboard', onClick: () => setViewMode('list') },
+              { label: 'Blogs' },
+            ]}
+          />
+          <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a', margin: '8px 0 0 0', letterSpacing: '-0.02em' }}>
+            Blogs
           </h1>
           <p style={{ fontSize: '13.5px', color: '#64748b', margin: '4px 0 0 0' }}>
             Create, manage and publish company articles.

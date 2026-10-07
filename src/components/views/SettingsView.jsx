@@ -14,6 +14,7 @@ import { Button } from '../ui/Button';
 import { FormField } from '../ui/FormField';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { useToast } from '../ui/ToastContext';
+import { Breadcrumb } from '../ui/Breadcrumb';
 
 export const SettingsView = ({
   user = {
@@ -118,7 +119,8 @@ export const SettingsView = ({
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '720px' }} className="animate-fade-in">
       {/* HEADER */}
       <div>
-        <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
+        <Breadcrumb items={[{ label: 'Dashboard' }, { label: 'Settings' }]} />
+        <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a', margin: '8px 0 0 0', letterSpacing: '-0.02em' }}>
           Settings
         </h1>
         <p style={{ fontSize: '13.5px', color: '#64748b', margin: '4px 0 0 0' }}>

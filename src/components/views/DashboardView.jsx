@@ -18,6 +18,7 @@ import { Badge } from '../ui/Badge';
 import { DataTable } from '../ui/DataTable';
 import { Skeleton } from '../ui/Skeleton';
 import { useToast } from '../ui/ToastContext';
+import { Breadcrumb } from '../ui/Breadcrumb';
 
 export const DashboardView = ({
   stats,
@@ -177,7 +178,8 @@ export const DashboardView = ({
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* HEADER */}
       <div>
-        <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
+        <Breadcrumb items={[{ label: 'Dashboard' }]} />
+        <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a', margin: '8px 0 0 0', letterSpacing: '-0.02em' }}>
           Dashboard
         </h1>
         <p style={{ fontSize: '13.5px', color: '#64748b', margin: '4px 0 0 0' }}>

@@ -34,25 +34,6 @@ export const Header = ({
   onToggleMobileSidebar,
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
-
-  const getBreadcrumbs = () => {
-    switch (activeTab) {
-      case 'dashboard':
-        return { title: 'Dashboard', path: ['BLOGTECH', 'Dashboard'] };
-      case 'careers':
-        return { title: 'Careers', path: ['BLOGTECH', 'Careers', 'Jobs'] };
-      case 'blogs':
-        return { title: 'Blogs', path: ['BLOGTECH', 'Content', 'Blogs'] };
-      case 'enquiries':
-        return { title: 'Enquiries', path: ['BLOGTECH', 'Inbox', 'Enquiries'] };
-      case 'settings':
-        return { title: 'Settings', path: ['BLOGTECH', 'System', 'Settings'] };
-      default:
-        return { title: 'Dashboard', path: ['BLOGTECH', 'Dashboard'] };
-    }
-  };
-
-  const { title, path } = getBreadcrumbs();
   const unreadNotifsCount = notifications.filter((n) => !n.read).length;
 
   return (
@@ -68,14 +49,11 @@ export const Header = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 32px',
-        marginLeft: sidebarCollapsed ? '72px' : '256px',
-        transition: 'margin-left 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+        padding: '0 24px',
       }}
     >
-      {/* Left: Hamburger (Mobile) + Page Title & Breadcrumbs */}
+      {/* Left: Mobile Hamburger Button */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        {/* Mobile Hamburger Button (Min 44px Touch Target) */}
         <button
           type="button"
           onClick={onToggleMobileSidebar}
@@ -89,34 +67,18 @@ export const Header = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            minWidth: '44px',
-            minHeight: '44px',
+            minWidth: '40px',
+            minHeight: '40px',
           }}
           className="show-on-mobile"
           title="Open Menu"
         >
           <Menu size={22} />
         </button>
-
-        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#64748b' }} className="hide-on-mobile">
-            {path.map((item, index) => (
-              <React.Fragment key={index}>
-                {index > 0 && <ChevronRight size={12} style={{ color: '#cbd5e1' }} />}
-                <span style={{ color: index === path.length - 1 ? '#0f172a' : '#64748b', fontWeight: index === path.length - 1 ? 500 : 400 }}>
-                  {item}
-                </span>
-              </React.Fragment>
-            ))}
-          </div>
-          <h1 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: 0, lineHeight: 1.2 }}>
-            {title}
-          </h1>
-        </div>
       </div>
 
       {/* Right Controls: Quick Search, Site Status, Notifications, Profile */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         {/* Quick Command Search Trigger */}
         <button
           type="button"
@@ -143,10 +105,14 @@ export const Header = ({
             e.currentTarget.style.borderColor = '#e2e8f0';
             e.currentTarget.style.backgroundColor = '#f8fafc';
           }}
+          title="Search or jump to (Cmd+K)"
         >
           <Search size={15} style={{ color: '#94a3b8' }} />
-          <span style={{ paddingRight: '8px' }}>Search or jump to...</span>
+          <span className="hide-on-mobile" style={{ paddingRight: '8px' }}>
+            Search or jump to...
+          </span>
           <kbd
+            className="hide-on-mobile"
             style={{
               fontSize: '11px',
               fontWeight: 600,
@@ -168,7 +134,12 @@ export const Header = ({
           icon={Send}
           onClick={onPublishClick}
         >
-          {publishingStatus === 'Changes Pending' ? 'Publish Site Changes' : 'Site Synced'}
+          <span className="hide-on-mobile">
+            {publishingStatus === 'Changes Pending' ? 'Publish Site Changes' : 'Site Synced'}
+          </span>
+          <span className="show-on-mobile" style={{ fontSize: '12px' }}>
+            {publishingStatus === 'Changes Pending' ? 'Publish' : 'Synced'}
+          </span>
         </Button>
 
         {/* View Live Site Link */}
@@ -190,8 +161,9 @@ export const Header = ({
           }}
           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#eef2ff')}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+          title="View Live Site"
         >
-          <span>Live Site</span>
+          <span className="hide-on-mobile">Live Site</span>
           <ExternalLink size={14} />
         </a>
 

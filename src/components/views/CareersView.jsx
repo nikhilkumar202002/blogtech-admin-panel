@@ -28,6 +28,7 @@ import { DatePicker } from '../ui/DatePicker';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { DropdownMenu } from '../ui/DropdownMenu';
 import { useToast } from '../ui/ToastContext';
+import { Breadcrumb } from '../ui/Breadcrumb';
 
 export const CareersView = ({
   jobs = [],
@@ -444,28 +445,14 @@ export const CareersView = ({
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }} className="animate-fade-in">
-        {/* Back Link */}
-        <button
-          type="button"
-          onClick={() => setViewMode('list')}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            fontSize: '13px',
-            color: '#64748b',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: 0,
-            width: 'fit-content',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = '#0f172a')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
-        >
-          <ArrowLeft size={16} />
-          Back to Career Management
-        </button>
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb
+          items={[
+            { label: 'Dashboard', onClick: () => setViewMode('list') },
+            { label: 'Careers', onClick: () => setViewMode('list') },
+            { label: viewingJob.title },
+          ]}
+        />
 
         {/* HEADER BAR */}
         <div
@@ -483,7 +470,7 @@ export const CareersView = ({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
+            <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
               {viewingJob.title}
             </h1>
             <Badge status={viewingJob.status}>{viewingJob.status}</Badge>
@@ -719,34 +706,17 @@ export const CareersView = ({
   if (viewMode === 'form') {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }} className="animate-fade-in">
-        {/* Back Button & Header */}
+        {/* Breadcrumb & Header */}
         <div>
-          <button
-            type="button"
-            onClick={() => {
-              setViewMode('list');
-              onCloseCreateOpen && onCloseCreateOpen();
-            }}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '13px',
-              color: '#64748b',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              marginBottom: '12px',
-              padding: 0,
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = '#0f172a')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
-          >
-            <ArrowLeft size={16} />
-            Back to Careers
-          </button>
+          <Breadcrumb
+            items={[
+              { label: 'Dashboard', onClick: () => setViewMode('list') },
+              { label: 'Careers', onClick: () => setViewMode('list') },
+              { label: editingJob ? 'Edit Job Opening' : 'Create Job Opening' },
+            ]}
+          />
 
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
+          <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a', margin: '8px 0 0 0', letterSpacing: '-0.02em' }}>
             {editingJob ? 'Edit Job Opening' : 'Create Job Opening'}
           </h1>
           <p style={{ fontSize: '13.5px', color: '#64748b', margin: '4px 0 0 0' }}>
@@ -1079,8 +1049,14 @@ export const CareersView = ({
         }}
       >
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
-            Career Management
+          <Breadcrumb
+            items={[
+              { label: 'Dashboard', onClick: () => setViewMode('list') },
+              { label: 'Careers' },
+            ]}
+          />
+          <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a', margin: '8px 0 0 0', letterSpacing: '-0.02em' }}>
+            Careers
           </h1>
           <p style={{ fontSize: '13.5px', color: '#64748b', margin: '4px 0 0 0' }}>
             Manage current job openings and vacancy status.

@@ -213,6 +213,11 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* Helper utility classes for responsiveness */
+.show-on-mobile {
+  display: none !important;
+}
+
 /* Touch Friendly Controls & Responsive Utilities */
 @media (max-width: 768px) {
   aside {
