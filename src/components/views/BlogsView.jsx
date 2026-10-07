@@ -968,61 +968,23 @@ export const BlogsView = ({
         />
       </div>
 
-      {/* BLOG TABLE / GRID (DESKTOP) */}
-      <div className="hide-on-mobile">
-        <DataTable
-          columns={columns}
-          data={sortedBlogs}
-          selectedRows={selectedRows}
-          onSelectRow={setSelectedRows}
-          onSelectAll={setSelectedRows}
-          currentPage={currentPage}
-          pageSize={pageSize}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setPageSize}
-          isLoading={isLoading}
-          emptyTitle="No articles yet"
-          emptyDescription="Create your first article to publish content on your website."
-          onEmptyAction={handleOpenCreate}
-          emptyActionLabel="Create your first article"
-        />
-      </div>
-
-      {/* MOBILE STACKED BLOG CARDS */}
-      <div className="show-on-mobile" style={{ flexDirection: 'column', gap: '16px' }}>
-        {sortedBlogs.length === 0 ? (
-          <div className="card card-padded" style={{ textAlign: 'center', color: '#94a3b8' }}>
-            No articles match active filters.
-          </div>
-        ) : (
-          sortedBlogs.map((blog) => (
-            <div key={blog.id} className="card" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-              <div style={{ height: '160px', overflow: 'hidden', position: 'relative' }}>
-                <img src={blog.coverImage} alt={blog.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                <div style={{ position: 'absolute', top: '10px', right: '10px' }}>
-                  <Badge status={blog.status}>{blog.status}</Badge>
-                </div>
-              </div>
-              <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <h3 style={{ fontSize: '15.5px', fontWeight: 700, color: '#0f172a', margin: 0, lineHeight: 1.35 }}>
-                  {blog.title}
-                </h3>
-                <div style={{ fontSize: '12.5px', color: '#64748b' }}>
-                  Publication date: {blog.publishedAt}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingTop: '10px', borderTop: '1px solid #f1f5f9' }}>
-                  <Button size="sm" variant="secondary" icon={Eye} onClick={() => handleOpenPreview(blog)} style={{ flex: 1, minHeight: '44px' }}>
-                    View
-                  </Button>
-                  <Button size="sm" variant="primary" icon={Edit2} onClick={() => handleOpenEdit(blog)} style={{ flex: 1, minHeight: '44px' }}>
-                    Edit
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+      {/* BLOG TABLE */}
+      <DataTable
+        columns={columns}
+        data={sortedBlogs}
+        selectedRows={selectedRows}
+        onSelectRow={setSelectedRows}
+        onSelectAll={setSelectedRows}
+        currentPage={currentPage}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+        isLoading={isLoading}
+        emptyTitle="No articles yet"
+        emptyDescription="Create your first article to publish content on your website."
+        onEmptyAction={handleOpenCreate}
+        emptyActionLabel="Create your first article"
+      />
 
       {/* DELETE CONFIRMATION MODAL */}
       <ConfirmDialog

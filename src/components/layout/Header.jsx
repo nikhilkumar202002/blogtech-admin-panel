@@ -68,7 +68,8 @@ export const Header = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 16px',
+        padding: '0 32px',
+        marginLeft: sidebarCollapsed ? '72px' : '256px',
         transition: 'margin-left 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >

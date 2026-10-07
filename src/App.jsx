@@ -231,9 +231,8 @@ const MainApp = () => {
           style={{
             flex: 1,
             padding: '24px 32px 48px 32px',
-            marginLeft: sidebarCollapsed ? '72px' : '240px',
+            marginLeft: sidebarCollapsed ? '72px' : '256px',
             transition: 'margin-left 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-            maxWidth: '1600px',
             width: '100%',
             boxSizing: 'border-box',
           }}
