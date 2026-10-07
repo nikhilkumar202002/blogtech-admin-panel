@@ -10,6 +10,7 @@ import {
   LogOut,
   Sparkles,
   ExternalLink,
+  Menu,
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { DropdownMenu } from '../ui/DropdownMenu';
@@ -30,23 +31,24 @@ export const Header = ({
   onLogoutClick,
   onPublishClick,
   publishingStatus = 'Synced',
+  onToggleMobileSidebar,
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
 
   const getBreadcrumbs = () => {
     switch (activeTab) {
       case 'dashboard':
-        return { title: 'Dashboard Overview', path: ['ApexCMS', 'Dashboard'] };
+        return { title: 'Dashboard', path: ['BLOGTECH', 'Dashboard'] };
       case 'careers':
-        return { title: 'Careers & Job Openings', path: ['ApexCMS', 'Careers', 'Jobs'] };
+        return { title: 'Careers', path: ['BLOGTECH', 'Careers', 'Jobs'] };
       case 'blogs':
-        return { title: 'Blog Articles Management', path: ['ApexCMS', 'Content', 'Blogs'] };
+        return { title: 'Blogs', path: ['BLOGTECH', 'Content', 'Blogs'] };
       case 'enquiries':
-        return { title: 'Contact & Mail Enquiries', path: ['ApexCMS', 'Inbox', 'Enquiries'] };
+        return { title: 'Enquiries', path: ['BLOGTECH', 'Inbox', 'Enquiries'] };
       case 'settings':
-        return { title: 'Publishing & Admin Settings', path: ['ApexCMS', 'System', 'Settings'] };
+        return { title: 'Settings', path: ['BLOGTECH', 'System', 'Settings'] };
       default:
-        return { title: 'Dashboard', path: ['ApexCMS', 'Dashboard'] };
+        return { title: 'Dashboard', path: ['BLOGTECH', 'Dashboard'] };
     }
   };
 
@@ -55,6 +57,7 @@ export const Header = ({
 
   return (
     <header
+      className="header-responsive"
       style={{
         height: '64px',
         backgroundColor: '#ffffff',
@@ -65,26 +68,50 @@ export const Header = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 24px',
-        marginLeft: sidebarCollapsed ? '72px' : '240px',
+        padding: '0 16px',
         transition: 'margin-left 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >
-      {/* Left: Breadcrumbs & Page Title */}
-      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#64748b' }}>
-          {path.map((item, index) => (
-            <React.Fragment key={index}>
-              {index > 0 && <ChevronRight size={12} style={{ color: '#cbd5e1' }} />}
-              <span style={{ color: index === path.length - 1 ? '#0f172a' : '#64748b', fontWeight: index === path.length - 1 ? 500 : 400 }}>
-                {item}
-              </span>
-            </React.Fragment>
-          ))}
+      {/* Left: Hamburger (Mobile) + Page Title & Breadcrumbs */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Mobile Hamburger Button (Min 44px Touch Target) */}
+        <button
+          type="button"
+          onClick={onToggleMobileSidebar}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#0f172a',
+            cursor: 'pointer',
+            padding: '8px',
+            borderRadius: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minWidth: '44px',
+            minHeight: '44px',
+          }}
+          className="show-on-mobile"
+          title="Open Menu"
+        >
+          <Menu size={22} />
+        </button>
+
+        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#64748b' }} className="hide-on-mobile">
+            {path.map((item, index) => (
+              <React.Fragment key={index}>
+                {index > 0 && <ChevronRight size={12} style={{ color: '#cbd5e1' }} />}
+                <span style={{ color: index === path.length - 1 ? '#0f172a' : '#64748b', fontWeight: index === path.length - 1 ? 500 : 400 }}>
+                  {item}
+                </span>
+              </React.Fragment>
+            ))}
+          </div>
+          <h1 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: 0, lineHeight: 1.2 }}>
+            {title}
+          </h1>
         </div>
-        <h1 style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a', margin: '2px 0 0 0', lineHeight: 1.2 }}>
-          {title}
-        </h1>
       </div>
 
       {/* Right Controls: Quick Search, Site Status, Notifications, Profile */}

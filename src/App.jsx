@@ -36,6 +36,7 @@ const MainApp = () => {
   // Navigation & Layout State
   const [activeTab, setActiveTab] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
@@ -190,9 +191,14 @@ const MainApp = () => {
       {/* Sidebar Navigation */}
       <Sidebar
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={(tab) => {
+          setActiveTab(tab);
+          setIsMobileOpen(false);
+        }}
         isCollapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        isMobileOpen={isMobileOpen}
+        onCloseMobile={() => setIsMobileOpen(false)}
         badgeCounts={badgeCounts}
         user={currentUser}
         onLogoutClick={() => setIsLogoutConfirmOpen(true)}
@@ -210,15 +216,18 @@ const MainApp = () => {
             if (notif.type === 'enquiry') setActiveTab('enquiries');
             if (notif.type === 'career') setActiveTab('careers');
             if (notif.type === 'blog') setActiveTab('blogs');
+            setIsMobileOpen(false);
           }}
           user={currentUser}
           onLogoutClick={() => setIsLogoutConfirmOpen(true)}
           onPublishClick={() => setIsPublishModalOpen(true)}
           publishingStatus={stats.publishingStatus}
+          onToggleMobileSidebar={() => setIsMobileOpen(!isMobileOpen)}
         />
 
         {/* View Main Content Area */}
         <main
+          className="main-content-area"
           style={{
             flex: 1,
             padding: '24px 32px 48px 32px',
@@ -340,7 +349,7 @@ const MainApp = () => {
           setIsAuthenticated(false);
           addToast({ title: 'Logged Out', message: 'You have been safely signed out.', type: 'info' });
         }}
-        title="Sign Out of ApexCMS?"
+        title="Sign Out of BLOGTECH?"
         message="Are you sure you want to end your active administrative session?"
         confirmLabel="Logout Now"
         type="warning"

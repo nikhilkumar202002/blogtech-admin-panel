@@ -121,23 +121,17 @@ export const LoginView = ({ onLoginSuccess }) => {
             marginBottom: '28px',
           }}
         >
-          <div
+          <img
+            src="/MAIN-LOGO.png"
+            alt="BLOGTECH Logo"
             style={{
-              width: '38px',
-              height: '38px',
-              borderRadius: '10px',
-              backgroundColor: '#0f172a',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#ffffff',
-              boxShadow: '0 2px 4px rgba(15, 23, 42, 0.15)',
+              height: '40px',
+              width: 'auto',
+              objectFit: 'contain',
             }}
-          >
-            <Layers size={20} />
-          </div>
+          />
           <div style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.02em' }}>
-            Apex<span style={{ color: '#4f46e5' }}>CMS</span>
+            BLOG<span style={{ color: '#4f46e5' }}>TECH</span>
           </div>
         </div>
 

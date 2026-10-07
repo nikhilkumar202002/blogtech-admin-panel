@@ -185,11 +185,12 @@ export const DashboardView = ({
         </p>
       </div>
 
-      {/* TOP STATISTICS (Four Premium Cards) */}
+      {/* TOP STATISTICS (Four Premium Cards - 2 Column Grid on Mobile) */}
       <div
+        className="mobile-grid-2"
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
           gap: '16px',
         }}
       >

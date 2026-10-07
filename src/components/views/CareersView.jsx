@@ -1147,23 +1147,75 @@ export const CareersView = ({
         />
       </div>
 
-      {/* TABLE */}
-      <DataTable
-        columns={columns}
-        data={sortedJobs}
-        selectedRows={selectedRows}
-        onSelectRow={setSelectedRows}
-        onSelectAll={setSelectedRows}
-        currentPage={currentPage}
-        pageSize={pageSize}
-        onPageChange={setCurrentPage}
-        onPageSizeChange={setPageSize}
-        isLoading={isLoading}
-        emptyTitle="No job openings found"
-        emptyDescription="No vacancies match your current search or filter parameters."
-        onEmptyAction={handleOpenCreate}
-        emptyActionLabel="Create your first job opening"
-      />
+      {/* DESKTOP TABLE */}
+      <div className="hide-on-mobile">
+        <DataTable
+          columns={columns}
+          data={sortedJobs}
+          selectedRows={selectedRows}
+          onSelectRow={setSelectedRows}
+          onSelectAll={setSelectedRows}
+          currentPage={currentPage}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+          isLoading={isLoading}
+          emptyTitle="No job openings found"
+          emptyDescription="No vacancies match your current search or filter parameters."
+          onEmptyAction={handleOpenCreate}
+          emptyActionLabel="Create your first job opening"
+        />
+      </div>
+
+      {/* MOBILE STACKED CAREER CARDS */}
+      <div className="show-on-mobile" style={{ flexDirection: 'column', gap: '14px' }}>
+        {sortedJobs.length === 0 ? (
+          <div className="card card-padded" style={{ textAlign: 'center', color: '#94a3b8' }}>
+            No job openings match active filters.
+          </div>
+        ) : (
+          sortedJobs.map((job) => (
+            <div
+              key={job.id}
+              className="card card-padded"
+              style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
+                <div>
+                  <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', margin: 0, lineHeight: 1.3 }}>
+                    {job.title}
+                  </h3>
+                  <div style={{ fontSize: '12.5px', color: '#64748b', marginTop: '4px' }}>
+                    {job.location} • {job.experience}
+                  </div>
+                </div>
+                <Badge status={job.status}>{job.status}</Badge>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingTop: '10px', borderTop: '1px solid #f1f5f9' }}>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  icon={Eye}
+                  onClick={() => handleOpenDetails(job)}
+                  style={{ flex: 1, minHeight: '44px' }}
+                >
+                  View
+                </Button>
+                <Button
+                  size="sm"
+                  variant="primary"
+                  icon={Edit2}
+                  onClick={() => handleOpenEdit(job)}
+                  style={{ flex: 1, minHeight: '44px' }}
+                >
+                  Edit
+                </Button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
 
       {/* DELETE CONFIRMATION MODAL */}
       <ConfirmDialog

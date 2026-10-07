@@ -8,8 +8,6 @@ import {
   Send,
   EyeOff,
   Globe,
-  Grid,
-  List,
   ArrowLeft,
   ChevronDown,
   ChevronUp,
@@ -45,9 +43,8 @@ export const BlogsView = ({
 }) => {
   const { addToast } = useToast();
 
-  // View Mode: 'list' (Table/Grid) | 'form' (Create / Edit Article) | 'preview' (Blog Article Preview Page)
+  // View Mode: 'list' (Table view) | 'form' (Create / Edit Article) | 'preview' (Blog Article Preview Page)
   const [viewMode, setViewMode] = useState('list');
-  const [layoutStyle, setLayoutStyle] = useState('table');
 
   // Filter Bar State
   const [search, setSearch] = useState('');
@@ -638,9 +635,10 @@ export const BlogsView = ({
           </div>
         </div>
 
-        {/* MAIN LAYOUT (TWO COLUMNS: 70% LEFT MAIN AREA, 30% RIGHT SIDEBAR) */}
-        <form onSubmit={(e) => handleFormSubmit(e)} noValidate>
+        {/* MAIN LAYOUT (TWO COLUMNS: 70% LEFT MAIN AREA, 30% RIGHT SIDEBAR - SINGLE COLUMN ON MOBILE) */}
+        <form onSubmit={(e) => handleFormSubmit(e)} noValidate style={{ paddingBottom: '70px' }}>
           <div
+            className="mobile-grid-1"
             style={{
               display: 'grid',
               gridTemplateColumns: 'minmax(0, 2.3fr) minmax(0, 1fr)',
@@ -857,6 +855,44 @@ export const BlogsView = ({
               </div>
             </div>
           </div>
+
+          {/* MOBILE STICKY BOTTOM ACTION BAR FOR BLOG EDITOR */}
+          <div
+            className="show-on-mobile"
+            style={{
+              position: 'fixed',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              backgroundColor: '#ffffff',
+              borderTop: '1px solid #e2e8f0',
+              padding: '12px 16px',
+              boxShadow: '0 -4px 12px rgba(0,0,0,0.08)',
+              zIndex: 90,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '12px',
+            }}
+          >
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={(e) => handleFormSubmit(e, 'Draft')}
+              style={{ flex: 1, minHeight: '44px' }}
+            >
+              Save Draft
+            </Button>
+            <Button
+              type="submit"
+              variant="accent"
+              icon={Send}
+              onClick={(e) => handleFormSubmit(e, 'Published')}
+              style={{ flex: 1, minHeight: '44px' }}
+            >
+              Publish
+            </Button>
+          </div>
         </form>
       </div>
     );
@@ -921,67 +957,19 @@ export const BlogsView = ({
           />
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Select
-            value={sortBy}
-            onChange={setSortBy}
-            options={[
-              { value: 'newest', label: 'Sort: Newest' },
-              { value: 'oldest', label: 'Sort: Oldest' },
-              { value: 'updated', label: 'Sort: Recently Updated' },
-            ]}
-          />
-
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              backgroundColor: '#ffffff',
-              border: '1px solid #e2e8f0',
-              borderRadius: '8px',
-              padding: '2px',
-            }}
-          >
-            <button
-              type="button"
-              onClick={() => setLayoutStyle('table')}
-              style={{
-                padding: '6px 10px',
-                borderRadius: '6px',
-                border: 'none',
-                backgroundColor: layoutStyle === 'table' ? '#f1f5f9' : 'transparent',
-                color: layoutStyle === 'table' ? '#0f172a' : '#94a3b8',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-              }}
-              title="Table Layout"
-            >
-              <List size={16} />
-            </button>
-            <button
-              type="button"
-              onClick={() => setLayoutStyle('grid')}
-              style={{
-                padding: '6px 10px',
-                borderRadius: '6px',
-                border: 'none',
-                backgroundColor: layoutStyle === 'grid' ? '#f1f5f9' : 'transparent',
-                color: layoutStyle === 'grid' ? '#0f172a' : '#94a3b8',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-              }}
-              title="Grid Layout"
-            >
-              <Grid size={16} />
-            </button>
-          </div>
-        </div>
+        <Select
+          value={sortBy}
+          onChange={setSortBy}
+          options={[
+            { value: 'newest', label: 'Sort: Newest' },
+            { value: 'oldest', label: 'Sort: Oldest' },
+            { value: 'updated', label: 'Sort: Recently Updated' },
+          ]}
+        />
       </div>
 
-      {/* BLOG TABLE / GRID */}
-      {layoutStyle === 'table' ? (
+      {/* BLOG TABLE / GRID (DESKTOP) */}
+      <div className="hide-on-mobile">
         <DataTable
           columns={columns}
           data={sortedBlogs}
@@ -998,15 +986,16 @@ export const BlogsView = ({
           onEmptyAction={handleOpenCreate}
           emptyActionLabel="Create your first article"
         />
-      ) : (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-            gap: '20px',
-          }}
-        >
-          {sortedBlogs.map((blog) => (
+      </div>
+
+      {/* MOBILE STACKED BLOG CARDS */}
+      <div className="show-on-mobile" style={{ flexDirection: 'column', gap: '16px' }}>
+        {sortedBlogs.length === 0 ? (
+          <div className="card card-padded" style={{ textAlign: 'center', color: '#94a3b8' }}>
+            No articles match active filters.
+          </div>
+        ) : (
+          sortedBlogs.map((blog) => (
             <div key={blog.id} className="card" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
               <div style={{ height: '160px', overflow: 'hidden', position: 'relative' }}>
                 <img src={blog.coverImage} alt={blog.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -1014,29 +1003,26 @@ export const BlogsView = ({
                   <Badge status={blog.status}>{blog.status}</Badge>
                 </div>
               </div>
-              <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                <div>
-                  <Badge status="accent" size="sm">{blog.category}</Badge>
-                  <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: '8px 0 6px 0', lineHeight: 1.4 }}>
-                    {blog.title}
-                  </h3>
-                  <p style={{ fontSize: '12.5px', color: '#64748b', margin: 0, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                    {blog.excerpt}
-                  </p>
+              <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <h3 style={{ fontSize: '15.5px', fontWeight: 700, color: '#0f172a', margin: 0, lineHeight: 1.35 }}>
+                  {blog.title}
+                </h3>
+                <div style={{ fontSize: '12.5px', color: '#64748b' }}>
+                  Publication date: {blog.publishedAt}
                 </div>
-                <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>{blog.publishedAt}</span>
-                  <div style={{ display: 'flex', gap: '4px' }}>
-                    <Button size="sm" variant="ghost" icon={Eye} onClick={() => handleOpenPreview(blog)} />
-                    <Button size="sm" variant="ghost" icon={Edit2} onClick={() => handleOpenEdit(blog)} />
-                    <Button size="sm" variant="ghost" icon={Trash2} onClick={() => setDeleteBlogId(blog.id)} style={{ color: '#dc2626' }} />
-                  </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingTop: '10px', borderTop: '1px solid #f1f5f9' }}>
+                  <Button size="sm" variant="secondary" icon={Eye} onClick={() => handleOpenPreview(blog)} style={{ flex: 1, minHeight: '44px' }}>
+                    View
+                  </Button>
+                  <Button size="sm" variant="primary" icon={Edit2} onClick={() => handleOpenEdit(blog)} style={{ flex: 1, minHeight: '44px' }}>
+                    Edit
+                  </Button>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </div>
 
       {/* DELETE CONFIRMATION MODAL */}
       <ConfirmDialog

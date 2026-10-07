@@ -213,3 +213,53 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* Touch Friendly Controls & Responsive Utilities */
+@media (max-width: 768px) {
+  aside {
+    transform: translateX(-100%);
+    width: 280px !important;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.15) !important;
+  }
+  aside.mobile-drawer-open {
+    transform: translateX(0) !important;
+  }
+  .header-responsive {
+    margin-left: 0 !important;
+    padding: 0 12px !important;
+  }
+  .main-content-area {
+    margin-left: 0 !important;
+    padding: 16px 16px 40px 16px !important;
+  }
+
+  .mobile-touch-target {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  .show-on-mobile {
+    display: flex !important;
+  }
+
+  .mobile-full-width {
+    width: 100% !important;
+  }
+
+  .mobile-stack {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .mobile-grid-2 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .mobile-grid-1 {
+    grid-template-columns: 1fr !important;
+  }
+}
+

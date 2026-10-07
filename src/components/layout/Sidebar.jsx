@@ -10,6 +10,7 @@ import {
   LogOut,
   Layers,
   Sparkles,
+  X,
 } from 'lucide-react';
 
 export const Sidebar = ({
@@ -17,6 +18,8 @@ export const Sidebar = ({
   onTabChange,
   isCollapsed = false,
   onToggleCollapse,
+  isMobileOpen = false,
+  onCloseMobile,
   badgeCounts = { enquiries: 14, jobs: 12, blogs: 45 },
   user = {
     name: 'Sarah Jenkins',
@@ -33,91 +36,118 @@ export const Sidebar = ({
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
+  const handleNavClick = (id) => {
+    onTabChange(id);
+    if (onCloseMobile) onCloseMobile();
+  };
+
   return (
-    <aside
-      style={{
-        width: isCollapsed ? '72px' : '240px',
-        height: '100vh',
-        backgroundColor: '#ffffff',
-        borderRight: '1px solid #e2e8f0',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        zIndex: 50,
-        transition: 'width 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-        boxShadow: '1px 0 3px rgba(0,0,0,0.02)',
-      }}
-    >
-      {/* Brand Header */}
-      <div
+    <>
+      {/* Mobile Backdrop Overlay */}
+      {isMobileOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.45)',
+            backdropFilter: 'blur(3px)',
+            zIndex: 99,
+          }}
+          onClick={onCloseMobile}
+        />
+      )}
+
+      <aside
+        className={isMobileOpen ? 'mobile-drawer-open' : ''}
         style={{
-          height: '64px',
-          padding: isCollapsed ? '0 16px' : '0 20px',
+          width: isCollapsed ? '72px' : '240px',
+          height: '100vh',
+          backgroundColor: '#ffffff',
+          borderRight: '1px solid #e2e8f0',
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: isCollapsed ? 'center' : 'space-between',
-          borderBottom: '1px solid #f1f5f9',
-          flexShrink: 0,
+          flexDirection: 'column',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          zIndex: 100,
+          transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), width 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+          boxShadow: '1px 0 3px rgba(0,0,0,0.02)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div
-            style={{
-              width: '34px',
-              height: '34px',
-              borderRadius: '9px',
-              backgroundColor: '#0f172a',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#ffffff',
-              boxShadow: '0 2px 4px rgba(15, 23, 42, 0.15)',
-            }}
-          >
-            <Layers size={18} />
+        {/* Brand Header */}
+        <div
+          style={{
+            height: '64px',
+            padding: isCollapsed ? '0 16px' : '0 20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: isCollapsed ? 'center' : 'space-between',
+            borderBottom: '1px solid #f1f5f9',
+            flexShrink: 0,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img
+              src={isCollapsed ? '/fav-icon.jpg' : '/MAIN-LOGO.png'}
+              alt="BLOGTECH Logo"
+              style={{
+                height: isCollapsed ? '32px' : '38px',
+                width: isCollapsed ? '32px' : 'auto',
+                maxWidth: isCollapsed ? '32px' : '150px',
+                borderRadius: isCollapsed ? '8px' : '0px',
+                objectFit: 'contain',
+                transition: 'all 0.2s ease',
+              }}
+            />
           </div>
-          {!isCollapsed && (
-            <div>
-              <div
-                style={{
-                  fontSize: '15px',
-                  fontWeight: 700,
-                  color: '#0f172a',
-                  letterSpacing: '-0.02em',
-                  lineHeight: 1.2,
-                }}
-              >
-                Apex<span style={{ color: '#4f46e5' }}>CMS</span>
-              </div>
-              <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>
-                Enterprise SaaS
-              </div>
-            </div>
-          )}
-        </div>
 
-        {!isCollapsed && (
+          {/* Desktop Toggle Button (Single Arrow switching Left/Right) */}
           <button
             type="button"
             onClick={onToggleCollapse}
             style={{
               background: 'none',
               border: 'none',
-              color: '#94a3b8',
+              color: '#64748b',
               cursor: 'pointer',
-              padding: '4px',
+              padding: '6px',
               borderRadius: '6px',
               display: 'flex',
               alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'background 0.15s ease',
             }}
-            title="Collapse Sidebar"
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f5f9')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+            className="hide-on-mobile"
+            title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
           >
-            <ChevronLeft size={16} />
+            {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
           </button>
-        )}
-      </div>
+
+          {/* Close X on Mobile Drawer */}
+          {onCloseMobile && (
+            <button
+              type="button"
+              onClick={onCloseMobile}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#64748b',
+                cursor: 'pointer',
+                padding: '8px',
+                borderRadius: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              className="show-on-mobile"
+              title="Close Drawer"
+            >
+              <X size={20} />
+            </button>
+          )}
+        </div>
 
       {/* Navigation List */}
       <div style={{ padding: '16px 10px', flex: 1, overflowY: 'auto' }}>
@@ -130,7 +160,7 @@ export const Sidebar = ({
               <button
                 key={item.id}
                 type="button"
-                onClick={() => onTabChange(item.id)}
+                onClick={() => handleNavClick(item.id)}
                 title={isCollapsed ? item.label : undefined}
                 style={{
                   width: '100%',
@@ -192,28 +222,7 @@ export const Sidebar = ({
         </div>
       </div>
 
-      {/* Collapse Toggle for Icon-only Mode */}
-      {isCollapsed && (
-        <div style={{ padding: '8px', display: 'flex', justifyContent: 'center' }}>
-          <button
-            type="button"
-            onClick={onToggleCollapse}
-            style={{
-              background: '#f8fafc',
-              border: '1px solid #e2e8f0',
-              color: '#475569',
-              cursor: 'pointer',
-              padding: '6px',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-            }}
-            title="Expand Sidebar"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
-      )}
+
 
       {/* User Profile & Logout Footer */}
       <div
@@ -305,5 +314,6 @@ export const Sidebar = ({
         </div>
       </div>
     </aside>
+    </>
   );
 };
