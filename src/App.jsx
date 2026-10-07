@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layout } from './components/layout/Layout';
 import { ToastProvider, useToast } from './components/ui/ToastContext';
 import { CommandPalette } from './components/ui/CommandPalette';
@@ -26,14 +26,44 @@ import {
   ACTIVITY_LOG,
 } from './mockData';
 
+const VALID_TABS = ['dashboard', 'careers', 'blogs', 'enquiries', 'settings'];
+
+const getInitialTab = () => {
+  const hash = window.location.hash.replace('#', '').toLowerCase();
+  if (VALID_TABS.includes(hash)) return hash;
+  const stored = localStorage.getItem('blogtech_active_tab');
+  if (stored && VALID_TABS.includes(stored)) return stored;
+  return 'dashboard';
+};
+
 const MainApp = () => {
   const { addToast } = useToast();
 
   // Authentication State
   const [isAuthenticated, setIsAuthenticated] = useState(true);
 
-  // Navigation & Layout State
-  const [activeTab, setActiveTab] = useState('dashboard');
+  // Navigation & Layout State (Synced with URL hash and localStorage)
+  const [activeTab, setActiveTabState] = useState(getInitialTab);
+
+  const setActiveTab = (tab) => {
+    if (VALID_TABS.includes(tab)) {
+      setActiveTabState(tab);
+      window.location.hash = tab;
+      localStorage.setItem('blogtech_active_tab', tab);
+    }
+  };
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '').toLowerCase();
+      if (VALID_TABS.includes(hash)) {
+        setActiveTabState(hash);
+        localStorage.setItem('blogtech_active_tab', hash);
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);

@@ -923,43 +923,52 @@ export const BlogsView = ({
 
       {/* FILTER BAR */}
       <div
+        className="mobile-stack"
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '12px',
+          gap: '10px',
+          width: '100%',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          <SearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder="Search articles..."
-          />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0, flexWrap: 'nowrap' }}>
+          <div style={{ width: '240px', flexShrink: 0 }}>
+            <SearchInput
+              value={search}
+              onChange={setSearch}
+              placeholder="Search articles..."
+            />
+          </div>
 
+          <div style={{ width: '140px', flexShrink: 0 }}>
+            <Select
+              fullWidth
+              value={statusFilter}
+              onChange={setStatusFilter}
+              placeholder="All Statuses"
+              options={[
+                { value: '', label: 'All Statuses' },
+                { value: 'Published', label: 'Published' },
+                { value: 'Draft', label: 'Draft' },
+                { value: 'Unpublished', label: 'Unpublished' },
+              ]}
+            />
+          </div>
+        </div>
+
+        <div style={{ width: '165px', flexShrink: 0 }}>
           <Select
-            value={statusFilter}
-            onChange={setStatusFilter}
-            placeholder="All Statuses"
+            fullWidth
+            value={sortBy}
+            onChange={setSortBy}
             options={[
-              { value: '', label: 'All' },
-              { value: 'Published', label: 'Published' },
-              { value: 'Draft', label: 'Draft' },
-              { value: 'Unpublished', label: 'Unpublished' },
+              { value: 'newest', label: 'Sort: Newest' },
+              { value: 'oldest', label: 'Sort: Oldest' },
+              { value: 'updated', label: 'Sort: Recently Updated' },
             ]}
           />
         </div>
-
-        <Select
-          value={sortBy}
-          onChange={setSortBy}
-          options={[
-            { value: 'newest', label: 'Sort: Newest' },
-            { value: 'oldest', label: 'Sort: Oldest' },
-            { value: 'updated', label: 'Sort: Recently Updated' },
-          ]}
-        />
       </div>
 
       {/* BLOG TABLE */}

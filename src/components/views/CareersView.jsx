@@ -1070,57 +1070,81 @@ export const CareersView = ({
 
       {/* TOOLBAR */}
       <div
+        className="mobile-stack"
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '12px',
+          gap: '10px',
+          width: '100%',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          <SearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder="Search job openings..."
-          />
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            flex: 1,
+            minWidth: 0,
+            flexWrap: 'nowrap',
+          }}
+        >
+          <div style={{ width: '220px', flexShrink: 0 }}>
+            <SearchInput
+              value={search}
+              onChange={setSearch}
+              placeholder="Search job openings..."
+            />
+          </div>
 
-          <Select
-            value={statusFilter}
-            onChange={setStatusFilter}
-            placeholder="All Statuses"
-            options={[
-              { value: '', label: 'All Statuses' },
-              { value: 'Active', label: 'Active' },
-              { value: 'Closed', label: 'Closed' },
-            ]}
-          />
+          <div style={{ width: '135px', flexShrink: 0 }}>
+            <Select
+              fullWidth
+              value={statusFilter}
+              onChange={setStatusFilter}
+              placeholder="All Statuses"
+              options={[
+                { value: '', label: 'All Statuses' },
+                { value: 'Active', label: 'Active' },
+                { value: 'Closed', label: 'Closed' },
+              ]}
+            />
+          </div>
 
-          <Select
-            value={locationFilter}
-            onChange={setLocationFilter}
-            placeholder="All Locations"
-            options={['San Francisco, CA', 'Remote', 'Austin, TX', 'New York, NY']}
-          />
+          <div style={{ width: '145px', flexShrink: 0 }}>
+            <Select
+              fullWidth
+              value={locationFilter}
+              onChange={setLocationFilter}
+              placeholder="All Locations"
+              options={['San Francisco, CA', 'Remote', 'Austin, TX', 'New York, NY']}
+            />
+          </div>
 
-          <Select
-            value={experienceFilter}
-            onChange={setExperienceFilter}
-            placeholder="All Experience"
-            options={['Senior', 'Mid-Level', 'Lead / Principal', 'Entry']}
-          />
+          <div style={{ width: '145px', flexShrink: 0 }}>
+            <Select
+              fullWidth
+              value={experienceFilter}
+              onChange={setExperienceFilter}
+              placeholder="All Experience"
+              options={['Senior', 'Mid-Level', 'Lead / Principal', 'Entry']}
+            />
+          </div>
         </div>
 
-        <Select
-          value={sortBy}
-          onChange={setSortBy}
-          options={[
-            { value: 'newest', label: 'Sort: Newest First' },
-            { value: 'oldest', label: 'Sort: Oldest First' },
-            { value: 'title-asc', label: 'Sort: Title A-Z' },
-            { value: 'title-desc', label: 'Sort: Title Z-A' },
-          ]}
-        />
+        <div style={{ width: '165px', flexShrink: 0 }}>
+          <Select
+            fullWidth
+            value={sortBy}
+            onChange={setSortBy}
+            options={[
+              { value: 'newest', label: 'Sort: Newest First' },
+              { value: 'oldest', label: 'Sort: Oldest First' },
+              { value: 'title-asc', label: 'Sort: Title A-Z' },
+              { value: 'title-desc', label: 'Sort: Title Z-A' },
+            ]}
+          />
+        </div>
       </div>
 
       {/* CAREERS TABLE */}
