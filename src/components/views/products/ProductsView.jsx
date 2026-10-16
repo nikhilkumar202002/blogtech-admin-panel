@@ -16,12 +16,12 @@ import { Button } from '../../ui/Button';
 import { Badge } from '../../ui/Badge';
 import { DataTable } from '../../ui/DataTable';
 import { SearchInput } from '../../ui/SearchInput';
-import { Modal } from '../../ui/Modal';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
 import { Breadcrumb } from '../../ui/Breadcrumb';
 import { DropdownMenu } from '../../ui/DropdownMenu';
 import { useToast } from '../../ui/ToastContext';
 import { CreateProduct } from './CreateProduct';
+import { ViewDetails } from './ViewDetails';
 import {
   getProducts,
   getProduct,
@@ -170,22 +170,12 @@ export const ProductsView = ({ onNavigate }) => {
     setViewMode('edit');
   };
 
-  // Open View Details Drawer: GET /admin/products/:id
-  const handleOpenViewDetails = async (product) => {
+  // Open Full-Page View Details: GET /admin/products/:id
+  const handleOpenViewDetails = (product) => {
     setViewingProduct(product);
-    setIsLoadingDetails(true);
-    try {
-      const res = await getProduct(product.id);
-      const fresh = res?.data || res?.product || res;
-      if (fresh) {
-        setViewingProduct(fresh);
-      }
-    } catch (err) {
-      console.warn('Could not fetch product details:', err);
-    } finally {
-      setIsLoadingDetails(false);
-    }
+    setViewMode('details');
   };
+
 
   // Toggle Publish / Unpublish:
   // PATCH /admin/products/:id/publish OR PATCH /admin/products/:id/unpublish
@@ -252,6 +242,24 @@ export const ProductsView = ({ onNavigate }) => {
       setIsDeleting(false);
     }
   };
+
+  // If in details mode, display the full-page ViewDetails view
+  if (viewMode === 'details' && viewingProduct) {
+    return (
+      <ViewDetails
+        product={viewingProduct}
+        onBack={() => {
+          setViewMode('list');
+          setViewingProduct(null);
+        }}
+        onEdit={(prod) => {
+          setEditingProduct(prod);
+          setViewMode('edit');
+        }}
+        onRefresh={fetchProductsList}
+      />
+    );
+  }
 
   // If in create or edit mode, display the full-page CreateProduct form
   if (viewMode === 'create' || viewMode === 'edit') {
@@ -555,169 +563,8 @@ export const ProductsView = ({ onNavigate }) => {
         onEmptyAction={handleOpenCreate}
       />
 
-      {/* SINGLE PRODUCT DETAILS MODAL (Read-Only Review) */}
-      <Modal
-        isOpen={Boolean(viewingProduct)}
-        onClose={() => setViewingProduct(null)}
-        title={viewingProduct?.name || 'Product Details'}
-        subtitle={`Viewing full specifications for ID #${viewingProduct?.id || ''}`}
-        maxWidth="740px"
-        footer={
-          <div className="flex items-center justify-between w-full">
-            <Button
-              variant="secondary"
-              icon={Edit2}
-              onClick={() => {
-                const prod = viewingProduct;
-                setViewingProduct(null);
-                handleOpenEdit(prod);
-              }}
-            >
-              Edit Product
-            </Button>
-            <Button variant="primary" onClick={() => setViewingProduct(null)}>
-              Done
-            </Button>
-          </div>
-        }
-      >
-        {viewingProduct && (
-          <div className="flex flex-col gap-5">
-            {/* Featured Image Banner */}
-            <div className="w-full h-56 rounded-xl bg-slate-900 border border-slate-200 overflow-hidden flex items-center justify-center relative p-3">
-              {viewingProduct.featured_image || viewingProduct.featured_image_url ? (
-                <img
-                  src={formatImageUrl(
-                    viewingProduct.featured_image_url || viewingProduct.featured_image
-                  )}
-                  alt={viewingProduct.name}
-                  className="max-w-full max-h-full object-contain rounded"
-                />
-              ) : (
-                <div className="flex flex-col items-center gap-1.5 text-slate-400">
-                  <Package size={36} />
-                  <span className="text-xs">No featured image uploaded</span>
-                </div>
-              )}
-            </div>
-
-            {/* Quick Meta Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
-                <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                  Status
-                </div>
-                <div className="mt-1">
-                  <Badge
-                    status={
-                      viewingProduct.status === 'published'
-                        ? 'Active'
-                        : viewingProduct.status === 'draft'
-                        ? 'Draft'
-                        : 'Closed'
-                    }
-                  >
-                    {viewingProduct.status || 'Draft'}
-                  </Badge>
-                </div>
-              </div>
-
-              <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
-                <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                  Display Order
-                </div>
-                <div className="text-xs font-bold text-slate-800 mt-1">
-                  #{viewingProduct.sort_order ?? 1}
-                </div>
-              </div>
-
-              <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
-                <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                  Published Date
-                </div>
-                <div className="text-xs font-semibold text-slate-800 mt-1">
-                  {formatDate(viewingProduct.published_at)}
-                </div>
-              </div>
-
-              <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
-                <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                  URL Slug
-                </div>
-                <div className="text-xs font-mono text-slate-700 truncate mt-1">
-                  /{viewingProduct.slug}
-                </div>
-              </div>
-            </div>
-
-            {/* Short Description */}
-            {viewingProduct.short_description && (
-              <div className="p-3 rounded-lg bg-indigo-50/60 border border-indigo-100 text-xs text-indigo-950 font-medium leading-relaxed">
-                {viewingProduct.short_description}
-              </div>
-            )}
-
-            {/* Overview */}
-            {viewingProduct.description && (
-              <div className="flex flex-col gap-1.5">
-                <div className="text-xs font-bold text-slate-700">Overview</div>
-                <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-600 leading-relaxed">
-                  {viewingProduct.description}
-                </div>
-              </div>
-            )}
-
-            {/* Content HTML Display */}
-            {viewingProduct.content && (
-              <div className="flex flex-col gap-1.5">
-                <div className="text-xs font-bold text-slate-700">Product Content</div>
-                <div
-                  className="p-4 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-700 leading-relaxed prose prose-slate max-w-none prose-sm"
-                  dangerouslySetInnerHTML={{ __html: viewingProduct.content }}
-                />
-              </div>
-            )}
-
-            {/* Gallery Images Strip */}
-            {parseGalleryImages(viewingProduct).length > 0 && (
-              <div className="flex flex-col gap-2">
-                <div className="text-xs font-bold text-slate-700">
-                  Gallery Photos ({parseGalleryImages(viewingProduct).length})
-                </div>
-                <div className="flex items-center gap-2 overflow-x-auto pb-2">
-                  {parseGalleryImages(viewingProduct).map((item, idx) => (
-                    <div
-                      key={item.id || idx}
-                      className="w-24 h-24 rounded-lg border border-slate-200 overflow-hidden shrink-0 bg-slate-100 shadow-2xs"
-                    >
-                      <img
-                        src={item.url}
-                        alt={`Photo ${idx + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* SEO Metadata */}
-            {(viewingProduct.meta_title || viewingProduct.meta_description) && (
-              <div className="flex flex-col gap-1.5 border-t border-slate-200 pt-3">
-                <div className="text-xs font-bold text-slate-700">SEO Meta</div>
-                <div className="text-xs text-slate-600">
-                  <strong>Title:</strong> {viewingProduct.meta_title || 'None'}
-                </div>
-                <div className="text-xs text-slate-600">
-                  <strong>Description:</strong> {viewingProduct.meta_description || 'None'}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </Modal>
-
       {/* CONFIRM DELETE DIALOG: DELETE /admin/products/:id */}
+
       <ConfirmDialog
         isOpen={Boolean(deleteId)}
         onClose={() => setDeleteId(null)}
