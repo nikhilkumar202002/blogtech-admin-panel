@@ -11,10 +11,11 @@ import {
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { FormField } from '../ui/FormField';
+import { login } from '../../utils/auth.service';
 
 export const LoginView = ({ onLoginSuccess }) => {
-  const [email, setEmail] = useState('sarah.jenkins@apexcorp.com');
-  const [password, setPassword] = useState('••••••••••••');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
 
@@ -29,7 +30,7 @@ export const LoginView = ({ onLoginSuccess }) => {
   const [resetSent, setResetSent] = useState(false);
 
   // Validation & Submit Handler
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
 
@@ -40,35 +41,44 @@ export const LoginView = ({ onLoginSuccess }) => {
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(email.trim())) {
       setErrorMessage('Please enter a valid email address (e.g., name@company.com).');
       return;
     }
 
-    if (!password || password.length < 6) {
-      setErrorMessage('Password must be at least 6 characters long.');
+    if (!password) {
+      setErrorMessage('Please enter your password.');
       return;
     }
 
-    // Simulate Authentication API Call
+    // Call Real Authentication API
     setIsLoading(true);
 
-    setTimeout(() => {
-      // Simulate credential verification
-      if (email.toLowerCase() === 'error@test.com') {
-        setIsLoading(false);
-        setErrorMessage('Invalid credentials. Please verify your email and password.');
-        return;
-      }
+    try {
+      const response = await login({
+        email: email.trim(),
+        password,
+      });
 
       setIsLoading(false);
       setIsSuccess(true);
 
       // Transition to admin dashboard after short success feedback
       setTimeout(() => {
-        onLoginSuccess && onLoginSuccess({ email, rememberMe });
-      }, 600);
-    }, 1000);
+        onLoginSuccess && onLoginSuccess(response);
+      }, 500);
+    } catch (error) {
+      setIsLoading(false);
+      const apiMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        (error.response?.data?.errors
+          ? Object.values(error.response.data.errors).flat().join(' ')
+          : null) ||
+        error.message ||
+        'Invalid credentials. Please verify your email and password.';
+      setErrorMessage(apiMessage);
+    }
   };
 
   // Forgot Password Submit Handler

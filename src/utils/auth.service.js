@@ -1,4 +1,4 @@
-import mainAxios from './main.axios';
+import mainAxios from './main.service';
 
 const TOKEN_KEY = 'token';
 const AUTH_TOKEN_KEY = 'auth_token';
