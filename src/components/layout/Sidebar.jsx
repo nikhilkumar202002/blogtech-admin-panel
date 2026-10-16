@@ -206,6 +206,123 @@ export const Sidebar = ({
             </div>
           ))}
         </div>
+
+        {/* USER PROFILE & LOGOUT FOOTER */}
+        <div
+          style={{
+            padding: isCollapsed ? '12px 8px' : '14px 16px',
+            borderTop: '1px solid #f1f5f9',
+            backgroundColor: '#ffffff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: isCollapsed ? 'center' : 'space-between',
+            gap: '10px',
+            flexShrink: 0,
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              overflow: 'hidden',
+              cursor: 'pointer',
+              flex: 1,
+            }}
+            onClick={() => onTabChange && onTabChange('settings')}
+            title="View Account Settings"
+          >
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <img
+                src={
+                  user?.avatar ||
+                  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80'
+                }
+                alt={user?.name || 'Admin'}
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: '1px solid #cbd5e1',
+                  display: 'block',
+                }}
+              />
+              <span
+                style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  right: 0,
+                  width: '9px',
+                  height: '9px',
+                  borderRadius: '50%',
+                  backgroundColor: '#10b981',
+                  border: '2px solid #ffffff',
+                }}
+              />
+            </div>
+            {!isCollapsed && (
+              <div style={{ overflow: 'hidden', textAlign: 'left', lineHeight: 1.25, minWidth: 0 }}>
+                <div
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: '#0f172a',
+                    whiteSpace: 'nowrap',
+                    textOverflow: 'ellipsis',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {user?.name || 'Super Admin'}
+                </div>
+                <div
+                  style={{
+                    fontSize: '11px',
+                    color: '#64748b',
+                    whiteSpace: 'nowrap',
+                    textOverflow: 'ellipsis',
+                    overflow: 'hidden',
+                    marginTop: '2px',
+                  }}
+                >
+                  {user?.email || 'admin@blogtech.com'}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {!isCollapsed && (
+            <button
+              type="button"
+              onClick={onLogoutClick}
+              title="Sign Out of BLOGTECH"
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '6px',
+                border: 'none',
+                backgroundColor: 'transparent',
+                color: '#64748b',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#fef2f2';
+                e.currentTarget.style.color = '#dc2626';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#64748b';
+              }}
+            >
+              <LogOut size={16} />
+            </button>
+          )}
+        </div>
       </aside>
     </>
   );

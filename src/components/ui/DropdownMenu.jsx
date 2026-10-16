@@ -3,6 +3,8 @@ import React, { useState, useRef, useEffect } from 'react';
 export const DropdownMenu = ({
   trigger,
   items = [], // Array of { label, icon, onClick, danger, divider }
+  headerContent,
+  footerContent,
   align = 'right',
   width = '180px',
 }) => {
@@ -46,6 +48,11 @@ export const DropdownMenu = ({
           }}
           className="animate-pop-in"
         >
+          {headerContent && (
+            <div style={{ padding: '8px 10px 10px 10px', borderBottom: '1px solid #f1f5f9', marginBottom: '4px' }}>
+              {headerContent}
+            </div>
+          )}
           {items.map((item, idx) => {
             if (item.divider) {
               return (
@@ -97,6 +104,11 @@ export const DropdownMenu = ({
               </button>
             );
           })}
+          {footerContent && (
+            <div style={{ padding: '4px', borderTop: '1px solid #f1f5f9', marginTop: '4px' }}>
+              {footerContent}
+            </div>
+          )}
         </div>
       )}
     </div>

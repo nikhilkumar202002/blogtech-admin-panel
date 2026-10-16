@@ -54,6 +54,7 @@ export const Layout = ({
           onNotificationClick={onNotificationClick}
           user={user}
           onLogoutClick={onLogoutClick}
+          onTabChange={onTabChange}
           onPublishClick={onPublishClick}
           publishingStatus={publishingStatus}
           onToggleMobileSidebar={onToggleMobileSidebar}

@@ -25,6 +25,11 @@ import {
   INITIAL_NOTIFICATIONS,
   ACTIVITY_LOG,
 } from './mockData';
+import {
+  getCurrentUser,
+  logout as authLogout,
+  getStoredUser,
+} from './utils/auth.service';
 
 const VALID_TABS = ['dashboard', 'careers', 'blogs', 'enquiries', 'settings'];
 
@@ -97,8 +102,41 @@ const MainApp = () => {
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
   const [activityLog, setActivityLog] = useState(ACTIVITY_LOG);
 
-  // User Profile
-  const currentUser = users[0]; // Sarah Jenkins
+  // Authenticated User Profile (Synced with /admin/me API)
+  const [currentUser, setCurrentUser] = useState(() => {
+    const stored = getStoredUser();
+    if (stored) {
+      return {
+        id: stored.id || 'USR-01',
+        name: stored.name || 'Super Admin',
+        email: stored.email || 'nikhilkumars12343@gmail.com',
+        role: stored.role || 'Super Admin',
+        avatar: stored.avatar || SYSTEM_USERS[0].avatar,
+        status: stored.status || 'Active',
+      };
+    }
+    return SYSTEM_USERS[0];
+  });
+
+  // Sync profile data from /admin/me on load and auth state change
+  useEffect(() => {
+    if (isAuthenticated) {
+      getCurrentUser()
+        .then((response) => {
+          const userData = response?.data || response?.user || response;
+          if (userData && (userData.name || userData.email)) {
+            setCurrentUser((prev) => ({
+              ...prev,
+              ...userData,
+              avatar: userData.avatar || prev.avatar,
+            }));
+          }
+        })
+        .catch((err) => {
+          console.warn('Could not sync admin profile from /admin/me:', err?.message || err);
+        });
+    }
+  }, [isAuthenticated]);
 
   // Helper Badge Counts for Sidebar
   const badgeCounts = {
@@ -220,8 +258,30 @@ const MainApp = () => {
           if (window.location.pathname === '/login') {
             window.history.pushState({}, '', '/');
           }
-          const adminName = userData?.user?.name || 'Sarah Jenkins';
-          const adminRole = userData?.user?.role || 'Super Admin';
+          const userObj = userData?.user || userData?.data?.user || userData?.data;
+          if (userObj) {
+            setCurrentUser((prev) => ({
+              ...prev,
+              ...userObj,
+              avatar: userObj.avatar || prev.avatar,
+            }));
+          }
+          // Fetch complete profile from /admin/me
+          getCurrentUser()
+            .then((res) => {
+              const fresh = res?.data || res?.user;
+              if (fresh) {
+                setCurrentUser((prev) => ({
+                  ...prev,
+                  ...fresh,
+                  avatar: fresh.avatar || prev.avatar,
+                }));
+              }
+            })
+            .catch(() => {});
+
+          const adminName = userObj?.name || 'Super Admin';
+          const adminRole = userObj?.role || 'Super Admin';
           addToast({
             title: 'Welcome Back',
             message: `Signed in as ${adminName} (${adminRole}).`,
@@ -364,10 +424,21 @@ const MainApp = () => {
       <ConfirmDialog
         isOpen={isLogoutConfirmOpen}
         onClose={() => setIsLogoutConfirmOpen(false)}
-        onConfirm={() => {
+        onConfirm={async () => {
           setIsLogoutConfirmOpen(false);
-          setIsAuthenticated(false);
-          addToast({ title: 'Logged Out', message: 'You have been safely signed out.', type: 'info' });
+          try {
+            await authLogout();
+          } catch (err) {
+            console.warn('Logout API error:', err);
+          } finally {
+            setIsAuthenticated(false);
+            window.history.pushState({}, '', '/login');
+            addToast({
+              title: 'Logged Out',
+              message: 'You have been safely signed out.',
+              type: 'info',
+            });
+          }
         }}
         title="Sign Out of BLOGTECH?"
         message="Are you sure you want to end your active administrative session?"

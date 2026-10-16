@@ -3,7 +3,6 @@ import {
   Bell,
   Search,
   Send,
-  ChevronRight,
   User,
   Shield,
   HelpCircle,
@@ -11,6 +10,8 @@ import {
   Sparkles,
   ExternalLink,
   Menu,
+  ChevronDown,
+  CheckCircle2,
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { DropdownMenu } from '../ui/DropdownMenu';
@@ -24,11 +25,12 @@ export const Header = ({
   onNotificationClick,
   user = {
     name: 'Sarah Jenkins',
-    role: 'Lead Admin & Editor',
+    role: 'Super Admin',
     email: 'sarah.jenkins@apexcorp.com',
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80',
   },
   onLogoutClick,
+  onTabChange,
   onPublishClick,
   publishingStatus = 'Synced',
   onToggleMobileSidebar,
@@ -284,29 +286,127 @@ export const Header = ({
           )}
         </div>
 
-        {/* Admin Profile Dropdown */}
+        {/* Admin Profile Dropdown (Synced with /admin/me & /admin/logout) */}
         <DropdownMenu
+          width="260px"
           trigger={
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <img
-                src={user.avatar}
-                alt={user.name}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '4px 6px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                transition: 'background 0.15s ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f8fafc')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+            >
+              <div style={{ position: 'relative', flexShrink: 0 }}>
+                <img
+                  src={
+                    user?.avatar ||
+                    'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80'
+                  }
+                  alt={user?.name || 'Admin'}
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '1px solid #cbd5e1',
+                    display: 'block',
+                  }}
+                />
+                <span
+                  style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    right: 0,
+                    width: '9px',
+                    height: '9px',
+                    borderRadius: '50%',
+                    backgroundColor: '#10b981',
+                    border: '2px solid #ffffff',
+                  }}
+                />
+              </div>
+              <div className="hide-on-mobile" style={{ textAlign: 'left', lineHeight: 1.25 }}>
+                <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>
+                  {user?.name || 'Super Admin'}
+                </div>
+                <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
+                  {user?.role || 'Super Admin'}
+                </div>
+              </div>
+              <ChevronDown size={14} style={{ color: '#94a3b8' }} className="hide-on-mobile" />
+            </div>
+          }
+          headerContent={
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '13.5px', fontWeight: 700, color: '#0f172a' }}>
+                  {user?.name || 'Super Admin'}
+                </span>
+                <span
+                  style={{
+                    fontSize: '10.5px',
+                    fontWeight: 600,
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    backgroundColor: '#eef2ff',
+                    color: '#4f46e5',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                  }}
+                >
+                  {user?.role || 'Super Admin'}
+                </span>
+              </div>
+              <div style={{ fontSize: '12px', color: '#64748b', wordBreak: 'break-all' }}>
+                {user?.email || 'admin@blogtech.com'}
+              </div>
+              <div
                 style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
-                  objectFit: 'cover',
-                  border: '1px solid #cbd5e1',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontSize: '11px',
+                  color: '#059669',
+                  marginTop: '2px',
                 }}
-              />
+              >
+                <CheckCircle2 size={12} />
+                <span>Active Session (/admin/me)</span>
+              </div>
             </div>
           }
           items={[
-            { label: user.name, icon: User, onClick: () => {} },
-            { label: 'Admin Security', icon: Shield, onClick: () => {} },
-            { label: 'CMS Documentation', icon: HelpCircle, onClick: () => {} },
+            {
+              label: 'Account & Workspace Settings',
+              icon: User,
+              onClick: () => onTabChange && onTabChange('settings'),
+            },
+            {
+              label: 'Admin Security Credentials',
+              icon: Shield,
+              onClick: () => onTabChange && onTabChange('settings'),
+            },
+            {
+              label: 'CMS Help & Documentation',
+              icon: HelpCircle,
+              onClick: () => {
+                alert('BLOGTECH Knowledge Base & API Docs available under Settings > System.');
+              },
+            },
             { divider: true },
-            { label: 'Logout', icon: LogOut, danger: true, onClick: onLogoutClick },
+            {
+              label: 'Log Out of BLOGTECH',
+              icon: LogOut,
+              danger: true,
+              onClick: onLogoutClick,
+            },
           ]}
         />
       </div>
