@@ -21,16 +21,6 @@ export const removeToken = () => {
   localStorage.removeItem(USER_KEY);
 };
 
-export const DEFAULT_ADMIN_USER = {
-  id: 55,
-  name: 'Nikhil Kumar',
-  email: 'nikhilkumars12343@gmail.com',
-  role: 'super_admin',
-  status: 'active',
-  created_at: '2026-10-16T06:01:51.000000Z',
-  updated_at: '2026-10-16T06:01:51.000000Z',
-};
-
 const sanitizeUserData = (rawUser) => {
   if (!rawUser || typeof rawUser !== 'object') return null;
   const user = { ...rawUser };
@@ -104,13 +94,11 @@ export const logout = async () => {
  * {
  *   "success": true,
  *   "data": {
- *     "id": 55,
- *     "name": "Nikhil Kumar",
- *     "email": "nikhilkumars12343@gmail.com",
+ *     "id": 1,
+ *     "name": "Admin User",
+ *     "email": "admin@example.com",
  *     "role": "super_admin",
- *     "status": "active",
- *     "created_at": "2026-10-16T06:01:51.000000Z",
- *     "updated_at": "2026-10-16T06:01:51.000000Z"
+ *     "status": "active"
  *   }
  * }
  * @returns {Promise<Object>} API response data

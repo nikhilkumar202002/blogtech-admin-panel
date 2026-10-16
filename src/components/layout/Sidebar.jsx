@@ -6,6 +6,7 @@ import {
   Mail,
   Settings,
   LogOut,
+  X,
 } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 
@@ -17,13 +18,7 @@ export const Sidebar = ({
   isMobileOpen = false,
   onCloseMobile,
   badgeCounts = { enquiries: 14, jobs: 12, blogs: 45 },
-  user = {
-    id: 55,
-    name: 'Nikhil Kumar',
-    email: 'nikhilkumars12343@gmail.com',
-    role: 'super_admin',
-    status: 'active',
-  },
+  user = null,
   onLogoutClick,
 }) => {
   const navSections = [
@@ -55,21 +50,23 @@ export const Sidebar = ({
       {/* Mobile Backdrop Overlay */}
       {isMobileOpen && (
         <div
-          className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40"
+          className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 md:hidden"
           onClick={onCloseMobile}
         />
       )}
 
       <aside
-        className={`fixed top-0 left-0 h-screen bg-white border-r border-slate-200 flex flex-col z-50 transition-all duration-200 shadow-xs ${
-          isCollapsed ? 'w-[72px]' : 'w-64'
-        } ${isMobileOpen ? 'mobile-drawer-open' : ''}`}
+        className={`fixed top-0 left-0 h-screen bg-white border-r border-slate-200 flex flex-col z-50 transition-all duration-200 shadow-xl md:shadow-xs ${
+          isCollapsed ? 'md:w-[72px]' : 'md:w-64'
+        } ${
+          isMobileOpen
+            ? 'translate-x-0 w-72 max-w-[85vw]'
+            : '-translate-x-full md:translate-x-0 w-72 md:w-64'
+        }`}
       >
         {/* BRAND HEADER */}
         <div
-          className={`h-[68px] flex items-center border-b border-slate-100 shrink-0 ${
-            isCollapsed ? 'px-3 justify-center' : 'px-4 justify-between'
-          }`}
+          className={`h-16 flex items-center border-b border-slate-100 shrink-0 px-4 justify-between`}
         >
           <div className="flex items-center gap-2.5">
             <img
@@ -80,6 +77,16 @@ export const Sidebar = ({
               }`}
             />
           </div>
+
+          {/* Close button for mobile drawer */}
+          <button
+            type="button"
+            onClick={onCloseMobile}
+            className="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            title="Close Menu"
+          >
+            <X size={20} />
+          </button>
         </div>
 
         {/* NAVIGATION SECTIONS */}
@@ -151,11 +158,14 @@ export const Sidebar = ({
         >
           <div
             className="flex items-center gap-2.5 overflow-hidden cursor-pointer flex-1"
-            onClick={() => onTabChange && onTabChange('settings')}
+            onClick={() => {
+              onTabChange && onTabChange('settings');
+              if (onCloseMobile) onCloseMobile();
+            }}
             title="View Account Settings"
           >
             <Avatar
-              name={user?.name || 'Nikhil Kumar'}
+              name={user?.name || 'Admin'}
               size="md"
               status={user?.status || 'active'}
               showStatus={true}
@@ -163,11 +173,13 @@ export const Sidebar = ({
             {!isCollapsed && (
               <div className="overflow-hidden text-left leading-tight min-w-0">
                 <div className="text-[13px] font-semibold text-slate-900 truncate">
-                  {user?.name || 'Nikhil Kumar'}
+                  {user?.name || 'Admin'}
                 </div>
-                <div className="text-[11px] text-slate-500 truncate mt-0.5">
-                  {user?.email || 'nikhilkumars12343@gmail.com'}
-                </div>
+                {user?.email && (
+                  <div className="text-[11px] text-slate-500 truncate mt-0.5">
+                    {user.email}
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -16,15 +16,7 @@ import { Breadcrumb } from '../ui/Breadcrumb';
 import { Avatar } from '../ui/Avatar';
 
 export const SettingsView = ({
-  user = {
-    id: 55,
-    name: 'Nikhil Kumar',
-    email: 'nikhilkumars12343@gmail.com',
-    role: 'super_admin',
-    status: 'active',
-    created_at: '2026-10-16T06:01:51.000000Z',
-    updated_at: '2026-10-16T06:01:51.000000Z',
-  },
+  user = null,
   onLogoutAll,
 }) => {
   const { addToast } = useToast();
@@ -32,17 +24,17 @@ export const SettingsView = ({
   // Settings Navigation: 'profile' | 'security'
   const [activeSection, setActiveSection] = useState('profile');
 
-  // Profile Form State (strictly logged in data, no user image)
+  // Profile Form State (strictly logged in data from API)
   const [profileData, setProfileData] = useState({
-    name: user?.name || 'Nikhil Kumar',
-    email: user?.email || 'nikhilkumars12343@gmail.com',
+    name: user?.name || '',
+    email: user?.email || '',
   });
 
   useEffect(() => {
     if (user) {
       setProfileData({
-        name: user.name || 'Nikhil Kumar',
-        email: user.email || 'nikhilkumars12343@gmail.com',
+        name: user.name || '',
+        email: user.email || '',
       });
     }
   }, [user]);
@@ -172,29 +164,35 @@ export const SettingsView = ({
 
           <form onSubmit={handleSaveProfile} className="flex flex-col gap-5">
             {/* User Identity Avatar (Initials Only, No User Image) */}
-            <div className="flex items-center gap-5 pb-5 border-b border-slate-100">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 pb-5 border-b border-slate-100">
               <Avatar
-                name={profileData.name || 'Nikhil Kumar'}
+                name={profileData.name || user?.name || 'Admin'}
                 size="xl"
                 status={user?.status || 'active'}
                 showStatus={true}
               />
 
               <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="text-base font-bold text-slate-900">
-                    {profileData.name || 'Nikhil Kumar'}
+                    {profileData.name || user?.name || 'Admin'}
                   </span>
                   <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 uppercase tracking-wide">
                     {formatRole(user?.role)}
                   </span>
                 </div>
-                <div className="text-xs text-slate-500">
-                  {profileData.email || 'nikhilkumars12343@gmail.com'}
-                </div>
+                {profileData.email ? (
+                  <div className="text-xs text-slate-500">
+                    {profileData.email}
+                  </div>
+                ) : user?.email ? (
+                  <div className="text-xs text-slate-500">
+                    {user.email}
+                  </div>
+                ) : null}
                 <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
-                  <span>Admin ID: #{user?.id || 55}</span>
-                  <span>•</span>
+                  {user?.id && <span>Admin ID: #{user.id}</span>}
+                  {user?.id && <span>•</span>}
                   <span className="text-emerald-600 font-medium inline-flex items-center gap-1">
                     <CheckCircle2 size={13} /> Active Account
                   </span>

@@ -5,18 +5,18 @@ import React from 'react';
  * Generates crisp initials from the user's name with a sleek gradient background.
  */
 export const Avatar = ({
-  name = 'Nikhil Kumar',
+  name = '',
   size = 'md', // 'xs' (28px), 'sm' (32px), 'md' (36px), 'lg' (44px), 'xl' (80px), or number
   status = 'active',
   showStatus = true,
   className = '',
   style = {},
 }) => {
-  // Extract initials (e.g., "Nikhil Kumar" -> "NK")
+  // Extract initials from user name (e.g. "John Doe" -> "JD", "Admin" -> "A")
   const getInitials = (str) => {
-    if (!str || typeof str !== 'string') return 'NK';
+    if (!str || typeof str !== 'string') return 'A';
     const parts = str.trim().split(/\s+/).filter(Boolean);
-    if (parts.length === 0) return 'NK';
+    if (parts.length === 0) return 'A';
     if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   };

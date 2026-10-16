@@ -1,8 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-/**
- * Dropdown Menu styled with Tailwind CSS
- */
 export const DropdownMenu = ({
   trigger,
   items = [], // Array of { label, icon, onClick, danger, divider }
@@ -39,7 +36,7 @@ export const DropdownMenu = ({
           style={{ width }}
           className={`absolute top-full mt-1.5 ${
             align === 'left' ? 'left-0' : 'right-0'
-          } bg-white rounded-xl border border-slate-200 shadow-xl shadow-slate-900/10 p-1.5 z-50 animate-pop-in`}
+          } max-w-[calc(100vw-24px)] bg-white rounded-xl border border-slate-200 shadow-xl shadow-slate-900/10 p-1.5 z-50 animate-pop-in`}
         >
           {headerContent && (
             <div className="p-2.5 pb-2.5 border-b border-slate-100 mb-1">

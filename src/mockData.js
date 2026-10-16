@@ -9,7 +9,7 @@ export const INITIAL_STATS = {
   totalEnquiries: 382,
   publishingStatus: 'Synced', // 'Synced', 'Changes Pending', 'Deploying', 'Error'
   lastPublishedAt: '2026-10-16 11:30 AM',
-  lastPublishedBy: 'Nikhil Kumar (Super Admin)',
+  lastPublishedBy: 'Super Admin',
   pendingPublishCount: 3,
 };
 
@@ -367,42 +367,6 @@ export const INITIAL_PUBLISHING_LOGS = [
   }
 ];
 
-export const SYSTEM_USERS = [
-  {
-    id: 55,
-    name: 'Nikhil Kumar',
-    email: 'nikhilkumars12343@gmail.com',
-    role: 'super_admin',
-    status: 'active',
-    created_at: '2026-10-16T06:01:51.000000Z',
-    updated_at: '2026-10-16T06:01:51.000000Z',
-    lastActive: 'Just now',
-  },
-  {
-    id: 'USR-02',
-    name: 'Alex Rivera',
-    email: 'alex.rivera@apexcorp.com',
-    role: 'Engineering Director',
-    status: 'Active',
-    lastActive: '25 min ago',
-  },
-  {
-    id: 'USR-03',
-    name: 'Jessica Chen',
-    email: 'jessica.chen@apexcorp.com',
-    role: 'Head of UX & Content',
-    status: 'Active',
-    lastActive: '2 hours ago',
-  },
-  {
-    id: 'USR-04',
-    name: 'Marcus Vance',
-    email: 'marcus.vance@apexcorp.com',
-    role: 'Product Content Lead',
-    status: 'Offline',
-    lastActive: 'Yesterday at 4:30 PM',
-  }
-];
 
 export const INITIAL_NOTIFICATIONS = [
   {

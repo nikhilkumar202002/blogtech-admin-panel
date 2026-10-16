@@ -187,15 +187,8 @@ export const DashboardView = ({
         </p>
       </div>
 
-      {/* TOP STATISTICS (Four Premium Cards - 2 Column Grid on Mobile) */}
-      <div
-        className="mobile-grid-2"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '16px',
-        }}
-      >
+      {/* TOP STATISTICS (Four Premium Cards - Responsive Grid) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Active Careers */}
         <div className="card card-padded">
           {isLoading ? (
@@ -343,19 +336,12 @@ export const DashboardView = ({
       </div>
 
       {/* TWO COLUMN DASHBOARD LAYOUT */}
-      <div
-        className="mobile-grid-1"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 2.3fr) minmax(0, 1fr)',
-          gap: '24px',
-        }}
-      >
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* LEFT / MAIN TABLES AREA */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+        <div className="lg:col-span-2 flex flex-col gap-7">
           {/* Section 1: Recent Job Openings */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h2 style={{ fontSize: '17px', fontWeight: 600, color: '#0f172a', margin: 0 }}>
                   Recent Job Openings
@@ -389,8 +375,8 @@ export const DashboardView = ({
           </div>
 
           {/* Section 2: Recent Blog Articles */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h2 style={{ fontSize: '17px', fontWeight: 600, color: '#0f172a', margin: 0 }}>
                   Recent Blog Articles
@@ -425,7 +411,7 @@ export const DashboardView = ({
         </div>
 
         {/* RIGHT / SECONDARY AREA */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div className="lg:col-span-1 flex flex-col gap-6">
           {/* Quick Actions Card */}
           <div className="card card-padded">
             <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: '0 0 4px 0' }}>

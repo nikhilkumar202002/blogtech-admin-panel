@@ -28,7 +28,6 @@ import {
   getCurrentUser,
   logout as authLogout,
   getStoredUser,
-  DEFAULT_ADMIN_USER,
   isAuthenticated as checkIsAuthenticated,
 } from './utils/auth.service';
 
@@ -102,21 +101,9 @@ const MainApp = () => {
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
   const [activityLog, setActivityLog] = useState(ACTIVITY_LOG);
 
-  // Authenticated User Profile (Synced directly with /admin/me API, initials avatar only)
+  // Authenticated User Profile (Fetched directly from API, no hardcoded dummy variables)
   const [currentUser, setCurrentUser] = useState(() => {
-    const stored = getStoredUser();
-    if (stored) {
-      return {
-        id: stored.id ?? 55,
-        name: stored.name || 'Nikhil Kumar',
-        email: stored.email || 'nikhilkumars12343@gmail.com',
-        role: stored.role || 'super_admin',
-        status: stored.status || 'active',
-        created_at: stored.created_at || '2026-10-16T06:01:51.000000Z',
-        updated_at: stored.updated_at || '2026-10-16T06:01:51.000000Z',
-      };
-    }
-    return DEFAULT_ADMIN_USER;
+    return getStoredUser() || null;
   });
 
   // Fetch logged in user profile from /admin/me API on load
@@ -124,17 +111,9 @@ const MainApp = () => {
     if (isAuthenticated) {
       getCurrentUser()
         .then((response) => {
-          const userData = response?.data || response?.user || (response?.id ? response : null);
+          const userData = response?.data || response?.user || (response?.id ? response : null) || response;
           if (userData && (userData.name || userData.email || userData.id)) {
-            setCurrentUser({
-              id: userData.id ?? 55,
-              name: userData.name || 'Nikhil Kumar',
-              email: userData.email || 'nikhilkumars12343@gmail.com',
-              role: userData.role || 'super_admin',
-              status: userData.status || 'active',
-              created_at: userData.created_at || '2026-10-16T06:01:51.000000Z',
-              updated_at: userData.updated_at || '2026-10-16T06:01:51.000000Z',
-            });
+            setCurrentUser(userData);
           }
         })
         .catch((err) => {
@@ -269,35 +248,19 @@ const MainApp = () => {
           }
           const userObj = userData?.user || userData?.data?.user || (userData?.data && !userData?.data?.token ? userData.data : null);
           if (userObj) {
-            setCurrentUser({
-              id: userObj.id ?? 55,
-              name: userObj.name || 'Nikhil Kumar',
-              email: userObj.email || 'nikhilkumars12343@gmail.com',
-              role: userObj.role || 'super_admin',
-              status: userObj.status || 'active',
-              created_at: userObj.created_at || '2026-10-16T06:01:51.000000Z',
-              updated_at: userObj.updated_at || '2026-10-16T06:01:51.000000Z',
-            });
+            setCurrentUser(userObj);
           }
           // Fetch complete profile from /admin/me
           getCurrentUser()
             .then((res) => {
-              const fresh = res?.data || res?.user || (res?.id ? res : null);
+              const fresh = res?.data || res?.user || (res?.id ? res : null) || res;
               if (fresh && (fresh.name || fresh.email || fresh.id)) {
-                setCurrentUser({
-                  id: fresh.id ?? 55,
-                  name: fresh.name || 'Nikhil Kumar',
-                  email: fresh.email || 'nikhilkumars12343@gmail.com',
-                  role: fresh.role || 'super_admin',
-                  status: fresh.status || 'active',
-                  created_at: fresh.created_at || '2026-10-16T06:01:51.000000Z',
-                  updated_at: fresh.updated_at || '2026-10-16T06:01:51.000000Z',
-                });
+                setCurrentUser(fresh);
               }
             })
             .catch(() => {});
 
-          const adminName = userObj?.name || 'Nikhil Kumar';
+          const adminName = userObj?.name || 'Admin';
           const rawRole = userObj?.role || 'super_admin';
           const adminRole = rawRole === 'super_admin' ? 'Super Admin' : rawRole.replace(/_/g, ' ');
           addToast({

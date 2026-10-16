@@ -505,28 +505,16 @@ export const CareersView = ({
         </div>
 
         {/* PAGE CONTENT LAYOUT */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(0, 2.3fr) minmax(0, 1fr)',
-            gap: '24px',
-          }}
-        >
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* LEFT / MAIN CONTENT AREA */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div className="lg:col-span-2 flex flex-col gap-5">
             {/* Overview Card */}
             <div className="card card-padded">
               <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: '0 0 16px 0' }}>
                 Position Overview
               </h3>
 
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                  gap: '16px',
-                }}
-              >
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
                   <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 500 }}>Position ID</div>
                   <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', marginTop: '2px' }}>
@@ -631,7 +619,7 @@ export const CareersView = ({
           </div>
 
           {/* RIGHT SIDEBAR */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div className="lg:col-span-1 flex flex-col gap-5">
             {/* Publishing Information Card */}
             <div className="card card-padded">
               <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: '0 0 14px 0' }}>
@@ -726,15 +714,9 @@ export const CareersView = ({
 
         {/* TWO-COLUMN DESKTOP FORM LAYOUT */}
         <form onSubmit={handleFormSubmit} noValidate>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'minmax(0, 2.3fr) minmax(0, 1fr)',
-              gap: '28px',
-            }}
-          >
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* LEFT / MAIN COLUMN */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div className="lg:col-span-2 flex flex-col gap-5">
               {/* Job Position / Title */}
               <div className="card card-padded">
                 <FormField label="Job Position / Title" required error={errors.title}>
@@ -855,7 +837,7 @@ export const CareersView = ({
             </div>
 
             {/* RIGHT COLUMN */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div className="lg:col-span-1 flex flex-col gap-5">
               {/* Job Parameters Card */}
               <div className="card card-padded">
                 <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: '0 0 16px 0' }}>

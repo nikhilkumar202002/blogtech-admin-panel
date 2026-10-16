@@ -399,23 +399,9 @@ export const BlogsView = ({
         </div>
 
         {/* MAIN PREVIEW & SIDEBAR LAYOUT */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(0, 2.3fr) minmax(0, 1fr)',
-            gap: '28px',
-          }}
-        >
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* ARTICLE PREVIEW (LEFT / MAIN AREA) */}
-          <div
-            style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '16px',
-              border: '1px solid #e2e8f0',
-              padding: '36px',
-              boxShadow: '0 1px 3px rgba(16,24,40,0.04)',
-            }}
-          >
+          <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-5 sm:p-8 md:p-9 shadow-xs">
             {/* Featured Image */}
             {previewBlog.coverImage && (
               <div style={{ borderRadius: '12px', overflow: 'hidden', height: '340px', marginBottom: '28px' }}>
@@ -488,7 +474,7 @@ export const BlogsView = ({
           </div>
 
           {/* SIDEBAR (RIGHT AREA) */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div className="lg:col-span-1 flex flex-col gap-5">
             {/* Publishing Status Card */}
             <div className="card card-padded">
               <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: '0 0 14px 0' }}>
@@ -623,16 +609,9 @@ export const BlogsView = ({
 
         {/* MAIN LAYOUT (TWO COLUMNS: 70% LEFT MAIN AREA, 30% RIGHT SIDEBAR - SINGLE COLUMN ON MOBILE) */}
         <form onSubmit={(e) => handleFormSubmit(e)} noValidate style={{ paddingBottom: '70px' }}>
-          <div
-            className="mobile-grid-1"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'minmax(0, 2.3fr) minmax(0, 1fr)',
-              gap: '28px',
-            }}
-          >
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* LEFT MAIN AREA (70%) */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div className="lg:col-span-2 flex flex-col gap-5">
               {/* Title & Slug Card */}
               <div className="card card-padded">
                 <FormField label="Article Title" required error={errors.title}>
@@ -746,7 +725,7 @@ export const BlogsView = ({
             </div>
 
             {/* RIGHT SIDEBAR (30%) */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div className="lg:col-span-1 flex flex-col gap-5">
               {/* Publishing Card */}
               <div className="card card-padded">
                 <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: '0 0 14px 0' }}>
@@ -843,24 +822,7 @@ export const BlogsView = ({
           </div>
 
           {/* MOBILE STICKY BOTTOM ACTION BAR FOR BLOG EDITOR */}
-          <div
-            className="show-on-mobile"
-            style={{
-              position: 'fixed',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              backgroundColor: '#ffffff',
-              borderTop: '1px solid #e2e8f0',
-              padding: '12px 16px',
-              boxShadow: '0 -4px 12px rgba(0,0,0,0.08)',
-              zIndex: 90,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '12px',
-            }}
-          >
+          <div className="flex md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-3 sm:p-4 z-40 items-center justify-between gap-3 shadow-lg">
             <Button
               type="button"
               variant="secondary"

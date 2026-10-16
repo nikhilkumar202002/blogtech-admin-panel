@@ -21,7 +21,7 @@ export const Layout = ({
   children,
 }) => {
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="min-h-screen flex bg-slate-50 relative overflow-x-hidden">
       {/* Common Sidebar Navigation */}
       <Sidebar
         activeTab={activeTab}
@@ -35,16 +35,17 @@ export const Layout = ({
         onLogoutClick={onLogoutClick}
       />
 
-      {/* Main Wrapper for Header and Dynamic Page Content */}
+      {/* Main Responsive Container */}
       <div
-        className={`layout-main-container flex-1 flex flex-col min-w-0 ${
-          sidebarCollapsed ? 'sidebar-collapsed' : ''
+        className={`flex-1 flex flex-col min-w-0 max-w-full transition-[margin] duration-200 ease-in-out ml-0 ${
+          sidebarCollapsed ? 'md:ml-[72px]' : 'md:ml-64'
         }`}
       >
         {/* Common Sticky Header */}
         <Header
           activeTab={activeTab}
           sidebarCollapsed={sidebarCollapsed}
+          onToggleCollapse={onToggleCollapse}
           onOpenCommandPalette={onOpenCommandPalette}
           notifications={notifications}
           onNotificationClick={onNotificationClick}
@@ -57,7 +58,7 @@ export const Layout = ({
         />
 
         {/* Dynamic Page Area */}
-        <main className="main-content-area flex-1 p-6 md:p-8 lg:p-10 w-full box-border">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 w-full max-w-full overflow-x-hidden box-border">
           {children}
         </main>
       </div>

@@ -73,7 +73,7 @@ export const LoginView = ({ onLoginSuccess }) => {
               <h2 className="text-2xl font-bold tracking-tight text-slate-900">
                 Reset your password
               </h2>
-              <p className="text-sm text-slate-500 w-[200px] leading-relaxed">
+              <p className="text-sm text-slate-500 mt-1.5 leading-relaxed">
                 Enter your email address to receive password reset instructions.
               </p>
             </div>
