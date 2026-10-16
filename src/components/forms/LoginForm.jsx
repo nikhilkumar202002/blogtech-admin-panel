@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import {
   Mail,
   Lock,
@@ -76,14 +77,17 @@ export const LoginForm = ({
     // Pre-flight validation
     if (!email.trim()) {
       setLocalErrorMessage('Please enter your email address.');
+      toast.error('Please enter your email address.');
       return;
     }
     if (!emailRegex.test(email.trim())) {
       setLocalErrorMessage('Please enter a valid email address.');
+      toast.error('Please enter a valid email address.');
       return;
     }
     if (!password) {
       setLocalErrorMessage('Please enter your password.');
+      toast.error('Please enter your password.');
       return;
     }
 
@@ -103,6 +107,7 @@ export const LoginForm = ({
 
       setLocalIsLoading(false);
       setLocalIsSuccess(true);
+      toast.success('Signed in successfully! Redirecting...');
 
       // Trigger success callback to launch dashboard
       setTimeout(() => {
@@ -122,6 +127,7 @@ export const LoginForm = ({
         'Invalid credentials. Please verify your email and password.';
 
       setLocalErrorMessage(apiMessage);
+      toast.error(apiMessage);
     }
   };
 

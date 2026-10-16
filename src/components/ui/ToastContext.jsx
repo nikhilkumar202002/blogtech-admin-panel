@@ -1,48 +1,98 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { CheckCircle2, AlertCircle, AlertTriangle, Info, X } from 'lucide-react';
+import React, { createContext, useContext, useCallback } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
 
 const ToastContext = createContext(null);
 
 export const ToastProvider = ({ children }) => {
-  const [toasts, setToasts] = useState([]);
-
   const addToast = useCallback(({ title, message, type = 'info', duration = 4000 }) => {
-    const id = Date.now() + Math.random();
-    setToasts((prev) => [...prev, { id, title, message, type }]);
+    const hasBoth = title && message;
+    const content = hasBoth ? (
+      <div className="flex flex-col gap-0.5">
+        <span className="font-semibold text-slate-900 text-[13px] leading-tight">{title}</span>
+        <span className="text-slate-600 text-xs leading-snug">{message}</span>
+      </div>
+    ) : (
+      title || message || ''
+    );
 
-    if (duration > 0) {
-      setTimeout(() => {
-        removeToast(id);
-      }, duration);
+    const options = { duration };
+
+    switch (type) {
+      case 'success':
+        return toast.success(content, options);
+      case 'error':
+        return toast.error(content, options);
+      case 'warning':
+        return toast(content, {
+          ...options,
+          icon: '⚠️',
+        });
+      case 'loading':
+        return toast.loading(content, options);
+      case 'info':
+      default:
+        return toast(content, {
+          ...options,
+          icon: (
+            <svg
+              className="w-4 h-4 text-indigo-600 shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="12" cy="12" r="10" strokeWidth="2" />
+              <path strokeWidth="2" d="M12 16v-4m0-4h.01" />
+            </svg>
+          ),
+        });
     }
   }, []);
 
   const removeToast = useCallback((id) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
+    if (id) {
+      toast.dismiss(id);
+    } else {
+      toast.dismiss();
+    }
   }, []);
 
   return (
-    <ToastContext.Provider value={{ addToast, removeToast }}>
+    <ToastContext.Provider value={{ addToast, removeToast, toast }}>
       {children}
-      {/* Floating Toast Container */}
-      <div
-        style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          zIndex: 9999,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '10px',
-          maxWidth: '380px',
-          width: '100%',
-          pointerEvents: 'none',
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+        gutter={8}
+        toastOptions={{
+          duration: 4000,
+          className: 'react-hot-toast-container',
+          style: {
+            background: '#ffffff',
+            color: '#0f172a',
+            fontFamily: "'Google Sans', 'Google Sans Text', system-ui, sans-serif",
+            fontSize: '13px',
+            borderRadius: '12px',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04)',
+            padding: '10px 14px',
+            maxWidth: '380px',
+          },
+          success: {
+            duration: 3500,
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#ffffff',
+            },
+          },
+          error: {
+            duration: 4500,
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#ffffff',
+            },
+          },
         }}
-      >
-        {toasts.map((toast) => (
-          <ToastItem key={toast.id} toast={toast} onClose={() => removeToast(toast.id)} />
-        ))}
-      </div>
+      />
     </ToastContext.Provider>
   );
 };
@@ -55,87 +105,5 @@ export const useToast = () => {
   return context;
 };
 
-const ToastItem = ({ toast, onClose }) => {
-  const getIcon = () => {
-    switch (toast.type) {
-      case 'success':
-        return <CheckCircle2 size={18} style={{ color: '#059669', flexShrink: 0 }} />;
-      case 'error':
-        return <AlertCircle size={18} style={{ color: '#dc2626', flexShrink: 0 }} />;
-      case 'warning':
-        return <AlertTriangle size={18} style={{ color: '#d97706', flexShrink: 0 }} />;
-      default:
-        return <Info size={18} style={{ color: '#2563eb', flexShrink: 0 }} />;
-    }
-  };
-
-  const getBorderColor = () => {
-    switch (toast.type) {
-      case 'success': return '#a7f3d0';
-      case 'error': return '#fca5a5';
-      case 'warning': return '#fde68a';
-      default: return '#bfdbfe';
-    }
-  };
-
-  return (
-    <div
-      style={{
-        pointerEvents: 'auto',
-        backgroundColor: '#ffffff',
-        borderRadius: '10px',
-        border: `1px solid ${getBorderColor()}`,
-        boxShadow: '0 10px 15px -3px rgba(16, 24, 40, 0.1), 0 4px 6px -4px rgba(16, 24, 40, 0.05)',
-        padding: '12px 16px',
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: '12px',
-      }}
-      className="animate-slide-in-right"
-    >
-      {getIcon()}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        {toast.title && (
-          <h4
-            style={{
-              fontSize: '13px',
-              fontWeight: 600,
-              color: '#0f172a',
-              margin: 0,
-            }}
-          >
-            {toast.title}
-          </h4>
-        )}
-        {toast.message && (
-          <p
-            style={{
-              fontSize: '12px',
-              color: '#475569',
-              margin: '2px 0 0 0',
-              lineHeight: 1.4,
-            }}
-          >
-            {toast.message}
-          </p>
-        )}
-      </div>
-      <button
-        type="button"
-        onClick={onClose}
-        style={{
-          background: 'none',
-          border: 'none',
-          color: '#94a3b8',
-          cursor: 'pointer',
-          padding: '2px',
-          borderRadius: '4px',
-          display: 'flex',
-          alignItems: 'center',
-        }}
-      >
-        <X size={14} />
-      </button>
-    </div>
-  );
-};
+// Re-export toast directly for convenient direct calls throughout the app
+export { toast, Toaster };
