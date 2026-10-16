@@ -212,14 +212,19 @@ const MainApp = () => {
     }
   };
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || window.location.pathname === '/login') {
     return (
       <LoginView
-        onLoginSuccess={() => {
+        onLoginSuccess={(userData) => {
           setIsAuthenticated(true);
+          if (window.location.pathname === '/login') {
+            window.history.pushState({}, '', '/');
+          }
+          const adminName = userData?.user?.name || 'Sarah Jenkins';
+          const adminRole = userData?.user?.role || 'Super Admin';
           addToast({
             title: 'Welcome Back',
-            message: 'Signed in as Sarah Jenkins (Super Admin).',
+            message: `Signed in as ${adminName} (${adminRole}).`,
             type: 'success',
           });
         }}
