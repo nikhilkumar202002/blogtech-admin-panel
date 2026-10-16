@@ -38,9 +38,9 @@ export const Header = ({
 
   return (
     <header className="header-responsive h-16 shrink-0 bg-white border-b border-slate-200 sticky top-0 z-40 flex items-center justify-between px-3 sm:px-6">
-      {/* Left: Mobile Hamburger & Desktop Collapse Toggle */}
+    
       <div className="flex items-center gap-1.5 sm:gap-2">
-        {/* Mobile Hamburger Button */}
+       
         <button
           type="button"
           onClick={onToggleMobileSidebar}
@@ -50,7 +50,6 @@ export const Header = ({
           <Menu size={20} />
         </button>
 
-        {/* Desktop Sidebar Collapse Toggle */}
         <button
           type="button"
           onClick={onToggleCollapse}
@@ -61,9 +60,8 @@ export const Header = ({
         </button>
       </div>
 
-      {/* Right Controls: Quick Search, Site Status, Notifications, Profile */}
       <div className="flex items-center gap-2 sm:gap-2.5">
-        {/* Quick Command Search Trigger */}
+
         <button
           type="button"
           onClick={onOpenCommandPalette}
@@ -74,10 +72,9 @@ export const Header = ({
           <span className="hidden sm:inline-block">Search or jump to...</span>
         </button>
 
-        {/* Divider */}
+
         <div className="w-px h-6 bg-slate-200 mx-0.5 sm:mx-1" />
 
-        {/* Notifications Popover */}
         <div className="relative">
           <button
             type="button"
@@ -135,7 +132,6 @@ export const Header = ({
           )}
         </div>
 
-        {/* Admin Profile Dropdown (Synced with /admin/me & /admin/logout) */}
         <DropdownMenu
           width="268px"
           trigger={
