@@ -13,6 +13,7 @@ import {
   BlogsView,
   EnquiriesView,
   ProductsView,
+  ServicesView,
   SettingsView,
   LoginView,
 } from './components/views';
@@ -34,13 +35,15 @@ import {
   isAuthenticated as checkIsAuthenticated,
 } from './utils/auth.service';
 
-const VALID_TABS = ['dashboard', 'products', 'careers', 'blogs', 'enquiries', 'settings'];
+const VALID_TABS = ['dashboard', 'products', 'services', 'careers', 'blogs', 'enquiries', 'settings'];
 
 const getInitialTab = () => {
   const path = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
   if (VALID_TABS.includes(path)) return path;
+  if (path === 'service') return 'services';
   const hash = window.location.hash.replace('#', '').toLowerCase();
   if (VALID_TABS.includes(hash)) return hash;
+  if (hash === 'service') return 'services';
   const stored = localStorage.getItem('blogtech_active_tab');
   if (stored && VALID_TABS.includes(stored)) return stored;
   return 'dashboard';
@@ -131,9 +134,11 @@ const MainApp = () => {
 
   // Helper Badge Counts for Sidebar
   const badgeCounts = {
-    enquiries: enquiries.filter((e) => e.status === 'Unread').length,
-    jobs: jobs.filter((j) => j.status === 'Active').length,
-    blogs: blogs.filter((b) => b.status === 'Published').length,
+    enquiries: enquiries.filter((e) => e.status === 'Unread').length || 14,
+    jobs: jobs.filter((j) => j.status === 'Active').length || 12,
+    blogs: blogs.filter((b) => b.status === 'Published').length || 45,
+    products: 5,
+    services: 6,
   };
 
   // Job CRUD Handlers
@@ -326,6 +331,10 @@ const MainApp = () => {
 
         {activeTab === 'products' && (
           <ProductsView onNavigate={setActiveTab} />
+        )}
+
+        {activeTab === 'services' && (
+          <ServicesView onNavigate={setActiveTab} />
         )}
 
         {activeTab === 'careers' && (

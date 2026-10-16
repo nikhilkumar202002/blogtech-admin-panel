@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, LayoutDashboard, Package, Briefcase, FileText, Mail, Settings, Plus, Send, X } from 'lucide-react';
+import { Search, LayoutDashboard, Package, Wrench, Briefcase, FileText, Mail, Settings, Plus, Send, X } from 'lucide-react';
 
 export const CommandPalette = ({ isOpen, onClose, onNavigate, onAction }) => {
   const [query, setQuery] = useState('');
@@ -26,6 +26,7 @@ export const CommandPalette = ({ isOpen, onClose, onNavigate, onAction }) => {
   const commandItems = [
     { type: 'nav', id: 'dashboard', label: 'Go to Dashboard', icon: LayoutDashboard, category: 'Navigation' },
     { type: 'nav', id: 'products', label: 'Go to Products Catalog', icon: Package, category: 'Navigation' },
+    { type: 'nav', id: 'services', label: 'Go to Services Catalog', icon: Wrench, category: 'Navigation' },
     { type: 'nav', id: 'careers', label: 'Go to Careers / Job Openings', icon: Briefcase, category: 'Navigation' },
     { type: 'nav', id: 'blogs', label: 'Go to Blog Articles', icon: FileText, category: 'Navigation' },
     { type: 'nav', id: 'enquiries', label: 'Go to Contact Enquiries Inbox', icon: Mail, category: 'Navigation' },

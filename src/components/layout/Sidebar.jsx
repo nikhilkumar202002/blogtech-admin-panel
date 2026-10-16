@@ -2,6 +2,7 @@ import React from 'react';
 import {
   LayoutDashboard,
   Package,
+  Wrench,
   Briefcase,
   FileText,
   Mail,
@@ -31,6 +32,7 @@ export const Sidebar = ({
       title: 'MANAGEMENT',
       items: [
         { id: 'products', label: 'Products', icon: Package, badge: badgeCounts?.products },
+        { id: 'services', label: 'Services', icon: Wrench, badge: badgeCounts?.services },
         { id: 'careers', label: 'Careers', icon: Briefcase, badge: badgeCounts?.jobs },
         { id: 'blogs', label: 'Blogs', icon: FileText, badge: badgeCounts?.blogs },
         { id: 'enquiries', label: 'Enquiries', icon: Mail, badge: badgeCounts?.enquiries, badgeColor: '#ef4444' },

@@ -350,18 +350,7 @@ export const ViewDetails = ({
             </h1>
 
             <Badge status={badgeType}>
-              <span className="flex items-center gap-1.5">
-                <span
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    statusLabel === 'published'
-                      ? 'bg-emerald-500 animate-pulse'
-                      : statusLabel === 'draft'
-                      ? 'bg-amber-500'
-                      : 'bg-slate-400'
-                  }`}
-                />
-                {statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}
-              </span>
+              {statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}
             </Badge>
 
             {product?.id && (
