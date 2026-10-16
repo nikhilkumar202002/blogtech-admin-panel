@@ -37,7 +37,7 @@ export const Header = ({
   const unreadNotifsCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <header className="header-responsive h-16 bg-white border-b border-slate-200 sticky top-0 z-40 flex items-center justify-between px-3 sm:px-6">
+    <header className="header-responsive h-16 shrink-0 bg-white border-b border-slate-200 sticky top-0 z-40 flex items-center justify-between px-3 sm:px-6">
       {/* Left: Mobile Hamburger & Desktop Collapse Toggle */}
       <div className="flex items-center gap-1.5 sm:gap-2">
         {/* Mobile Hamburger Button */}
