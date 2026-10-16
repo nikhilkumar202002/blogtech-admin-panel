@@ -11,6 +11,7 @@ import { DashboardView } from './components/views/DashboardView';
 import { CareersView } from './components/views/CareersView';
 import { BlogsView } from './components/views/BlogsView';
 import { EnquiriesView } from './components/views/EnquiriesView';
+import { ProductsView } from './components/views/ProductsView';
 import { SettingsView } from './components/views/SettingsView';
 import { LoginView } from './components/views/LoginView';
 
@@ -31,7 +32,7 @@ import {
   isAuthenticated as checkIsAuthenticated,
 } from './utils/auth.service';
 
-const VALID_TABS = ['dashboard', 'careers', 'blogs', 'enquiries', 'settings'];
+const VALID_TABS = ['dashboard', 'products', 'careers', 'blogs', 'enquiries', 'settings'];
 
 const getInitialTab = () => {
   const path = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
@@ -319,6 +320,10 @@ const MainApp = () => {
             }}
             onOpenPublishModal={() => setIsPublishModalOpen(true)}
           />
+        )}
+
+        {activeTab === 'products' && (
+          <ProductsView onNavigate={setActiveTab} />
         )}
 
         {activeTab === 'careers' && (
