@@ -24,6 +24,7 @@ import { Button } from '../../ui/Button';
 import { Badge } from '../../ui/Badge';
 import { FormField } from '../../ui/FormField';
 import { Breadcrumb } from '../../ui/Breadcrumb';
+import { RichTextEditor } from '../../ui/RichTextEditor';
 import { useToast } from '../../ui/ToastContext';
 import {
   createProduct,
@@ -564,38 +565,25 @@ export const CreateProduct = ({
             </FormField>
           </div>
 
-          {/* CARD 2: DETAILED PRODUCT CONTENT (HTML) */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-4">
+          {/* CARD 2: DETAILED PRODUCT CONTENT (MS WORD-STYLE WYSIWYG) */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-3">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
                 <Sparkles size={18} className="text-indigo-600" />
-                <h2 className="text-base font-semibold text-slate-900">Product Content (HTML)</h2>
+                <h2 className="text-base font-semibold text-slate-900">Product Content</h2>
               </div>
-              <span className="text-xs text-slate-400 font-mono">HTML / Formatted</span>
+              <span className="text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
+                Word Editor
+              </span>
             </div>
 
-            <FormField hint="Write formatted HTML features, headings, lists, or specifications for the product page.">
-              <textarea
-                rows={8}
-                value={formData.content}
-                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                placeholder="<h2>Manage Your Jewellery Business Smarter</h2><p>Our ERP helps retailers manage inventory...</p><h3>Key Benefits</h3><ul><li>Real-time inventory management</li></ul>"
-                className="w-full px-3.5 py-2.5 text-xs text-slate-900 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:bg-white focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 font-mono leading-relaxed"
-              />
-            </FormField>
-
-            {/* Live HTML Preview Toggle */}
-            {formData.content && (
-              <div className="mt-2 p-4 rounded-xl bg-slate-50 border border-slate-200">
-                <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                  Live Content Preview
-                </div>
-                <div
-                  className="prose prose-slate max-w-none text-xs text-slate-700 leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: formData.content }}
-                />
-              </div>
-            )}
+            <RichTextEditor
+              value={formData.content}
+              onChange={(html) => setFormData({ ...formData, content: html })}
+              placeholder="Start typing product specifications, benefits, headings, and details just like in Microsoft Word..."
+              minHeight="320px"
+            />
           </div>
 
           {/* CARD 3: SEO & METADATA */}
