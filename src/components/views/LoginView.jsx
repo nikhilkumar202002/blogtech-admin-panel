@@ -36,20 +36,13 @@ export const LoginView = ({ onLoginSuccess }) => {
       {/* Centered Auth Card */}
       <div className="w-full max-w-md bg-white rounded-2xl border border-slate-200/90 shadow-xl shadow-slate-900/5 p-8 sm:p-10 animate-pop-in">
         {/* Brand Header */}
-        <div className="flex items-center justify-center gap-3 mb-8">
+        <div className="flex flex-col items-center justify-center mb-8">
           <img
             src="/MAIN-LOGO.png"
             alt="BLOGTECH Logo"
-            className="h-10 w-auto object-contain"
+            className="h-10 w-auto object-contain mb-1.5"
           />
-          <div className="flex flex-col">
-            <div className="text-2xl font-extrabold tracking-tight text-slate-900 leading-none">
-              BLOG<span className="text-indigo-600">TECH</span>
-            </div>
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mt-0.5">
-              Admin Panel
-            </span>
-          </div>
+     
         </div>
 
         {/* View Switcher: Login | Forgot Password */}
@@ -77,7 +70,7 @@ export const LoginView = ({ onLoginSuccess }) => {
               <h2 className="text-2xl font-bold tracking-tight text-slate-900">
                 Reset your password
               </h2>
-              <p className="text-sm text-slate-500 mt-1.5 leading-relaxed">
+              <p className="text-sm text-slate-500 w-[200px] leading-relaxed">
                 Enter your email address to receive password reset instructions.
               </p>
             </div>
