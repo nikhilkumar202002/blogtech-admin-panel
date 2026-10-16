@@ -68,13 +68,10 @@ export const Header = ({
           type="button"
           onClick={onOpenCommandPalette}
           className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 rounded-lg px-2.5 sm:px-3 py-1.5 text-[13px] text-slate-500 cursor-pointer h-9 transition-colors"
-          title="Search or jump to (Cmd+K)"
+          title="Search or jump to"
         >
           <Search size={15} className="text-slate-400 shrink-0" />
-          <span className="hidden sm:inline-block pr-1">Search or jump to...</span>
-          <kbd className="hidden sm:inline-block text-[11px] font-semibold bg-white border border-slate-300 rounded px-1.5 py-0.5 text-slate-600 shadow-xs">
-            ⌘K
-          </kbd>
+          <span className="hidden sm:inline-block">Search or jump to...</span>
         </button>
 
         {/* Divider */}

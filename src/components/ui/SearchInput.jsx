@@ -6,7 +6,7 @@ export const SearchInput = ({
   onChange,
   onClear,
   placeholder = 'Search...',
-  shortcutHint = '⌘K',
+  shortcutHint = null,
   size = 'md',
   className = '',
   autoFocus = false,
