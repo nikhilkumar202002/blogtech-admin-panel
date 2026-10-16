@@ -17,22 +17,22 @@ import {
   User,
   ExternalLink,
 } from 'lucide-react';
-import { Button } from '../ui/Button';
-import { Badge } from '../ui/Badge';
-import { SearchInput } from '../ui/SearchInput';
-import { Select } from '../ui/Select';
-import { DataTable } from '../ui/DataTable';
-import { Modal } from '../ui/Modal';
-import { FormField } from '../ui/FormField';
-import { RichTextEditor } from '../ui/RichTextEditor';
-import { ImageUploader } from '../ui/ImageUploader';
-import { DatePicker } from '../ui/DatePicker';
-import { ConfirmDialog } from '../ui/ConfirmDialog';
-import { Avatar } from '../ui/Avatar';
-import { useToast } from '../ui/ToastContext';
-import { Breadcrumb } from '../ui/Breadcrumb';
-import { DropdownMenu } from '../ui/DropdownMenu';
-import { BLOG_CATEGORIES } from '../../mockData';
+import { Button } from '../../ui/Button';
+import { Badge } from '../../ui/Badge';
+import { SearchInput } from '../../ui/SearchInput';
+import { Select } from '../../ui/Select';
+import { DataTable } from '../../ui/DataTable';
+import { Modal } from '../../ui/Modal';
+import { FormField } from '../../ui/FormField';
+import { RichTextEditor } from '../../ui/RichTextEditor';
+import { ImageUploader } from '../../ui/ImageUploader';
+import { DatePicker } from '../../ui/DatePicker';
+import { ConfirmDialog } from '../../ui/ConfirmDialog';
+import { Avatar } from '../../ui/Avatar';
+import { useToast } from '../../ui/ToastContext';
+import { Breadcrumb } from '../../ui/Breadcrumb';
+import { DropdownMenu } from '../../ui/DropdownMenu';
+import { BLOG_CATEGORIES } from '../../../mockData';
 
 export const BlogsView = ({
   blogs = [],
@@ -963,3 +963,5 @@ export const BlogsView = ({
     </div>
   );
 };
+
+export default BlogsView;

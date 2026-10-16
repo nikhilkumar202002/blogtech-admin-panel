@@ -19,15 +19,15 @@ import {
   Calendar,
   AlertCircle,
 } from 'lucide-react';
-import { Button } from '../ui/Button';
-import { Badge } from '../ui/Badge';
-import { SearchInput } from '../ui/SearchInput';
-import { Select } from '../ui/Select';
-import { Breadcrumb } from '../ui/Breadcrumb';
-import { DataTable } from '../ui/DataTable';
-import { ConfirmDialog } from '../ui/ConfirmDialog';
-import { DropdownMenu } from '../ui/DropdownMenu';
-import { useToast } from '../ui/ToastContext';
+import { Button } from '../../ui/Button';
+import { Badge } from '../../ui/Badge';
+import { SearchInput } from '../../ui/SearchInput';
+import { Select } from '../../ui/Select';
+import { Breadcrumb } from '../../ui/Breadcrumb';
+import { DataTable } from '../../ui/DataTable';
+import { ConfirmDialog } from '../../ui/ConfirmDialog';
+import { DropdownMenu } from '../../ui/DropdownMenu';
+import { useToast } from '../../ui/ToastContext';
 
 export const EnquiriesView = ({
   enquiries = [],
@@ -730,3 +730,5 @@ export const EnquiriesView = ({
   );
 };
 
+
+export default EnquiriesView;

@@ -16,19 +16,19 @@ import {
   Clock,
   Sparkles,
 } from 'lucide-react';
-import { Button } from '../ui/Button';
-import { Badge } from '../ui/Badge';
-import { SearchInput } from '../ui/SearchInput';
-import { Select } from '../ui/Select';
-import { DataTable } from '../ui/DataTable';
-import { Modal } from '../ui/Modal';
-import { FormField } from '../ui/FormField';
-import { RichTextEditor } from '../ui/RichTextEditor';
-import { DatePicker } from '../ui/DatePicker';
-import { ConfirmDialog } from '../ui/ConfirmDialog';
-import { DropdownMenu } from '../ui/DropdownMenu';
-import { useToast } from '../ui/ToastContext';
-import { Breadcrumb } from '../ui/Breadcrumb';
+import { Button } from '../../ui/Button';
+import { Badge } from '../../ui/Badge';
+import { SearchInput } from '../../ui/SearchInput';
+import { Select } from '../../ui/Select';
+import { DataTable } from '../../ui/DataTable';
+import { Modal } from '../../ui/Modal';
+import { FormField } from '../../ui/FormField';
+import { RichTextEditor } from '../../ui/RichTextEditor';
+import { DatePicker } from '../../ui/DatePicker';
+import { ConfirmDialog } from '../../ui/ConfirmDialog';
+import { DropdownMenu } from '../../ui/DropdownMenu';
+import { useToast } from '../../ui/ToastContext';
+import { Breadcrumb } from '../../ui/Breadcrumb';
 
 export const CareersView = ({
   jobs = [],
@@ -1161,3 +1161,5 @@ export const CareersView = ({
     </div>
   );
 };
+
+export default CareersView;

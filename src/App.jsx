@@ -7,13 +7,15 @@ import { Button } from './components/ui/Button';
 import { ConfirmDialog } from './components/ui/ConfirmDialog';
 import { Badge } from './components/ui/Badge';
 
-import { DashboardView } from './components/views/DashboardView';
-import { CareersView } from './components/views/CareersView';
-import { BlogsView } from './components/views/BlogsView';
-import { EnquiriesView } from './components/views/EnquiriesView';
-import { ProductsView } from './components/views/ProductsView';
-import { SettingsView } from './components/views/SettingsView';
-import { LoginView } from './components/views/LoginView';
+import {
+  DashboardView,
+  CareersView,
+  BlogsView,
+  EnquiriesView,
+  ProductsView,
+  SettingsView,
+  LoginView,
+} from './components/views';
 
 import {
   INITIAL_STATS,

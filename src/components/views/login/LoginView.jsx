@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { CheckCircle2, ArrowLeft, Mail } from 'lucide-react';
-import { LoginForm } from '../forms/LoginForm';
+import { LoginForm } from '../../forms/LoginForm';
 
 /**
  * Clean Login Page (Tailwind CSS)

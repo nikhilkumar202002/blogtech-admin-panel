@@ -8,12 +8,12 @@ import {
   CheckCircle2,
   AlertTriangle,
 } from 'lucide-react';
-import { Button } from '../ui/Button';
-import { FormField } from '../ui/FormField';
-import { ConfirmDialog } from '../ui/ConfirmDialog';
-import { useToast } from '../ui/ToastContext';
-import { Breadcrumb } from '../ui/Breadcrumb';
-import { Avatar } from '../ui/Avatar';
+import { Button } from '../../ui/Button';
+import { FormField } from '../../ui/FormField';
+import { ConfirmDialog } from '../../ui/ConfirmDialog';
+import { useToast } from '../../ui/ToastContext';
+import { Breadcrumb } from '../../ui/Breadcrumb';
+import { Avatar } from '../../ui/Avatar';
 
 export const SettingsView = ({
   user = null,

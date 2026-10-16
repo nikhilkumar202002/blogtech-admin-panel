@@ -13,12 +13,12 @@ import {
   RefreshCw,
   FolderOpen,
 } from 'lucide-react';
-import { Button } from '../ui/Button';
-import { Badge } from '../ui/Badge';
-import { DataTable } from '../ui/DataTable';
-import { Skeleton } from '../ui/Skeleton';
-import { useToast } from '../ui/ToastContext';
-import { Breadcrumb } from '../ui/Breadcrumb';
+import { Button } from '../../ui/Button';
+import { Badge } from '../../ui/Badge';
+import { DataTable } from '../../ui/DataTable';
+import { Skeleton } from '../../ui/Skeleton';
+import { useToast } from '../../ui/ToastContext';
+import { Breadcrumb } from '../../ui/Breadcrumb';
 
 export const DashboardView = ({
   stats,
@@ -483,3 +483,5 @@ export const DashboardView = ({
     </div>
   );
 };
+
+export default DashboardView;
