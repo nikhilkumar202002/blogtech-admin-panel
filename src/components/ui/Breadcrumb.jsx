@@ -9,17 +9,7 @@ export const Breadcrumb = ({ items = [], showHomeIcon = true, className = '' }) 
   return (
     <nav
       aria-label="Breadcrumb"
-      className={`breadcrumb-container ${className}`}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: '6px',
-        fontSize: '13px',
-        color: '#64748b',
-        lineHeight: 1.4,
-        marginBottom: '6px',
-      }}
+      className={`breadcrumb-container flex items-center flex-wrap gap-1.5 text-[13px] text-slate-500 leading-normal mb-1.5 ${className}`}
     >
       {items.map((item, index) => {
         const isCurrent = index === lastIndex;
@@ -27,21 +17,17 @@ export const Breadcrumb = ({ items = [], showHomeIcon = true, className = '' }) 
         return (
           <React.Fragment key={index}>
             {index > 0 && (
-              <ChevronRight size={13} style={{ color: '#cbd5e1', flexShrink: 0 }} />
+              <ChevronRight size={13} className="text-slate-300 shrink-0" />
             )}
 
             {isCurrent ? (
               <span
-                style={{
-                  color: '#0f172a',
-                  fontWeight: 600,
-                  letterSpacing: '-0.01em',
-                }}
+                className="text-slate-900 font-semibold tracking-tight"
                 aria-current="page"
               >
                 {index === 0 && showHomeIcon && item.label === 'Dashboard' ? (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                    <Home size={14} style={{ color: '#0f172a' }} />
+                  <span className="inline-flex items-center gap-1.5">
+                    <Home size={14} className="text-slate-900" />
                     <span>{item.label}</span>
                   </span>
                 ) : (
@@ -52,25 +38,9 @@ export const Breadcrumb = ({ items = [], showHomeIcon = true, className = '' }) 
               <button
                 type="button"
                 onClick={item.onClick}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  padding: 0,
-                  color: '#64748b',
-                  fontWeight: 400,
-                  cursor: item.onClick ? 'pointer' : 'default',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  transition: 'color 0.15s ease',
-                  textDecoration: 'none',
-                }}
-                onMouseEnter={(e) => {
-                  if (item.onClick) e.currentTarget.style.color = '#4f46e5';
-                }}
-                onMouseLeave={(e) => {
-                  if (item.onClick) e.currentTarget.style.color = '#64748b';
-                }}
+                className={`bg-transparent border-0 p-0 text-slate-500 font-normal inline-flex items-center gap-1.5 transition-colors no-underline ${
+                  item.onClick ? 'cursor-pointer hover:text-indigo-600' : 'cursor-default'
+                }`}
               >
                 {index === 0 && showHomeIcon && item.label === 'Dashboard' && (
                   <Home size={14} />
@@ -84,3 +54,5 @@ export const Breadcrumb = ({ items = [], showHomeIcon = true, className = '' }) 
     </nav>
   );
 };
+
+export default Breadcrumb;

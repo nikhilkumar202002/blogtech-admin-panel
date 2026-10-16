@@ -6,8 +6,8 @@ import {
   Mail,
   Settings,
   LogOut,
-  Activity,
 } from 'lucide-react';
+import { Avatar } from '../ui/Avatar';
 
 export const Sidebar = ({
   activeTab = 'dashboard',
@@ -18,9 +18,11 @@ export const Sidebar = ({
   onCloseMobile,
   badgeCounts = { enquiries: 14, jobs: 12, blogs: 45 },
   user = {
-    name: 'Sarah Jenkins',
-    role: 'Lead Admin & Editor',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80',
+    id: 55,
+    name: 'Nikhil Kumar',
+    email: 'nikhilkumars12343@gmail.com',
+    role: 'super_admin',
+    status: 'active',
   },
   onLogoutClick,
 }) => {
@@ -32,9 +34,9 @@ export const Sidebar = ({
     {
       title: 'MANAGEMENT',
       items: [
-        { id: 'careers', label: 'Careers', icon: Briefcase, badge: badgeCounts.jobs },
-        { id: 'blogs', label: 'Blogs', icon: FileText, badge: badgeCounts.blogs },
-        { id: 'enquiries', label: 'Enquiries', icon: Mail, badge: badgeCounts.enquiries, badgeColor: '#ef4444' },
+        { id: 'careers', label: 'Careers', icon: Briefcase, badge: badgeCounts?.jobs },
+        { id: 'blogs', label: 'Blogs', icon: FileText, badge: badgeCounts?.blogs },
+        { id: 'enquiries', label: 'Enquiries', icon: Mail, badge: badgeCounts?.enquiries, badgeColor: '#ef4444' },
       ],
     },
     {
@@ -53,85 +55,43 @@ export const Sidebar = ({
       {/* Mobile Backdrop Overlay */}
       {isMobileOpen && (
         <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(15, 23, 42, 0.5)',
-            backdropFilter: 'blur(4px)',
-            zIndex: 99,
-          }}
+          className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40"
           onClick={onCloseMobile}
         />
       )}
 
       <aside
-        className={isMobileOpen ? 'mobile-drawer-open' : ''}
-        style={{
-          width: isCollapsed ? '72px' : '256px',
-          height: '100vh',
-          backgroundColor: '#ffffff',
-          borderRight: '1px solid #e2e8f0',
-          display: 'flex',
-          flexDirection: 'column',
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          zIndex: 100,
-          transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), width 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-          boxShadow: '2px 0 8px rgba(15, 23, 42, 0.03)',
-        }}
+        className={`fixed top-0 left-0 h-screen bg-white border-r border-slate-200 flex flex-col z-50 transition-all duration-200 shadow-xs ${
+          isCollapsed ? 'w-[72px]' : 'w-64'
+        } ${isMobileOpen ? 'mobile-drawer-open' : ''}`}
       >
         {/* BRAND HEADER */}
         <div
-          style={{
-            height: '68px',
-            padding: isCollapsed ? '0 12px' : '0 18px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: isCollapsed ? 'center' : 'space-between',
-            borderBottom: '1px solid #f1f5f9',
-            flexShrink: 0,
-          }}
+          className={`h-[68px] flex items-center border-b border-slate-100 shrink-0 ${
+            isCollapsed ? 'px-3 justify-center' : 'px-4 justify-between'
+          }`}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div className="flex items-center gap-2.5">
             <img
               src={isCollapsed ? '/fav-icon.jpg' : '/MAIN-LOGO.png'}
               alt="BLOGTECH Logo"
-              style={{
-                height: isCollapsed ? '32px' : '36px',
-                width: isCollapsed ? '32px' : 'auto',
-                maxWidth: isCollapsed ? '32px' : '140px',
-                borderRadius: isCollapsed ? '8px' : '0px',
-                objectFit: 'contain',
-                transition: 'all 0.2s ease',
-              }}
+              className={`transition-all duration-200 object-contain ${
+                isCollapsed ? 'h-8 w-8 rounded-lg' : 'h-9 w-auto max-w-[140px]'
+              }`}
             />
           </div>
-
-
-
-
         </div>
 
         {/* NAVIGATION SECTIONS */}
-        <div style={{ padding: '16px 12px', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="p-3 flex-1 overflow-y-auto flex flex-col gap-5">
           {navSections.map((section, idx) => (
-            <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div key={idx} className="flex flex-col gap-1">
               {!isCollapsed ? (
-                <div
-                  style={{
-                    fontSize: '10.5px',
-                    fontWeight: 700,
-                    color: '#94a3b8',
-                    letterSpacing: '0.08em',
-                    padding: '0 10px 6px 10px',
-                    textTransform: 'uppercase',
-                  }}
-                >
+                <div className="text-[10.5px] font-bold text-slate-400 tracking-wider px-2.5 pb-1.5 uppercase">
                   {section.title}
                 </div>
               ) : (
-                idx > 0 && <div style={{ height: '1px', backgroundColor: '#f1f5f9', margin: '4px 8px 8px 8px' }} />
+                idx > 0 && <div className="h-px bg-slate-100 my-1 mx-2" />
               )}
 
               {section.items.map((item) => {
@@ -144,62 +104,38 @@ export const Sidebar = ({
                     type="button"
                     onClick={() => handleNavClick(item.id)}
                     title={isCollapsed ? item.label : undefined}
-                    style={{
-                      width: '100%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: isCollapsed ? 'center' : 'space-between',
-                      padding: isCollapsed ? '10px 0' : '9px 12px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      backgroundColor: isActive ? '#eef2ff' : 'transparent',
-                      color: isActive ? '#4f46e5' : '#475569',
-                      fontWeight: isActive ? 600 : 500,
-                      fontSize: '13.5px',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease',
-                      position: 'relative',
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.backgroundColor = '#f8fafc';
-                        e.currentTarget.style.color = '#0f172a';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                        e.currentTarget.style.color = '#475569';
-                      }
-                    }}
+                    className={`w-full flex items-center rounded-lg border-0 text-[13.5px] cursor-pointer transition-colors relative ${
+                      isCollapsed ? 'justify-center py-2.5 px-0' : 'justify-between py-2.5 px-3'
+                    } ${
+                      isActive
+                        ? 'bg-indigo-50 text-indigo-600 font-semibold'
+                        : 'bg-transparent text-slate-600 font-medium hover:bg-slate-50 hover:text-slate-900'
+                    }`}
                   >
                     {/* Active Left Indicator Bar */}
                     {isActive && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          left: 0,
-                          top: '18%',
-                          bottom: '18%',
-                          width: '3.5px',
-                          borderRadius: '0 4px 4px 0',
-                          backgroundColor: '#4f46e5',
-                        }}
-                      />
+                      <div className="absolute left-0 top-[18%] bottom-[18%] w-[3.5px] rounded-r bg-indigo-600" />
                     )}
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '11px' }}>
+                    <div className="flex items-center gap-2.5">
                       <Icon
                         size={18}
-                        style={{
-                          color: isActive ? '#4f46e5' : '#64748b',
-                          flexShrink: 0,
-                        }}
+                        className={`shrink-0 ${isActive ? 'text-indigo-600' : 'text-slate-500'}`}
                       />
                       {!isCollapsed && <span>{item.label}</span>}
                     </div>
 
-
+                    {!isCollapsed && item.badge && (
+                      <span
+                        className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                          item.badgeColor
+                            ? 'bg-red-50 text-red-600'
+                            : 'bg-slate-100 text-slate-600'
+                        }`}
+                      >
+                        {item.badge}
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -209,83 +145,28 @@ export const Sidebar = ({
 
         {/* USER PROFILE & LOGOUT FOOTER */}
         <div
-          style={{
-            padding: isCollapsed ? '12px 8px' : '14px 16px',
-            borderTop: '1px solid #f1f5f9',
-            backgroundColor: '#ffffff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: isCollapsed ? 'center' : 'space-between',
-            gap: '10px',
-            flexShrink: 0,
-          }}
+          className={`border-t border-slate-100 bg-white flex items-center shrink-0 gap-2.5 ${
+            isCollapsed ? 'p-2.5 px-2 justify-center' : 'p-3.5 px-4 justify-between'
+          }`}
         >
           <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              overflow: 'hidden',
-              cursor: 'pointer',
-              flex: 1,
-            }}
+            className="flex items-center gap-2.5 overflow-hidden cursor-pointer flex-1"
             onClick={() => onTabChange && onTabChange('settings')}
             title="View Account Settings"
           >
-            <div style={{ position: 'relative', flexShrink: 0 }}>
-              <img
-                src={
-                  user?.avatar ||
-                  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80'
-                }
-                alt={user?.name || 'Admin'}
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
-                  objectFit: 'cover',
-                  border: '1px solid #cbd5e1',
-                  display: 'block',
-                }}
-              />
-              <span
-                style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  right: 0,
-                  width: '9px',
-                  height: '9px',
-                  borderRadius: '50%',
-                  backgroundColor: '#10b981',
-                  border: '2px solid #ffffff',
-                }}
-              />
-            </div>
+            <Avatar
+              name={user?.name || 'Nikhil Kumar'}
+              size="md"
+              status={user?.status || 'active'}
+              showStatus={true}
+            />
             {!isCollapsed && (
-              <div style={{ overflow: 'hidden', textAlign: 'left', lineHeight: 1.25, minWidth: 0 }}>
-                <div
-                  style={{
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    color: '#0f172a',
-                    whiteSpace: 'nowrap',
-                    textOverflow: 'ellipsis',
-                    overflow: 'hidden',
-                  }}
-                >
-                  {user?.name || 'Super Admin'}
+              <div className="overflow-hidden text-left leading-tight min-w-0">
+                <div className="text-[13px] font-semibold text-slate-900 truncate">
+                  {user?.name || 'Nikhil Kumar'}
                 </div>
-                <div
-                  style={{
-                    fontSize: '11px',
-                    color: '#64748b',
-                    whiteSpace: 'nowrap',
-                    textOverflow: 'ellipsis',
-                    overflow: 'hidden',
-                    marginTop: '2px',
-                  }}
-                >
-                  {user?.email || 'admin@blogtech.com'}
+                <div className="text-[11px] text-slate-500 truncate mt-0.5">
+                  {user?.email || 'nikhilkumars12343@gmail.com'}
                 </div>
               </div>
             )}
@@ -296,28 +177,7 @@ export const Sidebar = ({
               type="button"
               onClick={onLogoutClick}
               title="Sign Out of BLOGTECH"
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '6px',
-                border: 'none',
-                backgroundColor: 'transparent',
-                color: '#64748b',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-                transition: 'all 0.15s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#fef2f2';
-                e.currentTarget.style.color = '#dc2626';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.color = '#64748b';
-              }}
+              className="w-8 h-8 rounded-md border-0 bg-transparent text-slate-500 cursor-pointer flex items-center justify-center shrink-0 transition-colors hover:bg-red-50 hover:text-red-600"
             >
               <LogOut size={16} />
             </button>
@@ -327,3 +187,5 @@ export const Sidebar = ({
     </>
   );
 };
+
+export default Sidebar;

@@ -1,9 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   User,
   Shield,
-  Key,
-  Camera,
   LogOut,
   Eye,
   EyeOff,
@@ -15,28 +13,40 @@ import { FormField } from '../ui/FormField';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { useToast } from '../ui/ToastContext';
 import { Breadcrumb } from '../ui/Breadcrumb';
+import { Avatar } from '../ui/Avatar';
 
 export const SettingsView = ({
   user = {
-    name: 'Sarah Jenkins',
-    email: 'sarah.jenkins@apexcorp.com',
-    phone: '+1 (555) 019-2834',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80',
+    id: 55,
+    name: 'Nikhil Kumar',
+    email: 'nikhilkumars12343@gmail.com',
+    role: 'super_admin',
+    status: 'active',
+    created_at: '2026-10-16T06:01:51.000000Z',
+    updated_at: '2026-10-16T06:01:51.000000Z',
   },
   onLogoutAll,
 }) => {
   const { addToast } = useToast();
 
-  // Simple Settings Navigation: 'profile' | 'security'
+  // Settings Navigation: 'profile' | 'security'
   const [activeSection, setActiveSection] = useState('profile');
 
-  // Profile Form State
+  // Profile Form State (strictly logged in data, no user image)
   const [profileData, setProfileData] = useState({
-    name: user.name || 'Sarah Jenkins',
-    email: user.email || 'sarah.jenkins@apexcorp.com',
-    phone: user.phone || '+1 (555) 019-2834',
-    avatar: user.avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80',
+    name: user?.name || 'Nikhil Kumar',
+    email: user?.email || 'nikhilkumars12343@gmail.com',
   });
+
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        name: user.name || 'Nikhil Kumar',
+        email: user.email || 'nikhilkumars12343@gmail.com',
+      });
+    }
+  }, [user]);
+
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   // Security Form State
@@ -106,58 +116,34 @@ export const SettingsView = ({
     }, 400);
   };
 
-  // Profile Photo Change Demo
-  const handlePhotoUpload = () => {
-    addToast({
-      title: 'Photo Upload',
-      message: 'Select an image file to update your profile photo.',
-      type: 'info',
-    });
+  const formatRole = (role) => {
+    if (!role || role === 'super_admin') return 'Super Admin';
+    return role.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '720px' }} className="animate-fade-in">
+    <div className="flex flex-col gap-6 max-w-2xl animate-fade-in">
       {/* HEADER */}
       <div>
         <Breadcrumb items={[{ label: 'Dashboard' }, { label: 'Settings' }]} />
-        <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a', margin: '8px 0 0 0', letterSpacing: '-0.02em' }}>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 mt-2">
           Settings
         </h1>
-        <p style={{ fontSize: '13.5px', color: '#64748b', margin: '4px 0 0 0' }}>
+        <p className="text-sm text-slate-500 mt-1">
           Manage your account preferences and security credentials.
         </p>
       </div>
 
-      {/* SIMPLE SETTINGS NAVIGATION */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '6px',
-          backgroundColor: '#ffffff',
-          padding: '4px',
-          borderRadius: '10px',
-          border: '1px solid #e2e8f0',
-          width: 'fit-content',
-          boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
-        }}
-      >
+      {/* SETTINGS NAVIGATION TABS */}
+      <div className="flex gap-1.5 bg-white p-1 rounded-xl border border-slate-200 w-fit shadow-xs">
         <button
           type="button"
           onClick={() => setActiveSection('profile')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '8px 18px',
-            borderRadius: '8px',
-            border: 'none',
-            backgroundColor: activeSection === 'profile' ? '#4f46e5' : 'transparent',
-            color: activeSection === 'profile' ? '#ffffff' : '#64748b',
-            fontSize: '13px',
-            fontWeight: activeSection === 'profile' ? 600 : 500,
-            cursor: 'pointer',
-            transition: 'all 0.15s ease',
-          }}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
+            activeSection === 'profile'
+              ? 'bg-indigo-600 text-white'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+          }`}
         >
           <User size={15} />
           Profile
@@ -166,20 +152,11 @@ export const SettingsView = ({
         <button
           type="button"
           onClick={() => setActiveSection('security')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '8px 18px',
-            borderRadius: '8px',
-            border: 'none',
-            backgroundColor: activeSection === 'security' ? '#4f46e5' : 'transparent',
-            color: activeSection === 'security' ? '#ffffff' : '#64748b',
-            fontSize: '13px',
-            fontWeight: activeSection === 'security' ? 600 : 500,
-            cursor: 'pointer',
-            transition: 'all 0.15s ease',
-          }}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
+            activeSection === 'security'
+              ? 'bg-indigo-600 text-white'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+          }`}
         >
           <Shield size={15} />
           Security
@@ -188,58 +165,40 @@ export const SettingsView = ({
 
       {/* SECTION 1: PROFILE */}
       {activeSection === 'profile' && (
-        <div className="card card-padded" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+        <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col gap-6 shadow-xs">
+          <h2 className="text-base font-bold text-slate-900 m-0">
             Profile Details
           </h2>
 
-          <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {/* Profile Photo */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', paddingBottom: '12px', borderBottom: '1px solid #f1f5f9' }}>
-              <div style={{ position: 'relative' }}>
-                <img
-                  src={profileData.avatar}
-                  alt={profileData.name}
-                  style={{
-                    width: '80px',
-                    height: '80px',
-                    borderRadius: '50%',
-                    objectFit: 'cover',
-                    border: '2px solid #e2e8f0',
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={handlePhotoUpload}
-                  style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    right: 0,
-                    backgroundColor: '#4f46e5',
-                    color: '#ffffff',
-                    border: '2px solid #ffffff',
-                    borderRadius: '50%',
-                    width: '28px',
-                    height: '28px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                  }}
-                  title="Change Profile Photo"
-                >
-                  <Camera size={14} />
-                </button>
-              </div>
+          <form onSubmit={handleSaveProfile} className="flex flex-col gap-5">
+            {/* User Identity Avatar (Initials Only, No User Image) */}
+            <div className="flex items-center gap-5 pb-5 border-b border-slate-100">
+              <Avatar
+                name={profileData.name || 'Nikhil Kumar'}
+                size="xl"
+                status={user?.status || 'active'}
+                showStatus={true}
+              />
 
-              <div>
-                <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>Profile Photo</div>
-                <div style={{ fontSize: '12px', color: '#64748b', margin: '2px 0 8px 0' }}>
-                  JPG or PNG, max size 5MB
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-base font-bold text-slate-900">
+                    {profileData.name || 'Nikhil Kumar'}
+                  </span>
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 uppercase tracking-wide">
+                    {formatRole(user?.role)}
+                  </span>
                 </div>
-                <Button type="button" variant="secondary" size="sm" onClick={handlePhotoUpload}>
-                  Change Photo
-                </Button>
+                <div className="text-xs text-slate-500">
+                  {profileData.email || 'nikhilkumars12343@gmail.com'}
+                </div>
+                <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
+                  <span>Admin ID: #{user?.id || 55}</span>
+                  <span>•</span>
+                  <span className="text-emerald-600 font-medium inline-flex items-center gap-1">
+                    <CheckCircle2 size={13} /> Active Account
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -250,58 +209,23 @@ export const SettingsView = ({
                 value={profileData.name}
                 onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
                 placeholder="Enter admin name"
-                style={{
-                  width: '100%',
-                  padding: '10px 14px',
-                  fontSize: '14px',
-                  color: '#0f172a',
-                  borderRadius: '8px',
-                  border: '1px solid #e2e8f0',
-                  outline: 'none',
-                }}
+                className="w-full px-3.5 py-2 text-sm text-slate-900 rounded-lg border border-slate-200 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 shadow-xs"
               />
             </FormField>
 
-            {/* Email */}
+            {/* Email Address */}
             <FormField label="Email Address" required>
               <input
                 type="email"
                 value={profileData.email}
                 onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
                 placeholder="admin@example.com"
-                style={{
-                  width: '100%',
-                  padding: '10px 14px',
-                  fontSize: '14px',
-                  color: '#0f172a',
-                  borderRadius: '8px',
-                  border: '1px solid #e2e8f0',
-                  outline: 'none',
-                }}
-              />
-            </FormField>
-
-            {/* Phone */}
-            <FormField label="Phone Number">
-              <input
-                type="tel"
-                value={profileData.phone}
-                onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                placeholder="+1 (555) 000-0000"
-                style={{
-                  width: '100%',
-                  padding: '10px 14px',
-                  fontSize: '14px',
-                  color: '#0f172a',
-                  borderRadius: '8px',
-                  border: '1px solid #e2e8f0',
-                  outline: 'none',
-                }}
+                className="w-full px-3.5 py-2 text-sm text-slate-900 rounded-lg border border-slate-200 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 shadow-xs"
               />
             </FormField>
 
             {/* Save Button */}
-            <div style={{ display: 'flex', justifyContent: 'flex-start', paddingTop: '8px' }}>
+            <div className="flex justify-start pt-2">
               <Button type="submit" variant="primary" isLoading={isSavingProfile}>
                 Save Changes
               </Button>
@@ -312,61 +236,34 @@ export const SettingsView = ({
 
       {/* SECTION 2: SECURITY */}
       {activeSection === 'security' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div className="flex flex-col gap-6">
           {/* Change Password Card */}
-          <div className="card card-padded" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+          <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col gap-5 shadow-xs">
+            <h2 className="text-base font-bold text-slate-900 m-0">
               Change Password
             </h2>
 
             {passwordError && (
-              <div
-                style={{
-                  padding: '10px 14px',
-                  borderRadius: '8px',
-                  backgroundColor: '#fef2f2',
-                  border: '1px solid #fecaca',
-                  color: '#dc2626',
-                  fontSize: '13px',
-                }}
-              >
+              <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs">
                 {passwordError}
               </div>
             )}
 
-            <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form onSubmit={handleChangePassword} className="flex flex-col gap-4">
               {/* Current Password */}
               <FormField label="Current Password" required>
-                <div style={{ position: 'relative' }}>
+                <div className="relative">
                   <input
                     type={showCurrentPassword ? 'text' : 'password'}
                     value={securityData.currentPassword}
                     onChange={(e) => setSecurityData({ ...securityData, currentPassword: e.target.value })}
                     placeholder="Enter current password"
-                    style={{
-                      width: '100%',
-                      padding: '10px 14px',
-                      paddingRight: '40px',
-                      fontSize: '14px',
-                      color: '#0f172a',
-                      borderRadius: '8px',
-                      border: '1px solid #e2e8f0',
-                      outline: 'none',
-                    }}
+                    className="w-full px-3.5 py-2 pr-10 text-sm text-slate-900 rounded-lg border border-slate-200 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 shadow-xs"
                   />
                   <button
                     type="button"
                     onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    style={{
-                      position: 'absolute',
-                      right: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none',
-                      border: 'none',
-                      color: '#64748b',
-                      cursor: 'pointer',
-                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer p-0.5"
                   >
                     {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -375,36 +272,18 @@ export const SettingsView = ({
 
               {/* New Password */}
               <FormField label="New Password" required helperText="Must be at least 8 characters long">
-                <div style={{ position: 'relative' }}>
+                <div className="relative">
                   <input
                     type={showNewPassword ? 'text' : 'password'}
                     value={securityData.newPassword}
                     onChange={(e) => setSecurityData({ ...securityData, newPassword: e.target.value })}
                     placeholder="Enter new password"
-                    style={{
-                      width: '100%',
-                      padding: '10px 14px',
-                      paddingRight: '40px',
-                      fontSize: '14px',
-                      color: '#0f172a',
-                      borderRadius: '8px',
-                      border: '1px solid #e2e8f0',
-                      outline: 'none',
-                    }}
+                    className="w-full px-3.5 py-2 pr-10 text-sm text-slate-900 rounded-lg border border-slate-200 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 shadow-xs"
                   />
                   <button
                     type="button"
                     onClick={() => setShowNewPassword(!showNewPassword)}
-                    style={{
-                      position: 'absolute',
-                      right: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none',
-                      border: 'none',
-                      color: '#64748b',
-                      cursor: 'pointer',
-                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer p-0.5"
                   >
                     {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -413,36 +292,18 @@ export const SettingsView = ({
 
               {/* Confirm New Password */}
               <FormField label="Confirm New Password" required>
-                <div style={{ position: 'relative' }}>
+                <div className="relative">
                   <input
                     type={showConfirmPassword ? 'text' : 'password'}
                     value={securityData.confirmPassword}
                     onChange={(e) => setSecurityData({ ...securityData, confirmPassword: e.target.value })}
                     placeholder="Re-enter new password"
-                    style={{
-                      width: '100%',
-                      padding: '10px 14px',
-                      paddingRight: '40px',
-                      fontSize: '14px',
-                      color: '#0f172a',
-                      borderRadius: '8px',
-                      border: '1px solid #e2e8f0',
-                      outline: 'none',
-                    }}
+                    className="w-full px-3.5 py-2 pr-10 text-sm text-slate-900 rounded-lg border border-slate-200 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 shadow-xs"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    style={{
-                      position: 'absolute',
-                      right: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none',
-                      border: 'none',
-                      color: '#64748b',
-                      cursor: 'pointer',
-                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer p-0.5"
                   >
                     {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -450,7 +311,7 @@ export const SettingsView = ({
               </FormField>
 
               {/* Button */}
-              <div style={{ display: 'flex', justifyContent: 'flex-start', paddingTop: '8px' }}>
+              <div className="flex justify-start pt-2">
                 <Button type="submit" variant="primary" isLoading={isChangingPassword}>
                   Change Password
                 </Button>
@@ -459,22 +320,14 @@ export const SettingsView = ({
           </div>
 
           {/* DANGER ZONE */}
-          <div
-            style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '12px',
-              border: '1px solid #fecaca',
-              padding: '24px',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+          <div className="bg-white rounded-xl border border-rose-200 p-6 shadow-xs">
+            <div className="flex items-start justify-between flex-wrap gap-4">
               <div>
-                <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#dc2626', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h3 className="text-sm font-bold text-rose-600 m-0 flex items-center gap-2">
                   <AlertTriangle size={18} />
                   Danger Zone
                 </h3>
-                <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0 0' }}>
+                <p className="text-xs text-slate-500 mt-1 mb-0">
                   Logout from all active browser sessions and revoke access tokens.
                 </p>
               </div>
@@ -516,3 +369,5 @@ export const SettingsView = ({
     </div>
   );
 };
+
+export default SettingsView;

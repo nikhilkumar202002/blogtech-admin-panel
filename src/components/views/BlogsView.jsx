@@ -28,6 +28,7 @@ import { RichTextEditor } from '../ui/RichTextEditor';
 import { ImageUploader } from '../ui/ImageUploader';
 import { DatePicker } from '../ui/DatePicker';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
+import { Avatar } from '../ui/Avatar';
 import { useToast } from '../ui/ToastContext';
 import { Breadcrumb } from '../ui/Breadcrumb';
 import { DropdownMenu } from '../ui/DropdownMenu';
@@ -71,7 +72,6 @@ export const BlogsView = ({
     slug: '',
     category: 'Engineering',
     author: 'Sarah Jenkins (Lead Editor)',
-    authorAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80',
     status: 'Published',
     coverImage: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop&q=80',
     excerpt: '',
@@ -101,7 +101,6 @@ export const BlogsView = ({
       slug: '',
       category: 'Engineering',
       author: 'Sarah Jenkins (Lead Editor)',
-      authorAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80',
       status: 'Published',
       coverImage: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop&q=80',
       excerpt: '',
@@ -123,7 +122,6 @@ export const BlogsView = ({
       slug: blog.slug,
       category: blog.category || 'Engineering',
       author: blog.author || 'Sarah Jenkins (Lead Editor)',
-      authorAvatar: blog.authorAvatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80',
       status: blog.status,
       coverImage: blog.coverImage || '',
       excerpt: blog.excerpt || '',
@@ -460,10 +458,10 @@ export const BlogsView = ({
                 marginBottom: '28px',
               }}
             >
-              <img
-                src={previewBlog.authorAvatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80'}
-                alt={previewBlog.author}
-                style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #cbd5e1' }}
+              <Avatar
+                name={previewBlog.author || 'Sarah Jenkins'}
+                size="lg"
+                showStatus={false}
               />
               <div>
                 <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>

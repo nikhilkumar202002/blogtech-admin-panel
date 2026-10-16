@@ -1,30 +1,27 @@
 import React from 'react';
 
 /**
- * Status Badge Component
+ * Status Badge Component styled with Tailwind CSS
  * Handles Active/Published, Draft, Closed/Unpublished, and Error/Delete states
  */
 export const Badge = ({
   children,
-  status = 'default', // 'active', 'published', 'draft', 'closed', 'unpublished', 'error', 'danger', 'info'
+  status = 'default',
   size = 'md',
   dot = true,
   className = '',
 }) => {
-  // Normalize status names
   const normalizedStatus = String(status).toLowerCase();
 
-  const getStyles = () => {
+  const getStyleClasses = () => {
     switch (normalizedStatus) {
       case 'active':
       case 'published':
       case 'success':
       case 'synced':
         return {
-          bg: '#ecfdf5',
-          color: '#047857',
-          border: '#a7f3d0',
-          dot: '#10b981',
+          badge: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+          dot: 'bg-emerald-500',
         };
       case 'draft':
       case 'warning':
@@ -32,10 +29,8 @@ export const Badge = ({
       case 'changes pending':
       case 'scheduled':
         return {
-          bg: '#fffbeb',
-          color: '#b45309',
-          border: '#fde68a',
-          dot: '#f59e0b',
+          badge: 'bg-amber-50 text-amber-700 border-amber-200',
+          dot: 'bg-amber-500',
         };
       case 'closed':
       case 'unpublished':
@@ -43,10 +38,8 @@ export const Badge = ({
       case 'archived':
       case 'read':
         return {
-          bg: '#f1f5f9',
-          color: '#475569',
-          border: '#cbd5e1',
-          dot: '#64748b',
+          badge: 'bg-slate-100 text-slate-600 border-slate-200',
+          dot: 'bg-slate-500',
         };
       case 'error':
       case 'delete':
@@ -54,61 +47,37 @@ export const Badge = ({
       case 'rejected':
       case 'unread':
         return {
-          bg: '#fef2f2',
-          color: '#b91c1c',
-          border: '#fca5a5',
-          dot: '#ef4444',
+          badge: 'bg-rose-50 text-rose-700 border-rose-200',
+          dot: 'bg-rose-500',
         };
       case 'accent':
       case 'engineering':
       case 'product':
         return {
-          bg: '#eef2ff',
-          color: '#4338ca',
-          border: '#c7d2fe',
-          dot: '#6366f1',
+          badge: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+          dot: 'bg-indigo-500',
         };
       default:
         return {
-          bg: '#f8fafc',
-          color: '#334155',
-          border: '#e2e8f0',
-          dot: '#94a3b8',
+          badge: 'bg-slate-50 text-slate-700 border-slate-200',
+          dot: 'bg-slate-400',
         };
     }
   };
 
-  const styleObj = getStyles();
+  const { badge, dot: dotClass } = getStyleClasses();
+  const sizeClasses = size === 'sm' ? 'text-[11px] px-2 py-0.5 gap-1.5' : 'text-xs px-2.5 py-1 gap-1.5';
 
   return (
     <span
-      className={`inline-flex items-center font-medium rounded-full ${className}`}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '6px',
-        fontSize: size === 'sm' ? '11px' : '12px',
-        padding: size === 'sm' ? '2px 8px' : '4px 10px',
-        borderRadius: '9999px',
-        backgroundColor: styleObj.bg,
-        color: styleObj.color,
-        border: `1px solid ${styleObj.border}`,
-        lineHeight: 1.2,
-        whiteSpace: 'nowrap',
-      }}
+      className={`inline-flex items-center font-medium rounded-full border whitespace-nowrap leading-tight ${sizeClasses} ${badge} ${className}`}
     >
       {dot && (
-        <span
-          style={{
-            width: '6px',
-            height: '6px',
-            borderRadius: '50%',
-            backgroundColor: styleObj.dot,
-            display: 'inline-block',
-          }}
-        />
+        <span className={`w-1.5 h-1.5 rounded-full inline-block ${dotClass}`} />
       )}
       {children || status}
     </span>
   );
 };
+
+export default Badge;

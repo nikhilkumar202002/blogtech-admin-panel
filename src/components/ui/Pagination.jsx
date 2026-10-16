@@ -14,43 +14,19 @@ export const Pagination = ({
   const endItem = Math.min(currentPage * pageSize, totalItems);
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '12px 16px',
-        borderTop: '1px solid #e2e8f0',
-        backgroundColor: '#ffffff',
-        fontSize: '13px',
-        color: '#475569',
-        borderBottomLeftRadius: '12px',
-        borderBottomRightRadius: '12px',
-        flexWrap: 'wrap',
-        gap: '12px',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+    <div className="flex items-center justify-between p-3.5 px-4 border-t border-slate-200 bg-white text-[13px] text-slate-600 rounded-b-xl flex-wrap gap-3">
+      <div className="flex items-center gap-4">
         <span>
-          Showing <strong>{startItem}</strong> - <strong>{endItem}</strong> of{' '}
-          <strong>{totalItems}</strong> entries
+          Showing <strong className="text-slate-900">{startItem}</strong> - <strong className="text-slate-900">{endItem}</strong> of{' '}
+          <strong className="text-slate-900">{totalItems}</strong> entries
         </span>
         {onPageSizeChange && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div className="flex items-center gap-1.5">
             <span>Rows per page:</span>
             <select
               value={pageSize}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              style={{
-                padding: '4px 8px',
-                borderRadius: '6px',
-                border: '1px solid #cbd5e1',
-                backgroundColor: '#ffffff',
-                fontSize: '12px',
-                color: '#0f172a',
-                cursor: 'pointer',
-                outline: 'none',
-              }}
+              className="py-1 px-2 rounded-md border border-slate-300 bg-white text-xs text-slate-900 cursor-pointer outline-none focus:border-indigo-600"
             >
               {pageSizeOptions.map((opt) => (
                 <option key={opt} value={opt}>
@@ -62,21 +38,16 @@ export const Pagination = ({
         )}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+      <div className="flex items-center gap-1">
         <button
           type="button"
           disabled={currentPage === 1}
           onClick={() => onPageChange(1)}
-          style={{
-            padding: '6px',
-            borderRadius: '6px',
-            border: '1px solid #e2e8f0',
-            backgroundColor: '#ffffff',
-            color: currentPage === 1 ? '#cbd5e1' : '#334155',
-            cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-          }}
+          className={`p-1.5 rounded-md border border-slate-200 bg-white flex items-center transition-colors ${
+            currentPage === 1
+              ? 'text-slate-300 cursor-not-allowed'
+              : 'text-slate-700 hover:bg-slate-50 cursor-pointer'
+          }`}
           title="First Page"
         >
           <ChevronsLeft size={16} />
@@ -86,31 +57,17 @@ export const Pagination = ({
           type="button"
           disabled={currentPage === 1}
           onClick={() => onPageChange(currentPage - 1)}
-          style={{
-            padding: '6px 10px',
-            borderRadius: '6px',
-            border: '1px solid #e2e8f0',
-            backgroundColor: '#ffffff',
-            color: currentPage === 1 ? '#cbd5e1' : '#334155',
-            cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            fontSize: '13px',
-          }}
+          className={`py-1.5 px-2.5 rounded-md border border-slate-200 bg-white flex items-center gap-1 text-[13px] transition-colors ${
+            currentPage === 1
+              ? 'text-slate-300 cursor-not-allowed'
+              : 'text-slate-700 hover:bg-slate-50 cursor-pointer'
+          }`}
         >
           <ChevronLeft size={16} />
           Prev
         </button>
 
-        <span
-          style={{
-            padding: '4px 12px',
-            fontWeight: 600,
-            color: '#0f172a',
-            fontSize: '13px',
-          }}
-        >
+        <span className="py-1 px-3 font-semibold text-slate-900 text-[13px]">
           Page {currentPage} of {Math.max(1, totalPages)}
         </span>
 
@@ -118,18 +75,11 @@ export const Pagination = ({
           type="button"
           disabled={currentPage >= totalPages}
           onClick={() => onPageChange(currentPage + 1)}
-          style={{
-            padding: '6px 10px',
-            borderRadius: '6px',
-            border: '1px solid #e2e8f0',
-            backgroundColor: '#ffffff',
-            color: currentPage >= totalPages ? '#cbd5e1' : '#334155',
-            cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            fontSize: '13px',
-          }}
+          className={`py-1.5 px-2.5 rounded-md border border-slate-200 bg-white flex items-center gap-1 text-[13px] transition-colors ${
+            currentPage >= totalPages
+              ? 'text-slate-300 cursor-not-allowed'
+              : 'text-slate-700 hover:bg-slate-50 cursor-pointer'
+          }`}
         >
           Next
           <ChevronRight size={16} />
@@ -139,16 +89,11 @@ export const Pagination = ({
           type="button"
           disabled={currentPage >= totalPages}
           onClick={() => onPageChange(totalPages)}
-          style={{
-            padding: '6px',
-            borderRadius: '6px',
-            border: '1px solid #e2e8f0',
-            backgroundColor: '#ffffff',
-            color: currentPage >= totalPages ? '#cbd5e1' : '#334155',
-            cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-          }}
+          className={`p-1.5 rounded-md border border-slate-200 bg-white flex items-center transition-colors ${
+            currentPage >= totalPages
+              ? 'text-slate-300 cursor-not-allowed'
+              : 'text-slate-700 hover:bg-slate-50 cursor-pointer'
+          }`}
           title="Last Page"
         >
           <ChevronsRight size={16} />
@@ -157,3 +102,5 @@ export const Pagination = ({
     </div>
   );
 };
+
+export default Pagination;

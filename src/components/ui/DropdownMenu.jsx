@@ -1,5 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 
+/**
+ * Dropdown Menu styled with Tailwind CSS
+ */
 export const DropdownMenu = ({
   trigger,
   items = [], // Array of { label, icon, onClick, danger, divider }
@@ -26,45 +29,26 @@ export const DropdownMenu = ({
   }, [isOpen]);
 
   return (
-    <div ref={menuRef} style={{ position: 'relative', display: 'inline-block' }}>
-      <div onClick={() => setIsOpen(!isOpen)} style={{ cursor: 'pointer' }}>
+    <div ref={menuRef} className="relative inline-block">
+      <div onClick={() => setIsOpen(!isOpen)} className="cursor-pointer">
         {trigger}
       </div>
 
       {isOpen && (
         <div
-          style={{
-            position: 'absolute',
-            top: '100%',
-            marginTop: '6px',
-            [align]: 0,
-            width,
-            backgroundColor: '#ffffff',
-            borderRadius: '10px',
-            border: '1px solid #e2e8f0',
-            boxShadow: '0 10px 15px -3px rgba(16, 24, 40, 0.1), 0 4px 6px -4px rgba(16, 24, 40, 0.05)',
-            padding: '4px',
-            zIndex: 100,
-          }}
-          className="animate-pop-in"
+          style={{ width }}
+          className={`absolute top-full mt-1.5 ${
+            align === 'left' ? 'left-0' : 'right-0'
+          } bg-white rounded-xl border border-slate-200 shadow-xl shadow-slate-900/10 p-1.5 z-50 animate-pop-in`}
         >
           {headerContent && (
-            <div style={{ padding: '8px 10px 10px 10px', borderBottom: '1px solid #f1f5f9', marginBottom: '4px' }}>
+            <div className="p-2.5 pb-2.5 border-b border-slate-100 mb-1">
               {headerContent}
             </div>
           )}
           {items.map((item, idx) => {
             if (item.divider) {
-              return (
-                <div
-                  key={`div-${idx}`}
-                  style={{
-                    height: '1px',
-                    backgroundColor: '#f1f5f9',
-                    margin: '4px 0',
-                  }}
-                />
-              );
+              return <div key={`div-${idx}`} className="h-px bg-slate-100 my-1" />;
             }
 
             const Icon = item.icon;
@@ -76,36 +60,19 @@ export const DropdownMenu = ({
                   item.onClick && item.onClick();
                   setIsOpen(false);
                 }}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '8px 10px',
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  color: item.danger ? '#dc2626' : '#334155',
-                  backgroundColor: 'transparent',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'background 0.15s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = item.danger ? '#fef2f2' : '#f8fafc';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium rounded-lg text-left transition-colors cursor-pointer ${
+                  item.danger
+                    ? 'text-red-600 hover:bg-red-50 hover:text-red-700'
+                    : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                }`}
               >
-                {Icon && <Icon size={15} style={{ flexShrink: 0 }} />}
+                {Icon && <Icon size={15} className="shrink-0" />}
                 <span>{item.label}</span>
               </button>
             );
           })}
           {footerContent && (
-            <div style={{ padding: '4px', borderTop: '1px solid #f1f5f9', marginTop: '4px' }}>
+            <div className="p-1.5 border-t border-slate-100 mt-1">
               {footerContent}
             </div>
           )}

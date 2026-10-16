@@ -11,11 +11,10 @@ export const ConfirmDialog = ({
   message,
   confirmLabel,
   cancelLabel = 'Cancel',
-  type = 'danger', // 'danger' | 'warning' | 'info' | 'delete' | 'close-job' | 'unpublish'
+  type = 'danger',
   icon,
   isLoading = false,
 }) => {
-  // Preset Variants Configuration based on Prompt Specs
   let modalTitle = title;
   let modalMessage = message;
   let modalConfirmLabel = confirmLabel;
@@ -54,66 +53,23 @@ export const ConfirmDialog = ({
     modalConfirmLabel = confirmLabel || 'Confirm Action';
   }
 
-  // Render Icon Badge with soft backgrounds & rounded borders
   const renderIconBadge = () => {
     if (modalType === 'danger') {
       return (
-        <div
-          style={{
-            width: '48px',
-            height: '48px',
-            borderRadius: '50%',
-            backgroundColor: '#fef2f2',
-            border: '1px solid #fecaca',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#dc2626',
-            marginBottom: '16px',
-            flexShrink: 0,
-          }}
-        >
+        <div className="w-12 h-12 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 mb-4 shrink-0 shadow-xs">
           {modalIcon || <AlertTriangle size={24} />}
         </div>
       );
     }
     if (modalType === 'warning') {
       return (
-        <div
-          style={{
-            width: '48px',
-            height: '48px',
-            borderRadius: '50%',
-            backgroundColor: '#fffbeb',
-            border: '1px solid #fde68a',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#d97706',
-            marginBottom: '16px',
-            flexShrink: 0,
-          }}
-        >
+        <div className="w-12 h-12 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 mb-4 shrink-0 shadow-xs">
           {modalIcon || <AlertCircle size={24} />}
         </div>
       );
     }
     return (
-      <div
-        style={{
-          width: '48px',
-          height: '48px',
-          borderRadius: '50%',
-          backgroundColor: '#eef2ff',
-          border: '1px solid #c7d2fe',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#4f46e5',
-          marginBottom: '16px',
-          flexShrink: 0,
-        }}
-      >
+      <div className="w-12 h-12 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600 mb-4 shrink-0 shadow-xs">
         {modalIcon || <Info size={24} />}
       </div>
     );
@@ -121,46 +77,21 @@ export const ConfirmDialog = ({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} maxWidth="420px">
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          textAlign: 'center',
-          padding: '8px 4px 4px 4px',
-        }}
-      >
+      <div className="flex flex-col items-center text-center pt-2 px-1 pb-1">
         {renderIconBadge()}
 
         {/* Modal Title */}
-        <h3
-          style={{
-            fontSize: '18px',
-            fontWeight: 700,
-            color: '#0f172a',
-            margin: '0 0 8px 0',
-            letterSpacing: '-0.015em',
-            lineHeight: 1.3,
-          }}
-        >
+        <h3 className="text-lg font-bold text-slate-900 mb-2 tracking-tight leading-snug">
           {modalTitle}
         </h3>
 
         {/* Modal Message Description */}
-        <p
-          style={{
-            fontSize: '13.5px',
-            color: '#64748b',
-            margin: '0 0 24px 0',
-            lineHeight: 1.5,
-            maxWidth: '360px',
-          }}
-        >
+        <p className="text-[13.5px] text-slate-500 mb-6 leading-relaxed max-w-sm">
           {modalMessage}
         </p>
 
         {/* Modal Actions */}
-        <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
+        <div className="flex gap-3 w-full">
           <Button
             variant="secondary"
             onClick={onClose}
@@ -183,7 +114,6 @@ export const ConfirmDialog = ({
   );
 };
 
-// PRESET MODAL CONVENIENCE EXPORTS
 export const DeleteConfirmModal = (props) => (
   <ConfirmDialog type="delete" {...props} />
 );
@@ -195,3 +125,5 @@ export const CloseJobConfirmModal = (props) => (
 export const UnpublishBlogConfirmModal = (props) => (
   <ConfirmDialog type="unpublish" {...props} />
 );
+
+export default ConfirmDialog;

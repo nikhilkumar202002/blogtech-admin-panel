@@ -15,55 +15,27 @@ export const Select = ({
 }) => {
   return (
     <div
-      style={{
-        position: 'relative',
-        display: 'inline-flex',
-        alignItems: 'center',
-        width: fullWidth ? '100%' : 'auto',
-        minWidth: '140px',
-      }}
-      className={className}
+      className={`relative inline-flex items-center min-w-[140px] ${
+        fullWidth ? 'w-full' : 'w-auto'
+      } ${className}`}
     >
       {Icon && (
         <Icon
           size={15}
-          style={{
-            position: 'absolute',
-            left: '12px',
-            color: '#64748b',
-            pointerEvents: 'none',
-          }}
+          className="absolute left-3 text-slate-500 pointer-events-none"
         />
       )}
       <select
         value={value}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
-        style={{
-          width: '100%',
-          appearance: 'none',
-          paddingLeft: Icon ? '34px' : '12px',
-          paddingRight: '32px',
-          height: size === 'sm' ? '32px' : '38px',
-          fontSize: '13px',
-          color: '#0f172a',
-          backgroundColor: '#ffffff',
-          border: '1px solid #e2e8f0',
-          borderRadius: '8px',
-          outline: 'none',
-          cursor: disabled ? 'not-allowed' : 'pointer',
-          boxShadow: '0 1px 2px 0 rgba(16, 24, 40, 0.04)',
-          transition: 'all 0.15s ease',
-          opacity: disabled ? 0.6 : 1,
-        }}
-        onFocus={(e) => {
-          e.target.style.borderColor = '#4f46e5';
-          e.target.style.boxShadow = '0 0 0 3px rgba(79, 70, 229, 0.12)';
-        }}
-        onBlur={(e) => {
-          e.target.style.borderColor = '#e2e8f0';
-          e.target.style.boxShadow = '0 1px 2px 0 rgba(16, 24, 40, 0.04)';
-        }}
+        className={`w-full appearance-none ${
+          Icon ? 'pl-9' : 'pl-3'
+        } pr-8 ${
+          size === 'sm' ? 'h-8 text-xs' : 'h-9 text-[13px]'
+        } text-slate-900 bg-white border border-slate-200 rounded-lg outline-none shadow-xs transition-all focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 ${
+          disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+        }`}
         {...props}
       >
         {placeholder && <option value="">{placeholder}</option>}
@@ -79,13 +51,10 @@ export const Select = ({
       </select>
       <ChevronDown
         size={15}
-        style={{
-          position: 'absolute',
-          right: '10px',
-          color: '#64748b',
-          pointerEvents: 'none',
-        }}
+        className="absolute right-2.5 text-slate-500 pointer-events-none"
       />
     </div>
   );
 };
+
+export default Select;

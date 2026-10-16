@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import { CheckCircle2, ArrowLeft, Mail } from 'lucide-react';
 import { LoginForm } from '../forms/LoginForm';
 
@@ -21,6 +22,7 @@ export const LoginView = ({ onLoginSuccess }) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!resetEmail.trim() || !emailRegex.test(resetEmail.trim())) {
       setResetError('Please enter a valid email address.');
+      toast.error('Please enter a valid email address.');
       return;
     }
 
@@ -28,6 +30,7 @@ export const LoginView = ({ onLoginSuccess }) => {
     setTimeout(() => {
       setResetLoading(false);
       setResetSent(true);
+      toast.success('Password reset link sent to your email.');
     }, 700);
   };
 

@@ -21,10 +21,31 @@ export const removeToken = () => {
   localStorage.removeItem(USER_KEY);
 };
 
+export const DEFAULT_ADMIN_USER = {
+  id: 55,
+  name: 'Nikhil Kumar',
+  email: 'nikhilkumars12343@gmail.com',
+  role: 'super_admin',
+  status: 'active',
+  created_at: '2026-10-16T06:01:51.000000Z',
+  updated_at: '2026-10-16T06:01:51.000000Z',
+};
+
+const sanitizeUserData = (rawUser) => {
+  if (!rawUser || typeof rawUser !== 'object') return null;
+  const user = { ...rawUser };
+  delete user.avatar;
+  delete user.image;
+  delete user.photo;
+  delete user.profile_photo_url;
+  return user;
+};
+
 export const getStoredUser = () => {
   try {
     const raw = localStorage.getItem(USER_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    return sanitizeUserData(JSON.parse(raw));
   } catch (err) {
     console.error('Error parsing stored user:', err);
     return null;
@@ -52,9 +73,10 @@ export const login = async (credentials) => {
   }
 
   // Extract and save user if available in response
-  const user = data?.user || data?.data?.user || (data?.data && !data?.data?.token ? data?.data : null);
-  if (user) {
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
+  const rawUser = data?.user || data?.data?.user || (data?.data && !data?.data?.token ? data?.data : null);
+  const cleanUser = sanitizeUserData(rawUser);
+  if (cleanUser) {
+    localStorage.setItem(USER_KEY, JSON.stringify(cleanUser));
   }
 
   return data;
@@ -82,13 +104,13 @@ export const logout = async () => {
  * {
  *   "success": true,
  *   "data": {
- *     "id": 1,
- *     "name": "Super Admin",
+ *     "id": 55,
+ *     "name": "Nikhil Kumar",
  *     "email": "nikhilkumars12343@gmail.com",
  *     "role": "super_admin",
  *     "status": "active",
- *     "created_at": "...",
- *     "updated_at": "..."
+ *     "created_at": "2026-10-16T06:01:51.000000Z",
+ *     "updated_at": "2026-10-16T06:01:51.000000Z"
  *   }
  * }
  * @returns {Promise<Object>} API response data
@@ -96,9 +118,11 @@ export const logout = async () => {
 export const getCurrentUser = async () => {
   const response = await mainAxios.get('/admin/me');
   const data = response.data;
+  const rawUser = data?.data || data?.user || (data?.id ? data : null);
+  const cleanUser = sanitizeUserData(rawUser);
 
-  if (data?.data) {
-    localStorage.setItem(USER_KEY, JSON.stringify(data.data));
+  if (cleanUser) {
+    localStorage.setItem(USER_KEY, JSON.stringify(cleanUser));
   }
 
   return data;

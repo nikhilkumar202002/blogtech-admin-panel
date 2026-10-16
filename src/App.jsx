@@ -21,7 +21,6 @@ import {
   INITIAL_BLOGS,
   INITIAL_ENQUIRIES,
   INITIAL_PUBLISHING_LOGS,
-  SYSTEM_USERS,
   INITIAL_NOTIFICATIONS,
   ACTIVITY_LOG,
 } from './mockData';
@@ -29,6 +28,8 @@ import {
   getCurrentUser,
   logout as authLogout,
   getStoredUser,
+  DEFAULT_ADMIN_USER,
+  isAuthenticated as checkIsAuthenticated,
 } from './utils/auth.service';
 
 const VALID_TABS = ['dashboard', 'careers', 'blogs', 'enquiries', 'settings'];
@@ -98,42 +99,50 @@ const MainApp = () => {
   const [blogs, setBlogs] = useState(INITIAL_BLOGS);
   const [enquiries, setEnquiries] = useState(INITIAL_ENQUIRIES);
   const [publishingLogs, setPublishingLogs] = useState(INITIAL_PUBLISHING_LOGS);
-  const [users, setUsers] = useState(SYSTEM_USERS);
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
   const [activityLog, setActivityLog] = useState(ACTIVITY_LOG);
 
-  // Authenticated User Profile (Synced with /admin/me API)
+  // Authenticated User Profile (Synced directly with /admin/me API, initials avatar only)
   const [currentUser, setCurrentUser] = useState(() => {
     const stored = getStoredUser();
     if (stored) {
       return {
-        id: stored.id || 'USR-01',
-        name: stored.name || 'Super Admin',
+        id: stored.id ?? 55,
+        name: stored.name || 'Nikhil Kumar',
         email: stored.email || 'nikhilkumars12343@gmail.com',
-        role: stored.role || 'Super Admin',
-        avatar: stored.avatar || SYSTEM_USERS[0].avatar,
-        status: stored.status || 'Active',
+        role: stored.role || 'super_admin',
+        status: stored.status || 'active',
+        created_at: stored.created_at || '2026-10-16T06:01:51.000000Z',
+        updated_at: stored.updated_at || '2026-10-16T06:01:51.000000Z',
       };
     }
-    return SYSTEM_USERS[0];
+    return DEFAULT_ADMIN_USER;
   });
 
-  // Sync profile data from /admin/me on load and auth state change
+  // Fetch logged in user profile from /admin/me API on load
   useEffect(() => {
     if (isAuthenticated) {
       getCurrentUser()
         .then((response) => {
-          const userData = response?.data || response?.user || response;
-          if (userData && (userData.name || userData.email)) {
-            setCurrentUser((prev) => ({
-              ...prev,
-              ...userData,
-              avatar: userData.avatar || prev.avatar,
-            }));
+          const userData = response?.data || response?.user || (response?.id ? response : null);
+          if (userData && (userData.name || userData.email || userData.id)) {
+            setCurrentUser({
+              id: userData.id ?? 55,
+              name: userData.name || 'Nikhil Kumar',
+              email: userData.email || 'nikhilkumars12343@gmail.com',
+              role: userData.role || 'super_admin',
+              status: userData.status || 'active',
+              created_at: userData.created_at || '2026-10-16T06:01:51.000000Z',
+              updated_at: userData.updated_at || '2026-10-16T06:01:51.000000Z',
+            });
           }
         })
         .catch((err) => {
           console.warn('Could not sync admin profile from /admin/me:', err?.message || err);
+          if (err.response?.status === 401) {
+            authLogout();
+            setIsAuthenticated(false);
+          }
         });
     }
   }, [isAuthenticated]);
@@ -258,30 +267,39 @@ const MainApp = () => {
           if (window.location.pathname === '/login') {
             window.history.pushState({}, '', '/');
           }
-          const userObj = userData?.user || userData?.data?.user || userData?.data;
+          const userObj = userData?.user || userData?.data?.user || (userData?.data && !userData?.data?.token ? userData.data : null);
           if (userObj) {
-            setCurrentUser((prev) => ({
-              ...prev,
-              ...userObj,
-              avatar: userObj.avatar || prev.avatar,
-            }));
+            setCurrentUser({
+              id: userObj.id ?? 55,
+              name: userObj.name || 'Nikhil Kumar',
+              email: userObj.email || 'nikhilkumars12343@gmail.com',
+              role: userObj.role || 'super_admin',
+              status: userObj.status || 'active',
+              created_at: userObj.created_at || '2026-10-16T06:01:51.000000Z',
+              updated_at: userObj.updated_at || '2026-10-16T06:01:51.000000Z',
+            });
           }
           // Fetch complete profile from /admin/me
           getCurrentUser()
             .then((res) => {
-              const fresh = res?.data || res?.user;
-              if (fresh) {
-                setCurrentUser((prev) => ({
-                  ...prev,
-                  ...fresh,
-                  avatar: fresh.avatar || prev.avatar,
-                }));
+              const fresh = res?.data || res?.user || (res?.id ? res : null);
+              if (fresh && (fresh.name || fresh.email || fresh.id)) {
+                setCurrentUser({
+                  id: fresh.id ?? 55,
+                  name: fresh.name || 'Nikhil Kumar',
+                  email: fresh.email || 'nikhilkumars12343@gmail.com',
+                  role: fresh.role || 'super_admin',
+                  status: fresh.status || 'active',
+                  created_at: fresh.created_at || '2026-10-16T06:01:51.000000Z',
+                  updated_at: fresh.updated_at || '2026-10-16T06:01:51.000000Z',
+                });
               }
             })
             .catch(() => {});
 
-          const adminName = userObj?.name || 'Super Admin';
-          const adminRole = userObj?.role || 'Super Admin';
+          const adminName = userObj?.name || 'Nikhil Kumar';
+          const rawRole = userObj?.role || 'super_admin';
+          const adminRole = rawRole === 'super_admin' ? 'Super Admin' : rawRole.replace(/_/g, ' ');
           addToast({
             title: 'Welcome Back',
             message: `Signed in as ${adminName} (${adminRole}).`,

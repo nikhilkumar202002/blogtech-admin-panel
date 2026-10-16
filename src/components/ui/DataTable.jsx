@@ -73,39 +73,18 @@ export const DataTable = ({
     selectedRows.length > 0 && !allSelected;
 
   return (
-    <div
-      style={{
-        width: '100%',
-        backgroundColor: '#ffffff',
-        border: '1px solid #e2e8f0',
-        borderRadius: '12px',
-        boxShadow: '0 1px 3px 0 rgba(16, 24, 40, 0.04)',
-        overflow: 'hidden',
-      }}
-    >
+    <div className="w-full bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
       {/* Bulk actions banner if items are selected */}
       {selectedRows.length > 0 && (
-        <div
-          style={{
-            padding: '10px 16px',
-            backgroundColor: '#eef2ff',
-            borderBottom: '1px solid #c7d2fe',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            fontSize: '13px',
-            color: '#3730a3',
-            fontWeight: 500,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="px-4 py-2.5 bg-indigo-50 border-b border-indigo-200 flex items-center justify-between text-[13px] text-indigo-900 font-medium">
+          <div className="flex items-center gap-2">
             <CheckSquare size={16} />
             <span>
-              <strong>{selectedRows.length}</strong> item{selectedRows.length > 1 ? 's' : ''} selected
+              <strong className="font-semibold">{selectedRows.length}</strong> item{selectedRows.length > 1 ? 's' : ''} selected
             </span>
           </div>
           {bulkActions ? (
-            <div style={{ display: 'flex', gap: '8px' }}>{bulkActions}</div>
+            <div className="flex gap-2">{bulkActions}</div>
           ) : (
             <Button
               size="sm"
@@ -120,30 +99,12 @@ export const DataTable = ({
       )}
 
       {/* Main Table */}
-      <div style={{ overflowX: 'auto', width: '100%' }}>
-        <table
-          style={{
-            width: '100%',
-            borderCollapse: 'collapse',
-            textAlign: 'left',
-            fontSize: '13px',
-          }}
-        >
+      <div className="overflow-x-auto w-full">
+        <table className="w-full border-collapse text-left text-[13px]">
           <thead>
-            <tr
-              style={{
-                backgroundColor: '#f8fafc',
-                borderBottom: '1px solid #e2e8f0',
-              }}
-            >
+            <tr className="bg-slate-50 border-b border-slate-200">
               {selectable && (
-                <th
-                  style={{
-                    width: '44px',
-                    padding: '12px 16px',
-                    textAlign: 'center',
-                  }}
-                >
+                <th className="w-11 px-4 py-3 text-center">
                   <input
                     type="checkbox"
                     checked={allSelected}
@@ -161,42 +122,27 @@ export const DataTable = ({
                         onSelectAll && onSelectAll(remaining);
                       }
                     }}
-                    style={{
-                      width: '16px',
-                      height: '16px',
-                      accentColor: '#4f46e5',
-                      cursor: 'pointer',
-                      borderRadius: '4px',
-                    }}
+                    className="w-4 h-4 accent-indigo-600 cursor-pointer rounded"
                   />
                 </th>
               )}
               {columns.map((col) => (
                 <th
                   key={col.key || col.header}
-                  style={{
-                    padding: '12px 16px',
-                    fontWeight: 600,
-                    color: '#475569',
-                    width: col.width || 'auto',
-                    textAlign: col.align || 'left',
-                    whiteSpace: 'nowrap',
-                    userSelect: col.sortable ? 'none' : 'auto',
-                    cursor: col.sortable ? 'pointer' : 'default',
-                  }}
+                  style={{ width: col.width || 'auto' }}
+                  className={`px-4 py-3 font-semibold text-slate-600 whitespace-nowrap ${
+                    col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'
+                  } ${col.sortable ? 'cursor-pointer select-none' : 'cursor-default select-auto'}`}
                   onClick={() => col.sortable && handleSort(col.key)}
                 >
                   <div
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      justifyContent: col.align === 'right' ? 'flex-end' : 'flex-start',
-                    }}
+                    className={`inline-flex items-center gap-1 ${
+                      col.align === 'right' ? 'justify-end' : col.align === 'center' ? 'justify-center' : 'justify-start'
+                    }`}
                   >
                     <span>{col.header}</span>
                     {col.sortable && (
-                      <span style={{ color: sortKey === col.key ? '#4f46e5' : '#cbd5e1' }}>
+                      <span className={sortKey === col.key ? 'text-indigo-600' : 'text-slate-300'}>
                         {sortKey === col.key ? (
                           sortOrder === 'asc' ? (
                             <ArrowUp size={13} />
@@ -217,14 +163,14 @@ export const DataTable = ({
           <tbody>
             {isLoading ? (
               Array.from({ length: pageSize > 5 ? 5 : pageSize }).map((_, idx) => (
-                <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                <tr key={idx} className="border-b border-slate-100">
                   {selectable && (
-                    <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                    <td className="px-4 py-3.5 text-center">
                       <Skeleton width="16px" height="16px" radius="4px" />
                     </td>
                   )}
                   {columns.map((c, cIdx) => (
-                    <td key={cIdx} style={{ padding: '14px 16px' }}>
+                    <td key={cIdx} className="px-4 py-3.5">
                       <Skeleton width={cIdx === 0 ? '70%' : '50%'} height="16px" />
                     </td>
                   ))}
@@ -234,7 +180,7 @@ export const DataTable = ({
               <tr>
                 <td
                   colSpan={selectable ? columns.length + 1 : columns.length}
-                  style={{ padding: '48px 16px', textAlign: 'center' }}
+                  className="p-12 text-center"
                 >
                   <EmptyState
                     title={emptyTitle}
@@ -251,20 +197,12 @@ export const DataTable = ({
                 return (
                   <tr
                     key={row[keyField] || rIdx}
-                    style={{
-                      borderBottom: '1px solid #f1f5f9',
-                      backgroundColor: isSelected ? '#f8fafc' : '#ffffff',
-                      transition: 'background-color 0.15s ease',
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isSelected) e.currentTarget.style.backgroundColor = '#fafafa';
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isSelected) e.currentTarget.style.backgroundColor = '#ffffff';
-                    }}
+                    className={`border-b border-slate-100 transition-colors ${
+                      isSelected ? 'bg-slate-50' : 'bg-white hover:bg-slate-50/70'
+                    }`}
                   >
                     {selectable && (
-                      <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                      <td className="px-4 py-3.5 text-center">
                         <input
                           type="checkbox"
                           checked={isSelected}
@@ -276,25 +214,16 @@ export const DataTable = ({
                                 onSelectRow(selectedRows.filter((id) => id !== row[keyField]));
                             }
                           }}
-                          style={{
-                            width: '16px',
-                            height: '16px',
-                            accentColor: '#4f46e5',
-                            cursor: 'pointer',
-                            borderRadius: '4px',
-                          }}
+                          className="w-4 h-4 accent-indigo-600 cursor-pointer rounded"
                         />
                       </td>
                     )}
                     {columns.map((col) => (
                       <td
                         key={col.key || col.header}
-                        style={{
-                          padding: '14px 16px',
-                          color: '#0f172a',
-                          textAlign: col.align || 'left',
-                          verticalAlign: 'middle',
-                        }}
+                        className={`px-4 py-3.5 text-slate-900 align-middle ${
+                          col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'
+                        }`}
                       >
                         {col.render ? col.render(row, rIdx) : row[col.key]}
                       </td>
@@ -321,3 +250,5 @@ export const DataTable = ({
     </div>
   );
 };
+
+export default DataTable;

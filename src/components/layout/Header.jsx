@@ -2,20 +2,22 @@ import React, { useState } from 'react';
 import {
   Bell,
   Search,
-  Send,
   User,
   Shield,
   HelpCircle,
   LogOut,
-  Sparkles,
-  ExternalLink,
   Menu,
   ChevronDown,
   CheckCircle2,
 } from 'lucide-react';
-import { Button } from '../ui/Button';
 import { DropdownMenu } from '../ui/DropdownMenu';
-import { Badge } from '../ui/Badge';
+import { Avatar } from '../ui/Avatar';
+
+const formatRole = (role) => {
+  if (!role) return 'Super Admin';
+  if (role === 'super_admin') return 'Super Admin';
+  return role.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+};
 
 export const Header = ({
   activeTab = 'dashboard',
@@ -24,10 +26,11 @@ export const Header = ({
   notifications = [],
   onNotificationClick,
   user = {
-    name: 'Sarah Jenkins',
-    role: 'Super Admin',
-    email: 'sarah.jenkins@apexcorp.com',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80',
+    id: 55,
+    name: 'Nikhil Kumar',
+    role: 'super_admin',
+    email: 'nikhilkumars12343@gmail.com',
+    status: 'active',
   },
   onLogoutClick,
   onTabChange,
@@ -39,40 +42,13 @@ export const Header = ({
   const unreadNotifsCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <header
-      className="header-responsive"
-      style={{
-        height: '64px',
-        backgroundColor: '#ffffff',
-        borderBottom: '1px solid #e2e8f0',
-        position: 'sticky',
-        top: 0,
-        zIndex: 40,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 24px',
-      }}
-    >
+    <header className="header-responsive h-16 bg-white border-b border-slate-200 sticky top-0 z-40 flex items-center justify-between px-6">
       {/* Left: Mobile Hamburger Button */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={onToggleMobileSidebar}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: '#0f172a',
-            cursor: 'pointer',
-            padding: '8px',
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minWidth: '40px',
-            minHeight: '40px',
-          }}
-          className="show-on-mobile"
+          className="show-on-mobile bg-transparent border-0 text-slate-800 cursor-pointer p-2 rounded-lg flex items-center justify-center min-w-[40px] min-h-[40px] hover:bg-slate-100 transition-colors"
           title="Open Menu"
         >
           <Menu size={22} />
@@ -80,175 +56,51 @@ export const Header = ({
       </div>
 
       {/* Right Controls: Quick Search, Site Status, Notifications, Profile */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div className="flex items-center gap-2.5">
         {/* Quick Command Search Trigger */}
         <button
           type="button"
           onClick={onOpenCommandPalette}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            backgroundColor: '#f8fafc',
-            border: '1px solid #e2e8f0',
-            borderRadius: '8px',
-            padding: '6px 12px',
-            fontSize: '13px',
-            color: '#64748b',
-            cursor: 'pointer',
-            height: '36px',
-            transition: 'all 0.15s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = '#cbd5e1';
-            e.currentTarget.style.backgroundColor = '#f1f5f9';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = '#e2e8f0';
-            e.currentTarget.style.backgroundColor = '#f8fafc';
-          }}
+          className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 rounded-lg px-3 py-1.5 text-[13px] text-slate-500 cursor-pointer h-9 transition-colors"
           title="Search or jump to (Cmd+K)"
         >
-          <Search size={15} style={{ color: '#94a3b8' }} />
-          <span className="hide-on-mobile" style={{ paddingRight: '8px' }}>
-            Search or jump to...
-          </span>
-          <kbd
-            className="hide-on-mobile"
-            style={{
-              fontSize: '11px',
-              fontWeight: 600,
-              backgroundColor: '#ffffff',
-              border: '1px solid #cbd5e1',
-              borderRadius: '4px',
-              padding: '1px 5px',
-              color: '#475569',
-            }}
-          >
+          <Search size={15} className="text-slate-400" />
+          <span className="hide-on-mobile pr-2">Search or jump to...</span>
+          <kbd className="hide-on-mobile text-[11px] font-semibold bg-white border border-slate-300 rounded px-1.5 py-0.5 text-slate-600 shadow-xs">
             ⌘K
           </kbd>
         </button>
 
-        {/* Website Sync Status Button */}
-        <Button
-          size="sm"
-          variant={publishingStatus === 'Changes Pending' ? 'accent' : 'secondary'}
-          icon={Send}
-          onClick={onPublishClick}
-        >
-          <span className="hide-on-mobile">
-            {publishingStatus === 'Changes Pending' ? 'Publish Site Changes' : 'Site Synced'}
-          </span>
-          <span className="show-on-mobile" style={{ fontSize: '12px' }}>
-            {publishingStatus === 'Changes Pending' ? 'Publish' : 'Synced'}
-          </span>
-        </Button>
-
-        {/* View Live Site Link */}
-        <a
-          href="#"
-          target="_blank"
-          rel="noreferrer"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            fontSize: '13px',
-            fontWeight: 500,
-            color: '#4f46e5',
-            textDecoration: 'none',
-            padding: '6px 10px',
-            borderRadius: '6px',
-            transition: 'background 0.15s ease',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#eef2ff')}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-          title="View Live Site"
-        >
-          <span className="hide-on-mobile">Live Site</span>
-          <ExternalLink size={14} />
-        </a>
-
         {/* Divider */}
-        <div style={{ width: '1px', height: '24px', backgroundColor: '#e2e8f0' }} />
+        <div className="w-px h-6 bg-slate-200 mx-1" />
 
         {/* Notifications Popover */}
-        <div style={{ position: 'relative' }}>
+        <div className="relative">
           <button
             type="button"
             onClick={() => setShowNotifications(!showNotifications)}
-            style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '8px',
-              border: '1px solid #e2e8f0',
-              backgroundColor: '#ffffff',
-              color: '#475569',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-              transition: 'background 0.15s ease',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f8fafc')}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#ffffff')}
+            className="w-9 h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 cursor-pointer flex items-center justify-center relative transition-colors"
             title="Notifications"
           >
             <Bell size={17} />
             {unreadNotifsCount > 0 && (
-              <span
-                style={{
-                  position: 'absolute',
-                  top: '-2px',
-                  right: '-2px',
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  backgroundColor: '#ef4444',
-                  border: '2px solid #ffffff',
-                }}
-              />
+              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
             )}
           </button>
 
           {showNotifications && (
-            <div
-              style={{
-                position: 'absolute',
-                top: '100%',
-                right: 0,
-                marginTop: '8px',
-                width: '320px',
-                backgroundColor: '#ffffff',
-                borderRadius: '12px',
-                border: '1px solid #e2e8f0',
-                boxShadow: '0 10px 15px -3px rgba(16, 24, 40, 0.1), 0 4px 6px -4px rgba(16, 24, 40, 0.05)',
-                zIndex: 100,
-                overflow: 'hidden',
-              }}
-              className="animate-pop-in"
-            >
-              <div
-                style={{
-                  padding: '12px 16px',
-                  borderBottom: '1px solid #f1f5f9',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  backgroundColor: '#f8fafc',
-                }}
-              >
-                <span style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>
+            <div className="absolute top-full right-0 mt-2 w-80 bg-white rounded-xl border border-slate-200 shadow-xl z-50 overflow-hidden animate-pop-in">
+              <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                <span className="text-[13px] font-semibold text-slate-900">
                   Notifications ({unreadNotifsCount})
                 </span>
-                <span style={{ fontSize: '11px', color: '#4f46e5', cursor: 'pointer', fontWeight: 500 }}>
+                <span className="text-[11px] text-indigo-600 cursor-pointer font-medium hover:underline">
                   Mark all read
                 </span>
               </div>
-              <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
+              <div className="max-h-72 overflow-y-auto divide-y divide-slate-100">
                 {notifications.length === 0 ? (
-                  <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
+                  <div className="p-5 text-center text-slate-400 text-[13px]">
                     No notifications
                   </div>
                 ) : (
@@ -259,23 +111,17 @@ export const Header = ({
                         onNotificationClick && onNotificationClick(n);
                         setShowNotifications(false);
                       }}
-                      style={{
-                        padding: '12px 16px',
-                        borderBottom: '1px solid #f1f5f9',
-                        backgroundColor: n.read ? '#ffffff' : '#f8fafc',
-                        cursor: 'pointer',
-                        transition: 'background 0.15s ease',
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f5f9')}
-                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = n.read ? '#ffffff' : '#f8fafc')}
+                      className={`p-3.5 px-4 cursor-pointer transition-colors hover:bg-slate-100 ${
+                        n.read ? 'bg-white' : 'bg-slate-50'
+                      }`}
                     >
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>
+                      <div className="text-[13px] font-semibold text-slate-900">
                         {n.title}
                       </div>
-                      <div style={{ fontSize: '12px', color: '#475569', marginTop: '2px', lineHeight: 1.4 }}>
+                      <div className="text-xs text-slate-600 mt-0.5 leading-snug">
                         {n.message}
                       </div>
-                      <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+                      <div className="text-[11px] text-slate-400 mt-1">
                         {n.time}
                       </div>
                     </div>
@@ -288,97 +134,63 @@ export const Header = ({
 
         {/* Admin Profile Dropdown (Synced with /admin/me & /admin/logout) */}
         <DropdownMenu
-          width="260px"
+          width="268px"
           trigger={
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '4px 6px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                transition: 'background 0.15s ease',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f8fafc')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-            >
-              <div style={{ position: 'relative', flexShrink: 0 }}>
-                <img
-                  src={
-                    user?.avatar ||
-                    'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80'
-                  }
-                  alt={user?.name || 'Admin'}
-                  style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '50%',
-                    objectFit: 'cover',
-                    border: '1px solid #cbd5e1',
-                    display: 'block',
-                  }}
-                />
-                <span
-                  style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    right: 0,
-                    width: '9px',
-                    height: '9px',
-                    borderRadius: '50%',
-                    backgroundColor: '#10b981',
-                    border: '2px solid #ffffff',
-                  }}
-                />
-              </div>
-              <div className="hide-on-mobile" style={{ textAlign: 'left', lineHeight: 1.25 }}>
-                <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>
-                  {user?.name || 'Super Admin'}
+            <div className="flex items-center gap-2 p-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+              <Avatar
+                name={user?.name || 'Nikhil Kumar'}
+                size="md"
+                status={user?.status || 'active'}
+                showStatus={true}
+              />
+              <div className="hide-on-mobile text-left leading-tight">
+                <div className="text-[13px] font-semibold text-slate-900">
+                  {user?.name || 'Nikhil Kumar'}
                 </div>
-                <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
-                  {user?.role || 'Super Admin'}
+                <div className="text-[11px] text-slate-500 mt-0.5">
+                  {formatRole(user?.role)}
                 </div>
               </div>
-              <ChevronDown size={14} style={{ color: '#94a3b8' }} className="hide-on-mobile" />
+              <ChevronDown size={14} className="text-slate-400 hide-on-mobile" />
             </div>
           }
           headerContent={
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '13.5px', fontWeight: 700, color: '#0f172a' }}>
-                  {user?.name || 'Super Admin'}
-                </span>
-                <span
-                  style={{
-                    fontSize: '10.5px',
-                    fontWeight: 600,
-                    padding: '2px 6px',
-                    borderRadius: '4px',
-                    backgroundColor: '#eef2ff',
-                    color: '#4f46e5',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.04em',
-                  }}
-                >
-                  {user?.role || 'Super Admin'}
-                </span>
-              </div>
-              <div style={{ fontSize: '12px', color: '#64748b', wordBreak: 'break-all' }}>
-                {user?.email || 'admin@blogtech.com'}
-              </div>
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  fontSize: '11px',
-                  color: '#059669',
-                  marginTop: '2px',
-                }}
-              >
-                <CheckCircle2 size={12} />
-                <span>Active Session (/admin/me)</span>
+            <div className="flex gap-3 items-start">
+              <Avatar
+                name={user?.name || 'Nikhil Kumar'}
+                size="lg"
+                status={user?.status || 'active'}
+                showStatus={true}
+              />
+              <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-1.5">
+                  <span className="text-[13.5px] font-bold text-slate-900 truncate">
+                    {user?.name || 'Nikhil Kumar'}
+                  </span>
+                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600 uppercase tracking-wider whitespace-nowrap">
+                    {formatRole(user?.role)}
+                  </span>
+                </div>
+                <div className="text-xs text-slate-500 break-all">
+                  {user?.email || 'nikhilkumars12343@gmail.com'}
+                </div>
+                <div className="flex items-center justify-between mt-1 pt-1 border-t border-dashed border-slate-100">
+                  <div
+                    className={`inline-flex items-center gap-1 text-[11px] font-medium ${
+                      user?.status === 'active' || !user?.status ? 'text-emerald-600' : 'text-slate-500'
+                    }`}
+                  >
+                    <CheckCircle2 size={12} />
+                    <span>
+                      {user?.status ? user.status.charAt(0).toUpperCase() + user.status.slice(1) : 'Active'}
+                    </span>
+                  </div>
+                  {user?.id && (
+                    <span className="text-[10.5px] text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
+                      ID #{user.id}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           }
@@ -413,3 +225,5 @@ export const Header = ({
     </header>
   );
 };
+
+export default Header;

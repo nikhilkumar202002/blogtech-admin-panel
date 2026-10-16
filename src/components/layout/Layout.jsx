@@ -21,7 +21,7 @@ export const Layout = ({
   children,
 }) => {
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f8fafc' }}>
+    <div className="flex min-h-screen bg-slate-50">
       {/* Common Sidebar Navigation */}
       <Sidebar
         activeTab={activeTab}
@@ -37,13 +37,9 @@ export const Layout = ({
 
       {/* Main Wrapper for Header and Dynamic Page Content */}
       <div
-        className={`layout-main-container ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}
-        style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          minWidth: 0,
-        }}
+        className={`layout-main-container flex-1 flex flex-col min-w-0 ${
+          sidebarCollapsed ? 'sidebar-collapsed' : ''
+        }`}
       >
         {/* Common Sticky Header */}
         <Header
@@ -61,15 +57,7 @@ export const Layout = ({
         />
 
         {/* Dynamic Page Area */}
-        <main
-          className="main-content-area"
-          style={{
-            flex: 1,
-            padding: '24px 32px 48px 32px',
-            width: '100%',
-            boxSizing: 'border-box',
-          }}
-        >
+        <main className="main-content-area flex-1 p-6 md:p-8 lg:p-10 w-full box-border">
           {children}
         </main>
       </div>

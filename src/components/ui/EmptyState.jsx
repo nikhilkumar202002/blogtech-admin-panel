@@ -11,59 +11,28 @@ export const EmptyState = ({
   actionIcon,
 }) => {
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '40px 20px',
-        textAlign: 'center',
-        maxWidth: '420px',
-        margin: '0 auto',
-      }}
-    >
-      <div
-        style={{
-          width: '54px',
-          height: '54px',
-          borderRadius: '50%',
-          backgroundColor: '#f1f5f9',
-          border: '1px solid #e2e8f0',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#64748b',
-          marginBottom: '16px',
-        }}
-      >
+    <div className="flex flex-col items-center justify-center py-10 px-5 text-center max-w-md mx-auto">
+      <div className="w-14 h-14 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 mb-4 shadow-xs">
         <Icon size={24} />
       </div>
-      <h3
-        style={{
-          fontSize: '16px',
-          fontWeight: 600,
-          color: '#0f172a',
-          margin: '0 0 6px 0',
-        }}
-      >
+      <h3 className="text-base font-semibold text-slate-900 mb-1.5">
         {title}
       </h3>
-      <p
-        style={{
-          fontSize: '13px',
-          color: '#64748b',
-          margin: '0 0 20px 0',
-          lineHeight: 1.5,
-        }}
-      >
+      <p className="text-[13px] text-slate-500 mb-5 leading-relaxed">
         {description}
       </p>
       {actionLabel && onAction && (
-        <Button variant="primary" size="md" icon={actionIcon} onClick={onAction}>
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={onAction}
+          icon={actionIcon}
+        >
           {actionLabel}
         </Button>
       )}
     </div>
   );
 };
+
+export default EmptyState;
