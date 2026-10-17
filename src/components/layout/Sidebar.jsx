@@ -19,7 +19,7 @@ export const Sidebar = ({
   onToggleCollapse,
   isMobileOpen = false,
   onCloseMobile,
-  badgeCounts = { enquiries: 14, jobs: 12, blogs: 45 },
+  badgeCounts = {},
   user = null,
   onLogoutClick,
 }) => {
@@ -31,11 +31,11 @@ export const Sidebar = ({
     {
       title: 'MANAGEMENT',
       items: [
-        { id: 'products', label: 'Products', icon: Package, badge: badgeCounts?.products },
-        { id: 'services', label: 'Services', icon: Wrench, badge: badgeCounts?.services },
-        { id: 'careers', label: 'Careers', icon: Briefcase, badge: badgeCounts?.jobs },
-        { id: 'blogs', label: 'Blogs', icon: FileText, badge: badgeCounts?.blogs },
-        { id: 'enquiries', label: 'Enquiries', icon: Mail, badge: badgeCounts?.enquiries, badgeColor: '#ef4444' },
+        { id: 'products', label: 'Products', icon: Package },
+        { id: 'services', label: 'Services', icon: Wrench },
+        { id: 'careers', label: 'Careers', icon: Briefcase },
+        { id: 'blogs', label: 'Blogs', icon: FileText },
+        { id: 'enquiries', label: 'Enquiries', icon: Mail },
       ],
     },
     {
@@ -116,7 +116,7 @@ export const Sidebar = ({
                     onClick={() => handleNavClick(item.id)}
                     title={isCollapsed ? item.label : undefined}
                     className={`w-full flex items-center rounded-lg border-0 text-[13.5px] cursor-pointer transition-colors relative ${
-                      isCollapsed ? 'justify-center py-2.5 px-0' : 'justify-between py-2.5 px-3'
+                      isCollapsed ? 'justify-center py-2.5 px-0' : 'justify-start py-2.5 px-3'
                     } ${
                       isActive
                         ? 'bg-indigo-50 text-indigo-600 font-semibold'
@@ -135,18 +135,6 @@ export const Sidebar = ({
                       />
                       {!isCollapsed && <span>{item.label}</span>}
                     </div>
-
-                    {!isCollapsed && item.badge && (
-                      <span
-                        className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-                          item.badgeColor
-                            ? 'bg-red-50 text-red-600'
-                            : 'bg-slate-100 text-slate-600'
-                        }`}
-                      >
-                        {item.badge}
-                      </span>
-                    )}
                   </button>
                 );
               })}
