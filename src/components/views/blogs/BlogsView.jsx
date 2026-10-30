@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Plus,
   MoreVertical,
@@ -7,32 +7,19 @@ import {
   Trash2,
   Send,
   EyeOff,
-  Globe,
   ArrowLeft,
-  ChevronDown,
-  ChevronUp,
-  FileText,
-  Clock,
-  Calendar,
-  User,
-  ExternalLink,
 } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import { Badge } from '../../ui/Badge';
 import { SearchInput } from '../../ui/SearchInput';
 import { Select } from '../../ui/Select';
 import { DataTable } from '../../ui/DataTable';
-import { Modal } from '../../ui/Modal';
-import { FormField } from '../../ui/FormField';
-import { RichTextEditor } from '../../ui/RichTextEditor';
-import { ImageUploader } from '../../ui/ImageUploader';
-import { DatePicker } from '../../ui/DatePicker';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
 import { Avatar } from '../../ui/Avatar';
 import { useToast } from '../../ui/ToastContext';
 import { Breadcrumb } from '../../ui/Breadcrumb';
 import { DropdownMenu } from '../../ui/DropdownMenu';
-import { BLOG_CATEGORIES } from '../../../mockData';
+import { CreateBlog } from './CreateBlog';
 
 export const BlogsView = ({
   blogs = [],
@@ -63,77 +50,27 @@ export const BlogsView = ({
   const [previewBlog, setPreviewBlog] = useState(null);
   const [deleteBlogId, setDeleteBlogId] = useState(null);
 
-  // SEO Accordion Collapse State
-  const [isSeoOpen, setIsSeoOpen] = useState(false);
-
-  // Form State
-  const [formData, setFormData] = useState({
-    title: '',
-    slug: '',
-    category: 'Engineering',
-    author: 'Sarah Jenkins (Lead Editor)',
-    status: 'Published',
-    coverImage: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop&q=80',
-    excerpt: '',
-    content: '',
-    seoTitle: '',
-    seoDescription: '',
-    publishedAt: new Date().toISOString().split('T')[0],
-  });
-
-  // Inline Validation Errors
-  const [errors, setErrors] = useState({});
-
-  // Helper Slug Generator
-  const generateSlug = (text) => {
-    return text
-      .toLowerCase()
-      .replace(/[^a-z0-9 -]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-');
-  };
-
   // Open Create Form View
   const handleOpenCreate = () => {
     setEditingBlog(null);
-    setFormData({
-      title: '',
-      slug: '',
-      category: 'Engineering',
-      author: 'Sarah Jenkins (Lead Editor)',
-      status: 'Published',
-      coverImage: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop&q=80',
-      excerpt: '',
-      content: '<h2>Introduction</h2><p>Write your detailed article body content here...</p>',
-      seoTitle: '',
-      seoDescription: '',
-      publishedAt: new Date().toISOString().split('T')[0],
-    });
-    setErrors({});
-    setIsSeoOpen(false);
     setViewMode('form');
   };
 
   // Open Edit Form View
   const handleOpenEdit = (blog) => {
     setEditingBlog(blog);
-    setFormData({
-      title: blog.title,
-      slug: blog.slug,
-      category: blog.category || 'Engineering',
-      author: blog.author || 'Sarah Jenkins (Lead Editor)',
-      status: blog.status,
-      coverImage: blog.coverImage || '',
-      excerpt: blog.excerpt || '',
-      content: blog.content || '',
-      seoTitle: blog.seoTitle || '',
-      seoDescription: blog.seoDescription || '',
-      publishedAt: blog.publishedAt || new Date().toISOString().split('T')[0],
-    });
-    setErrors({});
-    setIsSeoOpen(!!(blog.seoTitle || blog.seoDescription));
     setViewMode('form');
   };
+
+  // Adjust state during render when isCreateOpen changes (React recommended pattern)
+  const [prevIsCreateOpen, setPrevIsCreateOpen] = useState(isCreateOpen);
+  if (isCreateOpen !== prevIsCreateOpen) {
+    setPrevIsCreateOpen(isCreateOpen);
+    if (isCreateOpen) {
+      setEditingBlog(null);
+      setViewMode('form');
+    }
+  }
 
   // Open Preview Page View
   const handleOpenPreview = (blog) => {
@@ -160,44 +97,6 @@ export const BlogsView = ({
       message: `Article "${blog.title}" status changed to ${nextStatus}.`,
       type: 'info',
     });
-  };
-
-  // Form Submit Handler
-  const handleFormSubmit = (e, forcedStatus = null) => {
-    if (e) e.preventDefault();
-
-    if (!formData.title.trim()) {
-      setErrors({ title: 'Article title is required.' });
-      addToast({ title: 'Validation Error', message: 'Article title is required.', type: 'error' });
-      return;
-    }
-
-    const finalStatus = forcedStatus || formData.status;
-    const finalSlug = formData.slug || generateSlug(formData.title);
-
-    if (editingBlog) {
-      onUpdateBlog({
-        ...editingBlog,
-        ...formData,
-        slug: finalSlug,
-        status: finalStatus,
-      });
-      addToast({ title: 'Article Saved', message: `Article "${formData.title}" saved as ${finalStatus}.`, type: 'success' });
-    } else {
-      const newBlog = {
-        id: `BLOG-${Math.floor(200 + Math.random() * 800)}`,
-        ...formData,
-        slug: finalSlug,
-        status: finalStatus,
-        views: '0',
-        readTime: '5 min read',
-      };
-      onAddBlog(newBlog);
-      addToast({ title: 'Article Saved', message: `New article "${formData.title}" saved as ${finalStatus}.`, type: 'success' });
-    }
-
-    setViewMode('list');
-    onCloseCreateOpen && onCloseCreateOpen();
   };
 
   // Confirm Delete Handler
@@ -293,7 +192,7 @@ export const BlogsView = ({
       header: 'Last Updated',
       key: 'updated',
       sortable: true,
-      render: (row) => <span style={{ fontSize: '12px', color: '#64748b', whiteSpace: 'nowrap' }}>Recently</span>,
+      render: () => <span style={{ fontSize: '12px', color: '#64748b', whiteSpace: 'nowrap' }}>Recently</span>,
     },
     {
       header: 'Actions',
@@ -549,300 +448,34 @@ export const BlogsView = ({
   }
 
   /* -------------------------------------------------------------------------- */
-  /* FORM VIEW: PREMIUM CMS ARTICLE EDITOR PAGE                                 */
+  /* FORM VIEW: CREATE / EDIT BLOG ARTICLE CMS PAGE                             */
   /* -------------------------------------------------------------------------- */
   if (viewMode === 'form') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }} className="animate-fade-in">
-        {/* HEADER & TOP ACTIONS BAR */}
-        <div
-          style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '16px',
-            border: '1px solid #e2e8f0',
-            padding: '20px 24px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '16px',
-            boxShadow: '0 1px 3px 0 rgba(16, 24, 40, 0.04)',
-          }}
-        >
-          <div>
-            <Breadcrumb
-              items={[
-                { label: 'Dashboard', onClick: () => setViewMode('list') },
-                { label: 'Blogs', onClick: () => setViewMode('list') },
-                { label: editingBlog ? 'Edit Article' : 'Create Article' },
-              ]}
-            />
-            <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a', margin: '8px 0 0 0', letterSpacing: '-0.02em' }}>
-              {editingBlog ? 'Edit Article' : 'Create Article'}
-            </h1>
-          </div>
-
-          {/* Top Actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Button
-              variant="ghost"
-              onClick={(e) => handleFormSubmit(e, 'Draft')}
-            >
-              Save Draft
-            </Button>
-            <Button
-              variant="secondary"
-              icon={Eye}
-              onClick={() => handleOpenPreview(formData)}
-            >
-              Preview
-            </Button>
-            <Button
-              variant="accent"
-              icon={Send}
-              onClick={(e) => handleFormSubmit(e, 'Published')}
-            >
-              Publish
-            </Button>
-          </div>
-        </div>
-
-        {/* MAIN LAYOUT (TWO COLUMNS: 70% LEFT MAIN AREA, 30% RIGHT SIDEBAR - SINGLE COLUMN ON MOBILE) */}
-        <form onSubmit={(e) => handleFormSubmit(e)} noValidate style={{ paddingBottom: '70px' }}>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* LEFT MAIN AREA (70%) */}
-            <div className="lg:col-span-2 flex flex-col gap-5">
-              {/* Title & Slug Card */}
-              <div className="card card-padded">
-                <FormField label="Article Title" required error={errors.title}>
-                  <input
-                    type="text"
-                    value={formData.title}
-                    onChange={(e) => {
-                      const newTitle = e.target.value;
-                      setFormData({
-                        ...formData,
-                        title: newTitle,
-                        slug: generateSlug(newTitle),
-                      });
-                      if (errors.title) setErrors({ ...errors, title: null });
-                    }}
-                    placeholder="Enter article title"
-                    style={{
-                      width: '100%',
-                      padding: '12px 14px',
-                      fontSize: '16px',
-                      fontWeight: 600,
-                      color: '#0f172a',
-                      borderRadius: '8px',
-                      border: errors.title ? '1px solid #ef4444' : '1px solid #e2e8f0',
-                      outline: 'none',
-                    }}
-                  />
-                </FormField>
-
-                <FormField label="Slug" helperText="Automatically generated from article title">
-                  <input
-                    type="text"
-                    value={formData.slug}
-                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                    placeholder="automatically generated slug"
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      fontSize: '13px',
-                      color: '#475569',
-                      backgroundColor: '#f8fafc',
-                      borderRadius: '8px',
-                      border: '1px solid #e2e8f0',
-                      outline: 'none',
-                    }}
-                  />
-                </FormField>
-              </div>
-
-              {/* Large Rich Text Editor Content Card */}
-              <div className="card card-padded">
-                <FormField label="Content" required>
-                  <RichTextEditor
-                    value={formData.content}
-                    onChange={(val) => setFormData({ ...formData, content: val })}
-                    placeholder="Write article content..."
-                    minHeight="360px"
-                  />
-                </FormField>
-              </div>
-
-              {/* OPTIONAL COLLAPSIBLE SEO SECTION */}
-              <div className="card" style={{ overflow: 'hidden' }}>
-                <div
-                  onClick={() => setIsSeoOpen(!isSeoOpen)}
-                  style={{
-                    padding: '16px 20px',
-                    backgroundColor: '#f8fafc',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    cursor: 'pointer',
-                    userSelect: 'none',
-                  }}
-                >
-                  <div>
-                    <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: 0 }}>
-                      SEO Settings (Search Engine Optimization)
-                    </h3>
-                    <p style={{ fontSize: '12px', color: '#64748b', margin: '2px 0 0 0' }}>
-                      Configure Meta Title & Meta Description tags for Google indexers
-                    </p>
-                  </div>
-                  {isSeoOpen ? <ChevronUp size={18} style={{ color: '#64748b' }} /> : <ChevronDown size={18} style={{ color: '#64748b' }} />}
-                </div>
-
-                {isSeoOpen && (
-                  <div style={{ padding: '20px', borderTop: '1px solid #e2e8f0' }}>
-                    <FormField label="Meta Title">
-                      <input
-                        type="text"
-                        value={formData.seoTitle}
-                        onChange={(e) => setFormData({ ...formData, seoTitle: e.target.value })}
-                        placeholder="Meta title tag..."
-                        style={{ width: '100%', padding: '8px 12px', fontSize: '13px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none' }}
-                      />
-                    </FormField>
-
-                    <FormField label="Meta Description">
-                      <textarea
-                        value={formData.seoDescription}
-                        onChange={(e) => setFormData({ ...formData, seoDescription: e.target.value })}
-                        placeholder="Meta description snippet..."
-                        rows={3}
-                        style={{ width: '100%', padding: '8px 12px', fontSize: '13px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', fontFamily: 'Inter, sans-serif' }}
-                      />
-                    </FormField>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* RIGHT SIDEBAR (30%) */}
-            <div className="lg:col-span-1 flex flex-col gap-5">
-              {/* Publishing Card */}
-              <div className="card card-padded">
-                <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: '0 0 14px 0' }}>
-                  Publishing
-                </h3>
-
-                <FormField label="Status" required>
-                  <Select
-                    fullWidth
-                    value={formData.status}
-                    onChange={(val) => setFormData({ ...formData, status: val })}
-                    options={[
-                      { value: 'Draft', label: 'Draft' },
-                      { value: 'Published', label: 'Published' },
-                      { value: 'Unpublished', label: 'Unpublished' },
-                    ]}
-                  />
-                </FormField>
-
-                <FormField label="Publication Date">
-                  <DatePicker
-                    value={formData.publishedAt}
-                    onChange={(date) => setFormData({ ...formData, publishedAt: date })}
-                  />
-                </FormField>
-
-                <FormField label="Category">
-                  <Select
-                    fullWidth
-                    value={formData.category}
-                    onChange={(val) => setFormData({ ...formData, category: val })}
-                    options={BLOG_CATEGORIES}
-                  />
-                </FormField>
-              </div>
-
-              {/* Featured Image Upload Area */}
-              <div className="card card-padded">
-                <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: '0 0 12px 0' }}>
-                  Featured Image
-                </h3>
-                <ImageUploader
-                  value={formData.coverImage}
-                  onChange={(img) => setFormData({ ...formData, coverImage: img })}
-                />
-              </div>
-
-              {/* Article Information Card */}
-              <div className="card card-padded">
-                <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: '0 0 12px 0' }}>
-                  Article Information
-                </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#64748b' }}>Created</span>
-                    <span style={{ color: '#0f172a', fontWeight: 500 }}>{formData.publishedAt}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#64748b' }}>Last updated</span>
-                    <span style={{ color: '#0f172a', fontWeight: 500 }}>Recently</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#64748b' }}>Author</span>
-                    <span style={{ color: '#0f172a', fontWeight: 500 }}>Sarah Jenkins</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* BOTTOM ACTIONS */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                <Button
-                  variant="secondary"
-                  onClick={(e) => handleFormSubmit(e, 'Draft')}
-                >
-                  Save Draft
-                </Button>
-                <Button
-                  variant="secondary"
-                  icon={Eye}
-                  onClick={() => handleOpenPreview(formData)}
-                >
-                  Preview
-                </Button>
-                <Button
-                  type="submit"
-                  variant="accent"
-                  icon={Send}
-                  onClick={(e) => handleFormSubmit(e, 'Published')}
-                >
-                  Publish Article
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* MOBILE STICKY BOTTOM ACTION BAR FOR BLOG EDITOR */}
-          <div className="flex md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-3 sm:p-4 z-40 items-center justify-between gap-3 shadow-lg">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={(e) => handleFormSubmit(e, 'Draft')}
-              style={{ flex: 1, minHeight: '44px' }}
-            >
-              Save Draft
-            </Button>
-            <Button
-              type="submit"
-              variant="accent"
-              icon={Send}
-              onClick={(e) => handleFormSubmit(e, 'Published')}
-              style={{ flex: 1, minHeight: '44px' }}
-            >
-              Publish
-            </Button>
-          </div>
-        </form>
-      </div>
+      <CreateBlog
+        key={editingBlog?.id || 'new-blog'}
+        initialBlog={editingBlog}
+        onBack={() => {
+          setViewMode('list');
+          setEditingBlog(null);
+          onCloseCreateOpen && onCloseCreateOpen();
+        }}
+        onSave={(savedBlog) => {
+          if (editingBlog) {
+            onUpdateBlog && onUpdateBlog(savedBlog);
+          } else {
+            onAddBlog && onAddBlog(savedBlog);
+          }
+          setViewMode('list');
+          setEditingBlog(null);
+          onCloseCreateOpen && onCloseCreateOpen();
+        }}
+        onPreview={(blogData) => {
+          setEditingBlog(blogData);
+          setPreviewBlog(blogData);
+          setViewMode('preview');
+        }}
+      />
     );
   }
 
