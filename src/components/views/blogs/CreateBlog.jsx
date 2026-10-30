@@ -40,10 +40,7 @@ export const CreateBlog = ({
     category: initialBlog?.category || 'Engineering',
     author: initialBlog?.author || 'Sarah Jenkins (Lead Editor)',
     status: initialBlog?.status || 'Published',
-    coverImage:
-      initialBlog?.coverImage !== undefined
-        ? initialBlog.coverImage
-        : 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop&q=80',
+    coverImage: initialBlog?.coverImage || '',
     excerpt: initialBlog?.excerpt || '',
     content:
       initialBlog?.content !== undefined
