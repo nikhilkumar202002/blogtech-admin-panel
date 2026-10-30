@@ -302,8 +302,13 @@ export const ProductsView = ({ onNavigate }) => {
                   alt={row.name}
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.style.display = 'none';
+                    if (!e.target.dataset.triedFallback && thumb?.includes('/backend/storage/')) {
+                      e.target.dataset.triedFallback = '1';
+                      e.target.src = thumb.replace('/backend/storage/', '/backend/api/storage/');
+                    } else {
+                      e.target.onerror = null;
+                      e.target.style.display = 'none';
+                    }
                   }}
                 />
               ) : (

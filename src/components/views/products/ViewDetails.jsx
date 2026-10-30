@@ -43,8 +43,11 @@ const formatImageUrl = (url) => {
     return url;
   }
   const baseUrl = API_BASE_URL.replace(/\/api\/?$/, '');
-  const cleanPath = url.startsWith('/') ? url : `/${url}`;
-  return `${baseUrl}${cleanPath}`;
+  const cleanPath = url.startsWith('/') ? url.slice(1) : url;
+  if (cleanPath.startsWith('storage/')) {
+    return `${baseUrl}/${cleanPath}`;
+  }
+  return `${baseUrl}/storage/${cleanPath}`;
 };
 
 const formatDate = (dateStr) => {
@@ -633,8 +636,13 @@ export const ViewDetails = ({
                         alt={`Gallery ${idx + 1}`}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                         onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = 'https://placehold.co/400x400/f1f5f9/94a3b8?text=Image+Not+Found';
+                          if (!e.target.dataset.triedFallback && item.url?.includes('/backend/storage/')) {
+                            e.target.dataset.triedFallback = '1';
+                            e.target.src = item.url.replace('/backend/storage/', '/backend/api/storage/');
+                          } else {
+                            e.target.onerror = null;
+                            e.target.src = 'https://placehold.co/400x400/f1f5f9/94a3b8?text=Image+Not+Found';
+                          }
                         }}
                       />
 
@@ -734,8 +742,13 @@ export const ViewDetails = ({
                     alt={product?.name}
                     className="max-w-full max-h-full object-contain p-2 group-hover:scale-102 transition-transform duration-200"
                     onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = 'https://placehold.co/600x400/0f172a/94a3b8?text=Image+Not+Available';
+                      if (!e.target.dataset.triedFallback && featuredImage?.includes('/backend/storage/')) {
+                        e.target.dataset.triedFallback = '1';
+                        e.target.src = featuredImage.replace('/backend/storage/', '/backend/api/storage/');
+                      } else {
+                        e.target.onerror = null;
+                        e.target.src = 'https://placehold.co/600x400/0f172a/94a3b8?text=Image+Not+Available';
+                      }
                     }}
                   />
 

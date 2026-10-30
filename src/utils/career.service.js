@@ -50,29 +50,19 @@ export const getCareer = async (id) => {
 // 3. POST /admin/careers - Create new career/job
 export const createCareer = async (careerData) => {
   const payload = toFormData(careerData);
-  const isMultipart = payload instanceof FormData;
-
-  const response = await mainAxios.post('/admin/careers', payload, {
-    headers: isMultipart ? { 'Content-Type': 'multipart/form-data' } : {},
-  });
+  const response = await mainAxios.post('/admin/careers', payload);
   return response.data;
 };
 
 // 4. PUT /admin/careers/:id - Update career/job
 export const updateCareer = async (id, careerData) => {
   const payload = toFormData(careerData);
-  const isMultipart = payload instanceof FormData;
-
   try {
-    const response = await mainAxios.put(`/admin/careers/${id}`, payload, {
-      headers: isMultipart ? { 'Content-Type': 'multipart/form-data' } : {},
-    });
+    const response = await mainAxios.put(`/admin/careers/${id}`, payload);
     return response.data;
   } catch (err) {
     if (err.response?.status === 405) {
-      const patchResponse = await mainAxios.patch(`/admin/careers/${id}`, payload, {
-        headers: isMultipart ? { 'Content-Type': 'multipart/form-data' } : {},
-      });
+      const patchResponse = await mainAxios.patch(`/admin/careers/${id}`, payload);
       return patchResponse.data;
     }
     throw err;

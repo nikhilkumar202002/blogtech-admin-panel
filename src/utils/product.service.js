@@ -18,8 +18,12 @@ export const createProduct = async (productData) => {
   return response.data;
 };
 
-// 4. PUT /admin/products/:id - Update product details
+// 4. PUT /admin/products/:id - Update product details (or POST if sending FormData)
 export const updateProduct = async (id, productData) => {
+  if (productData instanceof FormData) {
+    const response = await mainAxios.post(`/admin/products/${id}`, productData);
+    return response.data;
+  }
   try {
     const response = await mainAxios.put(`/admin/products/${id}`, productData);
     return response.data;
@@ -57,11 +61,7 @@ export const uploadFeaturedImage = async (id, fileOrFormData) => {
     formData = new FormData();
     formData.append('featured_image', fileOrFormData);
   }
-  const response = await mainAxios.post(`/admin/products/${id}/featured-image`, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
+  const response = await mainAxios.post(`/admin/products/${id}/featured-image`, formData);
   return response.data;
 };
 
@@ -83,11 +83,7 @@ export const uploadGalleryImages = async (id, filesOrFormData) => {
     formData = new FormData();
     formData.append('images[]', filesOrFormData);
   }
-  const response = await mainAxios.post(`/admin/products/${id}/images`, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
+  const response = await mainAxios.post(`/admin/products/${id}/images`, formData);
   return response.data;
 };
 

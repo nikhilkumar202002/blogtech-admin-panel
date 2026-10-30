@@ -57,8 +57,11 @@ const formatImageUrl = (url) => {
     return url;
   }
   const baseUrl = API_BASE_URL.replace(/\/api\/?$/, '');
-  const cleanPath = url.startsWith('/') ? url : `/${url}`;
-  return `${baseUrl}${cleanPath}`;
+  const cleanPath = url.startsWith('/') ? url.slice(1) : url;
+  if (cleanPath.startsWith('storage/')) {
+    return `${baseUrl}/${cleanPath}`;
+  }
+  return `${baseUrl}/storage/${cleanPath}`;
 };
 
 export const CreateProduct = ({
@@ -125,19 +128,13 @@ export const CreateProduct = ({
     if (!Array.isArray(list)) return [];
 
     return list.map((item, index) => {
-      if (typeof item === 'string') {
-        return {
-          id: index + 1,
-          index: index + 1,
-          url: formatImageUrl(item),
-          path: paths[index] || null,
-        };
-      }
+      const rawUrl = typeof item === 'string' ? item : (item.url || item.image_url || item.path || item.image || '');
+      const rawPath = paths[index] || (typeof item === 'object' ? item.path : null);
       return {
-        id: item.id || index + 1,
-        index: index + 1,
-        url: formatImageUrl(item.url || item.image_url || item.path || item.image || ''),
-        path: item.path || paths[index] || null,
+        id: index,
+        index: index,
+        url: formatImageUrl(rawUrl),
+        path: rawPath,
       };
     });
   };
@@ -177,6 +174,10 @@ export const CreateProduct = ({
   const handleSelectFeaturedFile = async (file) => {
     if (!file) return;
 
+    // Immediately generate a local preview so the uploaded image displays right away
+    const localUrl = URL.createObjectURL(file);
+    setStagedFeaturedPreview(localUrl);
+
     if (isEditing && activeProduct?.id) {
       // Direct API upload: POST /admin/products/:id/featured-image
       setIsUploadingFeatured(true);
@@ -208,9 +209,14 @@ export const CreateProduct = ({
           }
         }
       } catch (err) {
+        setStagedFeaturedPreview(null);
+        const errMsg =
+          err?.response?.data?.errors?.featured_image?.[0] ||
+          err?.response?.data?.message ||
+          'Failed to upload featured image.';
         addToast({
           title: 'Upload Failed',
-          message: err?.response?.data?.message || 'Failed to upload featured image.',
+          message: errMsg,
           type: 'error',
         });
       } finally {
@@ -219,9 +225,6 @@ export const CreateProduct = ({
     } else {
       // Staged for creation
       setStagedFeaturedFile(file);
-      const reader = new FileReader();
-      reader.onload = (e) => setStagedFeaturedPreview(e.target.result);
-      reader.readAsDataURL(file);
     }
   };
 
@@ -266,6 +269,18 @@ export const CreateProduct = ({
     if (isEditing && activeProduct?.id) {
       // Direct API upload: POST /admin/products/:id/images
       setIsUploadingGallery(true);
+
+      // Create instant local previews so the user immediately sees the photos viewing
+      const fileArray = Array.from(files);
+      const localItems = fileArray.map((file, idx) => ({
+        id: `local-${Date.now()}-${idx}`,
+        index: galleryList.length + idx,
+        url: URL.createObjectURL(file),
+        name: file.name,
+        isLocal: true,
+      }));
+      setGalleryList((prev) => [...prev, ...localItems]);
+
       try {
         await uploadGalleryImages(activeProduct.id, files);
         addToast({
@@ -280,9 +295,15 @@ export const CreateProduct = ({
           setGalleryList(syncGallery(f));
         }
       } catch (err) {
+        // Revert local items on failure
+        setGalleryList((prev) => prev.filter((item) => !item.isLocal));
+        const errMsg =
+          err?.response?.data?.errors?.images?.[0] ||
+          err?.response?.data?.message ||
+          'Failed to upload gallery photos.';
         addToast({
           title: 'Upload Failed',
-          message: err?.response?.data?.message || 'Failed to upload gallery photos.',
+          message: errMsg,
           type: 'error',
         });
       } finally {
@@ -294,11 +315,8 @@ export const CreateProduct = ({
       setStagedGalleryFiles((prev) => [...prev, ...newFiles]);
 
       newFiles.forEach((file) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setStagedGalleryPreviews((prev) => [...prev, { name: file.name, url: e.target.result }]);
-        };
-        reader.readAsDataURL(file);
+        const url = URL.createObjectURL(file);
+        setStagedGalleryPreviews((prev) => [...prev, { name: file.name, url }]);
       });
     }
   };
@@ -306,9 +324,10 @@ export const CreateProduct = ({
   // Delete single Gallery Image
   const handleDeleteGalleryImage = async (item) => {
     if (isEditing && activeProduct?.id) {
-      setDeletingGalleryId(item.id || item.index);
+      const targetKey = item.index !== undefined ? item.index : item.id;
+      setDeletingGalleryId(targetKey);
       try {
-        await deleteGalleryImage(activeProduct.id, item.id || item.index);
+        await deleteGalleryImage(activeProduct.id, targetKey);
         addToast({
           title: 'Image Deleted',
           message: 'Gallery image removed.',
@@ -364,8 +383,9 @@ export const CreateProduct = ({
       };
 
       if (isEditing && activeProduct?.id) {
-        // PUT /admin/products/:id
-        await updateProduct(activeProduct.id, payload);
+        // Exclude image strings from general JSON update so relative paths aren't replaced with URLs
+        const { featured_image, gallery_images, ...cleanPayload } = payload;
+        await updateProduct(activeProduct.id, cleanPayload);
         addToast({
           title: 'Product Updated',
           message: `"${formData.name}" has been updated successfully.`,
@@ -373,9 +393,55 @@ export const CreateProduct = ({
         });
         if (onSuccess) onSuccess();
       } else {
-        // POST /admin/products
-        const res = await createProduct(payload);
+        // Create mode: build FormData payload to send product details and staged images atomically
+        const formDataPayload = new FormData();
+        formDataPayload.append('name', formData.name.trim());
+        formDataPayload.append('slug', formData.slug.trim() || generateSlug(formData.name));
+        formDataPayload.append('short_description', formData.short_description?.trim() || '');
+        formDataPayload.append('description', formData.description?.trim() || '');
+        formDataPayload.append('content', formData.content || '');
+        formDataPayload.append('status', formData.status || 'published');
+        formDataPayload.append('sort_order', String(Number(formData.sort_order) || 1));
+        formDataPayload.append('meta_title', formData.meta_title?.trim() || '');
+        formDataPayload.append('meta_description', formData.meta_description?.trim() || '');
+        if (formData.published_at) {
+          formDataPayload.append('published_at', formData.published_at);
+        }
+
+        if (stagedFeaturedFile instanceof File) {
+          formDataPayload.append('featured_image', stagedFeaturedFile);
+        }
+
+        if (stagedGalleryFiles && stagedGalleryFiles.length > 0) {
+          stagedGalleryFiles.forEach((file) => {
+            formDataPayload.append('gallery_images[]', file);
+          });
+        }
+
+        const res = await createProduct(formDataPayload);
         const created = res?.data || res?.product || null;
+
+        // Fallback: If backend didn't attach images in store, upload via dedicated endpoints
+        if (created?.id) {
+          if (stagedFeaturedFile && !created.featured_image && !created.featured_image_url) {
+            try {
+              await uploadFeaturedImage(created.id, stagedFeaturedFile);
+            } catch (imgErr) {
+              console.warn('Featured image secondary upload fallback error:', imgErr);
+            }
+          }
+
+          if (
+            stagedGalleryFiles.length > 0 &&
+            (!created.gallery_images || created.gallery_images.length === 0)
+          ) {
+            try {
+              await uploadGalleryImages(created.id, stagedGalleryFiles);
+            } catch (galErr) {
+              console.warn('Gallery secondary upload fallback error:', galErr);
+            }
+          }
+        }
 
         addToast({
           title: 'Product Created',
@@ -383,31 +449,16 @@ export const CreateProduct = ({
           type: 'success',
         });
 
-        // If user staged featured image or gallery photos, upload them to newly created product
-        if (created?.id) {
-          if (stagedFeaturedFile) {
-            try {
-              await uploadFeaturedImage(created.id, stagedFeaturedFile);
-            } catch (imgErr) {
-              console.warn('Featured image upload error on create:', imgErr);
-            }
-          }
-
-          if (stagedGalleryFiles.length > 0) {
-            try {
-              await uploadGalleryImages(created.id, stagedGalleryFiles);
-            } catch (galErr) {
-              console.warn('Gallery upload error on create:', galErr);
-            }
-          }
-        }
-
         if (onSuccess) onSuccess();
       }
     } catch (err) {
+      const errMsg =
+        err?.response?.data?.message ||
+        Object.values(err?.response?.data?.errors || {})[0]?.[0] ||
+        'Failed to save product details.';
       addToast({
         title: 'Save Failed',
-        message: err?.response?.data?.message || 'Failed to save product details.',
+        message: errMsg,
         type: 'error',
       });
     } finally {
@@ -431,6 +482,7 @@ export const CreateProduct = ({
           if (e.target.files && e.target.files[0]) {
             handleSelectFeaturedFile(e.target.files[0]);
           }
+          e.target.value = '';
         }}
       />
       <input
@@ -443,6 +495,7 @@ export const CreateProduct = ({
           if (e.target.files && e.target.files.length > 0) {
             handleSelectGalleryFiles(e.target.files);
           }
+          e.target.value = '';
         }}
       />
 
@@ -701,6 +754,12 @@ export const CreateProduct = ({
                     src={currentFeaturedUrl}
                     alt="Featured preview"
                     className="max-h-full max-w-full object-contain rounded"
+                    onError={(e) => {
+                      if (!e.target.dataset.triedFallback && currentFeaturedUrl?.includes('/backend/storage/')) {
+                        e.target.dataset.triedFallback = '1';
+                        e.target.src = currentFeaturedUrl.replace('/backend/storage/', '/backend/api/storage/');
+                      }
+                    }}
                   />
                 </div>
 
@@ -789,6 +848,12 @@ export const CreateProduct = ({
                         src={item.url}
                         alt={`Gallery ${idx + 1}`}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          if (!e.target.dataset.triedFallback && item.url?.includes('/backend/storage/')) {
+                            e.target.dataset.triedFallback = '1';
+                            e.target.src = item.url.replace('/backend/storage/', '/backend/api/storage/');
+                          }
+                        }}
                       />
                       <div className="absolute top-1 left-1 px-1 py-0.5 rounded bg-slate-900/70 text-[9px] text-white font-mono">
                         #{idx + 1}
