@@ -29,13 +29,14 @@ import {
   unpublishService,
   deleteService,
 } from '../../../utils/ourservice.service';
+import { API_BASE_URL } from '../../../utils/main.service';
 
 const formatImageUrl = (url) => {
   if (!url) return '';
   if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
     return url;
   }
-  const baseUrl = (import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api').replace(/\/api\/?$/, '');
+  const baseUrl = API_BASE_URL.replace(/\/api\/?$/, '');
   const cleanPath = url.startsWith('/') ? url : `/${url}`;
   return `${baseUrl}${cleanPath}`;
 };

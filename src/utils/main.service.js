@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api';
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'https://blogtec.co.in/backend/api';
 
 const mainAxios = axios.create({
   baseURL: API_BASE_URL,
@@ -27,8 +28,11 @@ mainAxios.interceptors.request.use(
 mainAxios.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // Optional: Handle token expiration / unauthorized redirect if needed
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_user');
+      window.dispatchEvent(new Event('auth:unauthorized'));
     }
     return Promise.reject(error);
   }

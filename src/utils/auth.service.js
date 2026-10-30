@@ -5,7 +5,9 @@ const AUTH_TOKEN_KEY = 'auth_token';
 const USER_KEY = 'auth_user';
 
 export const getToken = () => {
-  return localStorage.getItem(TOKEN_KEY) || localStorage.getItem(AUTH_TOKEN_KEY) || null;
+  const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem(AUTH_TOKEN_KEY);
+  if (!token || token === 'undefined' || token === 'null') return null;
+  return token;
 };
 
 export const setToken = (token) => {
@@ -81,6 +83,10 @@ export const logout = async () => {
   try {
     const response = await mainAxios.post('/admin/logout');
     return response.data;
+  } catch (error) {
+    // If server request fails or session expired, log warning and proceed to clear local credentials
+    console.warn('Logout API request warning:', error?.message || error);
+    return null;
   } finally {
     // Clear tokens regardless of whether server request succeeds or fails
     removeToken();

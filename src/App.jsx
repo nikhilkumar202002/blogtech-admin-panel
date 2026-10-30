@@ -52,8 +52,18 @@ const getInitialTab = () => {
 const MainApp = () => {
   const { addToast } = useToast();
 
-  // Authentication State
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  // Authentication State (Requires valid token; redirect to login if unauthenticated)
+  const [isAuthenticated, setIsAuthenticated] = useState(() => checkIsAuthenticated());
+
+  // Listen for global unauthorized events (e.g. 401 on expired session)
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      setIsAuthenticated(false);
+      setCurrentUser(null);
+    };
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
+  }, []);
 
   // Navigation & Layout State (Synced with clean URL pathnames and localStorage)
   const [activeTab, setActiveTabState] = useState(getInitialTab);
@@ -124,7 +134,7 @@ const MainApp = () => {
         })
         .catch((err) => {
           console.warn('Could not sync admin profile from /admin/me:', err?.message || err);
-          if (err.response?.status === 401) {
+          if (err.response?.status === 401 || err.response?.status === 403) {
             authLogout();
             setIsAuthenticated(false);
           }
