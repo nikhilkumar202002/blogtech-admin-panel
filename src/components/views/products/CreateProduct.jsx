@@ -5,23 +5,15 @@ import {
   Plus,
   Trash2,
   UploadCloud,
-  RefreshCw,
   Globe,
   Calendar,
   FileText,
   Layers,
-  Eye,
-  CheckCircle2,
   Sparkles,
-  ExternalLink,
   Save,
   Image as ImageIcon,
-  Clock,
-  EyeOff,
-  AlertCircle,
 } from 'lucide-react';
 import { Button } from '../../ui/Button';
-import { Badge } from '../../ui/Badge';
 import { FormField } from '../../ui/FormField';
 import { Breadcrumb } from '../../ui/Breadcrumb';
 import { RichTextEditor } from '../../ui/RichTextEditor';
@@ -30,14 +22,8 @@ import {
   createProduct,
   updateProduct,
   getProduct,
-  uploadFeaturedImage,
-  deleteFeaturedImage,
-  uploadGalleryImages,
-  deleteGalleryImage,
-  publishProduct,
-  unpublishProduct,
 } from '../../../utils/product.service';
-import { API_BASE_URL } from '../../../utils/main.service';
+import { formatImageUrl, handleImageError } from '../../../utils/image.helper';
 
 const generateSlug = (text) => {
   return (text || '')
@@ -49,19 +35,6 @@ const generateSlug = (text) => {
     .replace(/--+/g, '-')
     .replace(/^-+/, '')
     .replace(/-+$/, '');
-};
-
-const formatImageUrl = (url) => {
-  if (!url) return '';
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
-    return url;
-  }
-  const baseUrl = API_BASE_URL.replace(/\/api\/?$/, '');
-  const cleanPath = url.startsWith('/') ? url.slice(1) : url;
-  if (cleanPath.startsWith('storage/')) {
-    return `${baseUrl}/${cleanPath}`;
-  }
-  return `${baseUrl}/storage/${cleanPath}`;
 };
 
 export const CreateProduct = ({
@@ -83,7 +56,6 @@ export const CreateProduct = ({
     sort_order: initialProduct?.sort_order ?? 1,
     meta_title: initialProduct?.meta_title || '',
     meta_description: initialProduct?.meta_description || '',
-    featured_image: initialProduct?.featured_image || initialProduct?.featured_image_url || '',
     published_at: initialProduct?.published_at
       ? initialProduct.published_at.split('T')[0]
       : new Date().toISOString().split('T')[0],
@@ -95,18 +67,26 @@ export const CreateProduct = ({
   // Active product details (keeps sync with fresh server data)
   const [activeProduct, setActiveProduct] = useState(initialProduct);
 
-  // Staged files for initial creation (if created before having an ID)
-  const [stagedFeaturedFile, setStagedFeaturedFile] = useState(null);
-  const [stagedFeaturedPreview, setStagedFeaturedPreview] = useState(null);
-  const [stagedGalleryFiles, setStagedGalleryFiles] = useState([]);
-  const [stagedGalleryPreviews, setStagedGalleryPreviews] = useState([]);
+  // Featured Image State
+  const [featuredFile, setFeaturedFile] = useState(null);
+  const [featuredPreview, setFeaturedPreview] = useState(
+    formatImageUrl(
+      initialProduct?.featured_image_path ||
+      initialProduct?.featured_image_url ||
+      initialProduct?.featured_image
+    ) || null
+  );
+  const [removeFeaturedImage, setRemoveFeaturedImage] = useState(false);
 
-  // Existing Gallery list from server
-  const [galleryList, setGalleryList] = useState([]);
-  const [isUploadingFeatured, setIsUploadingFeatured] = useState(false);
-  const [isDeletingFeatured, setIsDeletingFeatured] = useState(false);
-  const [isUploadingGallery, setIsUploadingGallery] = useState(false);
-  const [deletingGalleryId, setDeletingGalleryId] = useState(null);
+  // Gallery Images State
+  // Existing images retrieved from server: [{ id, index, url, path }]
+  const [existingGallery, setExistingGallery] = useState([]);
+  // Newly staged gallery files for upload: File[]
+  const [stagedGalleryFiles, setStagedGalleryFiles] = useState([]);
+  // Newly staged gallery preview objects: [{ id, url, name }]
+  const [stagedGalleryPreviews, setStagedGalleryPreviews] = useState([]);
+  // Paths or indices of existing gallery items marked for removal: string[]
+  const [removedGalleryImages, setRemovedGalleryImages] = useState([]);
 
   const featuredInputRef = useRef(null);
   const galleryInputRef = useRef(null);
@@ -131,10 +111,10 @@ export const CreateProduct = ({
       const rawUrl = typeof item === 'string' ? item : (item.url || item.image_url || item.path || item.image || '');
       const rawPath = paths[index] || (typeof item === 'object' ? item.path : null);
       return {
-        id: index,
+        id: `existing-${index}`,
         index: index,
-        url: formatImageUrl(rawUrl),
-        path: rawPath,
+        url: formatImageUrl(rawPath || rawUrl),
+        path: rawPath || (typeof item === 'string' ? item : null),
       };
     });
   };
@@ -142,7 +122,7 @@ export const CreateProduct = ({
   useEffect(() => {
     if (initialProduct?.id) {
       setActiveProduct(initialProduct);
-      setGalleryList(syncGallery(initialProduct));
+      setExistingGallery(syncGallery(initialProduct));
 
       // Fetch fresh details from GET /admin/products/:id
       getProduct(initialProduct.id)
@@ -150,7 +130,7 @@ export const CreateProduct = ({
           const fresh = res?.data || res?.product || res;
           if (fresh && fresh.id) {
             setActiveProduct(fresh);
-            setGalleryList(syncGallery(fresh));
+            setExistingGallery(syncGallery(fresh));
             setFormData({
               name: fresh.name || '',
               slug: fresh.slug || '',
@@ -161,201 +141,119 @@ export const CreateProduct = ({
               sort_order: fresh.sort_order ?? 1,
               meta_title: fresh.meta_title || '',
               meta_description: fresh.meta_description || '',
-              featured_image: fresh.featured_image || fresh.featured_image_url || '',
               published_at: fresh.published_at ? fresh.published_at.split('T')[0] : '',
             });
+            const freshImg = formatImageUrl(
+              fresh.featured_image_path ||
+              fresh.featured_image_url ||
+              fresh.featured_image
+            );
+            if (freshImg) {
+              setFeaturedPreview(freshImg);
+            }
           }
         })
         .catch((err) => console.warn('Could not sync fresh product:', err));
     }
   }, [initialProduct]);
 
-  // Handle Featured Image Selection
-  const handleSelectFeaturedFile = async (file) => {
+  // Handle Featured Image Selection (Staged locally, saved atomically on submit)
+  const handleSelectFeaturedFile = (file) => {
     if (!file) return;
 
-    // Immediately generate a local preview so the uploaded image displays right away
-    const localUrl = URL.createObjectURL(file);
-    setStagedFeaturedPreview(localUrl);
-
-    if (isEditing && activeProduct?.id) {
-      // Direct API upload: POST /admin/products/:id/featured-image
-      setIsUploadingFeatured(true);
-      try {
-        const res = await uploadFeaturedImage(activeProduct.id, file);
-        const updated = res?.data || res?.product || null;
-
-        addToast({
-          title: 'Featured Image Uploaded',
-          message: 'Product featured image updated successfully.',
-          type: 'success',
-        });
-
-        if (updated) {
-          setActiveProduct(updated);
-          setFormData((prev) => ({
-            ...prev,
-            featured_image: updated.featured_image || updated.featured_image_url || '',
-          }));
-        } else {
-          const fresh = await getProduct(activeProduct.id);
-          const f = fresh?.data || fresh?.product || fresh;
-          if (f) {
-            setActiveProduct(f);
-            setFormData((prev) => ({
-              ...prev,
-              featured_image: f.featured_image || f.featured_image_url || '',
-            }));
-          }
-        }
-      } catch (err) {
-        setStagedFeaturedPreview(null);
-        const errMsg =
-          err?.response?.data?.errors?.featured_image?.[0] ||
-          err?.response?.data?.message ||
-          'Failed to upload featured image.';
-        addToast({
-          title: 'Upload Failed',
-          message: errMsg,
-          type: 'error',
-        });
-      } finally {
-        setIsUploadingFeatured(false);
-      }
-    } else {
-      // Staged for creation
-      setStagedFeaturedFile(file);
+    if (file.size > 5 * 1024 * 1024) {
+      addToast({
+        title: 'File Too Large',
+        message: 'Featured image must be under 5MB.',
+        type: 'error',
+      });
+      return;
     }
+
+    setFeaturedFile(file);
+    setFeaturedPreview(URL.createObjectURL(file));
+    setRemoveFeaturedImage(false);
+
+    addToast({
+      title: 'Featured Image Selected',
+      message: `${file.name} ready to save.`,
+      type: 'info',
+    });
   };
 
-  // Handle Delete Featured Image
-  const handleDeleteFeaturedImage = async () => {
-    if (isEditing && activeProduct?.id) {
-      // Direct API delete: DELETE /admin/products/:id/featured-image
-      setIsDeletingFeatured(true);
-      try {
-        await deleteFeaturedImage(activeProduct.id);
-        addToast({
-          title: 'Featured Image Removed',
-          message: 'The featured image has been deleted.',
-          type: 'success',
-        });
-        setActiveProduct((prev) => ({
-          ...prev,
-          featured_image: null,
-          featured_image_url: null,
-          featured_image_path: null,
-        }));
-        setFormData((prev) => ({ ...prev, featured_image: '' }));
-      } catch (err) {
-        addToast({
-          title: 'Delete Failed',
-          message: err?.response?.data?.message || 'Could not delete featured image.',
-          type: 'error',
-        });
-      } finally {
-        setIsDeletingFeatured(false);
-      }
-    } else {
-      setStagedFeaturedFile(null);
-      setStagedFeaturedPreview(null);
+  // Handle Delete Featured Image (Staged locally, saved atomically on submit)
+  const handleDeleteFeaturedImage = () => {
+    setFeaturedFile(null);
+    setFeaturedPreview(null);
+    setRemoveFeaturedImage(true);
+    if (featuredInputRef.current) {
+      featuredInputRef.current.value = '';
     }
+
+    addToast({
+      title: 'Featured Image Removed',
+      message: 'Image will be deleted upon saving.',
+      type: 'info',
+    });
   };
 
-  // Handle Gallery Selection
-  const handleSelectGalleryFiles = async (files) => {
+  // Handle Gallery Selection (Staged locally, saved atomically on submit)
+  const handleSelectGalleryFiles = (files) => {
     if (!files || files.length === 0) return;
 
-    if (isEditing && activeProduct?.id) {
-      // Direct API upload: POST /admin/products/:id/images
-      setIsUploadingGallery(true);
+    const fileArray = Array.from(files);
+    const validFiles = [];
+    const newPreviews = [];
 
-      // Create instant local previews so the user immediately sees the photos viewing
-      const fileArray = Array.from(files);
-      const localItems = fileArray.map((file, idx) => ({
-        id: `local-${Date.now()}-${idx}`,
-        index: galleryList.length + idx,
-        url: URL.createObjectURL(file),
-        name: file.name,
-        isLocal: true,
-      }));
-      setGalleryList((prev) => [...prev, ...localItems]);
-
-      try {
-        await uploadGalleryImages(activeProduct.id, files);
+    fileArray.forEach((file, idx) => {
+      if (file.size > 5 * 1024 * 1024) {
         addToast({
-          title: 'Gallery Uploaded',
-          message: `${files.length} photo(s) added to gallery.`,
-          type: 'success',
-        });
-        const fresh = await getProduct(activeProduct.id);
-        const f = fresh?.data || fresh?.product || fresh;
-        if (f) {
-          setActiveProduct(f);
-          setGalleryList(syncGallery(f));
-        }
-      } catch (err) {
-        // Revert local items on failure
-        setGalleryList((prev) => prev.filter((item) => !item.isLocal));
-        const errMsg =
-          err?.response?.data?.errors?.images?.[0] ||
-          err?.response?.data?.message ||
-          'Failed to upload gallery photos.';
-        addToast({
-          title: 'Upload Failed',
-          message: errMsg,
+          title: 'File Too Large',
+          message: `${file.name} exceeds 5MB limit and was skipped.`,
           type: 'error',
         });
-      } finally {
-        setIsUploadingGallery(false);
+        return;
       }
-    } else {
-      // Staged for creation
-      const newFiles = Array.from(files);
-      setStagedGalleryFiles((prev) => [...prev, ...newFiles]);
+      validFiles.push(file);
+      newPreviews.push({
+        id: `staged-${Date.now()}-${idx}`,
+        url: URL.createObjectURL(file),
+        name: file.name,
+      });
+    });
 
-      newFiles.forEach((file) => {
-        const url = URL.createObjectURL(file);
-        setStagedGalleryPreviews((prev) => [...prev, { name: file.name, url }]);
+    if (validFiles.length > 0) {
+      setStagedGalleryFiles((prev) => [...prev, ...validFiles]);
+      setStagedGalleryPreviews((prev) => [...prev, ...newPreviews]);
+
+      addToast({
+        title: 'Gallery Photos Added',
+        message: `${validFiles.length} photo(s) staged to upload.`,
+        type: 'info',
       });
     }
   };
 
-  // Delete single Gallery Image
-  const handleDeleteGalleryImage = async (item) => {
-    if (isEditing && activeProduct?.id) {
-      const targetKey = item.index !== undefined ? item.index : item.id;
-      setDeletingGalleryId(targetKey);
-      try {
-        await deleteGalleryImage(activeProduct.id, targetKey);
-        addToast({
-          title: 'Image Deleted',
-          message: 'Gallery image removed.',
-          type: 'success',
-        });
-        const fresh = await getProduct(activeProduct.id);
-        const f = fresh?.data || fresh?.product || fresh;
-        if (f) {
-          setActiveProduct(f);
-          setGalleryList(syncGallery(f));
-        }
-      } catch (err) {
-        addToast({
-          title: 'Remove Failed',
-          message: err?.response?.data?.message || 'Failed to remove gallery photo.',
-          type: 'error',
-        });
-      } finally {
-        setDeletingGalleryId(null);
-      }
-    } else {
-      // Remove from staged
-      setStagedGalleryFiles((prev) => prev.filter((_, idx) => idx !== item.index));
-      setStagedGalleryPreviews((prev) => prev.filter((_, idx) => idx !== item.index));
-    }
+  // Delete single existing gallery image
+  const handleDeleteExistingGalleryImage = (item, idx) => {
+    const identifier = item.path || item.index !== undefined ? (item.path || item.index) : idx;
+    setRemovedGalleryImages((prev) => [...prev, identifier]);
+    setExistingGallery((prev) => prev.filter((_, i) => i !== idx));
+
+    addToast({
+      title: 'Image Marked for Removal',
+      message: 'Photo will be removed upon saving.',
+      type: 'info',
+    });
   };
 
-  // Form Submit Handler
+  // Delete single staged new gallery image
+  const handleDeleteStagedGalleryImage = (idx) => {
+    setStagedGalleryFiles((prev) => prev.filter((_, i) => i !== idx));
+    setStagedGalleryPreviews((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  // Form Submit Handler: unified atomic request for product data and all media
   const handleSubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     const errors = {};
@@ -376,80 +274,63 @@ export const CreateProduct = ({
 
     setIsSaving(true);
     try {
-      const payload = {
-        ...formData,
-        slug: formData.slug.trim() || generateSlug(formData.name),
-        sort_order: Number(formData.sort_order) || 1,
-      };
+      // Build FormData payload
+      const formDataPayload = new FormData();
+      formDataPayload.append('name', formData.name.trim());
+      formDataPayload.append('slug', formData.slug.trim() || generateSlug(formData.name));
+      formDataPayload.append('short_description', formData.short_description?.trim() || '');
+      formDataPayload.append('description', formData.description?.trim() || '');
+      formDataPayload.append('content', formData.content || '');
+      formDataPayload.append('status', formData.status || 'published');
+      formDataPayload.append('sort_order', String(Number(formData.sort_order) || 1));
+      formDataPayload.append('meta_title', formData.meta_title?.trim() || '');
+      formDataPayload.append('meta_description', formData.meta_description?.trim() || '');
+
+      if (formData.published_at) {
+        formDataPayload.append('published_at', formData.published_at);
+      }
+
+      // Featured Image handling
+      if (featuredFile instanceof File) {
+        formDataPayload.append('featured_image', featuredFile);
+      } else if (removeFeaturedImage) {
+        formDataPayload.append('remove_featured_image', '1');
+      }
+
+      // Staged new gallery images handling
+      if (stagedGalleryFiles && stagedGalleryFiles.length > 0) {
+        stagedGalleryFiles.forEach((file) => {
+          formDataPayload.append('gallery_images[]', file);
+        });
+      }
+
+      // Removed gallery images handling
+      if (removedGalleryImages && removedGalleryImages.length > 0) {
+        removedGalleryImages.forEach((item) => {
+          formDataPayload.append('removed_gallery_images[]', String(item));
+        });
+      }
 
       if (isEditing && activeProduct?.id) {
-        // Exclude image strings from general JSON update so relative paths aren't replaced with URLs
-        const { featured_image, gallery_images, ...cleanPayload } = payload;
-        await updateProduct(activeProduct.id, cleanPayload);
+        // Edit mode: single unified POST /admin/products/:id API call
+        await updateProduct(activeProduct.id, formDataPayload);
         addToast({
           title: 'Product Updated',
           message: `"${formData.name}" has been updated successfully.`,
           type: 'success',
         });
-        if (onSuccess) onSuccess();
       } else {
-        // Create mode: build FormData payload to send product details and staged images atomically
-        const formDataPayload = new FormData();
-        formDataPayload.append('name', formData.name.trim());
-        formDataPayload.append('slug', formData.slug.trim() || generateSlug(formData.name));
-        formDataPayload.append('short_description', formData.short_description?.trim() || '');
-        formDataPayload.append('description', formData.description?.trim() || '');
-        formDataPayload.append('content', formData.content || '');
-        formDataPayload.append('status', formData.status || 'published');
-        formDataPayload.append('sort_order', String(Number(formData.sort_order) || 1));
-        formDataPayload.append('meta_title', formData.meta_title?.trim() || '');
-        formDataPayload.append('meta_description', formData.meta_description?.trim() || '');
-        if (formData.published_at) {
-          formDataPayload.append('published_at', formData.published_at);
-        }
-
-        if (stagedFeaturedFile instanceof File) {
-          formDataPayload.append('featured_image', stagedFeaturedFile);
-        }
-
-        if (stagedGalleryFiles && stagedGalleryFiles.length > 0) {
-          stagedGalleryFiles.forEach((file) => {
-            formDataPayload.append('gallery_images[]', file);
-          });
-        }
-
-        const res = await createProduct(formDataPayload);
-        const created = res?.data || res?.product || null;
-
-        // Fallback: If backend didn't attach images in store, upload via dedicated endpoints
-        if (created?.id) {
-          if (stagedFeaturedFile && !created.featured_image && !created.featured_image_url) {
-            try {
-              await uploadFeaturedImage(created.id, stagedFeaturedFile);
-            } catch (imgErr) {
-              console.warn('Featured image secondary upload fallback error:', imgErr);
-            }
-          }
-
-          if (
-            stagedGalleryFiles.length > 0 &&
-            (!created.gallery_images || created.gallery_images.length === 0)
-          ) {
-            try {
-              await uploadGalleryImages(created.id, stagedGalleryFiles);
-            } catch (galErr) {
-              console.warn('Gallery secondary upload fallback error:', galErr);
-            }
-          }
-        }
-
+        // Create mode: single unified POST /admin/products API call
+        await createProduct(formDataPayload);
         addToast({
           title: 'Product Created',
           message: `"${formData.name}" has been created successfully.`,
           type: 'success',
         });
+      }
 
-        if (onSuccess) onSuccess();
+      if (onSuccess) {
+        onSuccess();
       }
     } catch (err) {
       const errMsg =
@@ -466,9 +347,7 @@ export const CreateProduct = ({
     }
   };
 
-  const currentFeaturedUrl =
-    stagedFeaturedPreview ||
-    formatImageUrl(activeProduct?.featured_image_url || activeProduct?.featured_image);
+  const totalGalleryCount = existingGallery.length + stagedGalleryPreviews.length;
 
   return (
     <div className="flex flex-col gap-6 animate-fade-in pb-16">
@@ -519,12 +398,12 @@ export const CreateProduct = ({
               <ArrowLeft size={18} />
             </button>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-              {isEditing ? `Edit: ${activeProduct?.name}` : 'Create New Product'}
+              {isEditing ? `Edit: ${activeProduct?.name || formData.name}` : 'Create New Product'}
             </h1>
           </div>
           <p className="text-sm text-slate-500 mt-1">
             {isEditing
-              ? 'Update catalog specifications, manage media assets, and adjust publishing status.'
+              ? 'Update catalog specifications, manage media assets, and adjust publishing status in a single save.'
               : 'Add a new software solution or catalog item with specifications, media, and SEO.'}
           </p>
         </div>
@@ -747,25 +626,20 @@ export const CreateProduct = ({
               <span className="text-[11px] text-slate-400">Primary Thumbnail</span>
             </div>
 
-            {currentFeaturedUrl ? (
+            {featuredPreview ? (
               <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-900 flex flex-col relative group">
                 <div className="h-44 w-full flex items-center justify-center bg-slate-950 p-2 overflow-hidden">
                   <img
-                    src={currentFeaturedUrl}
+                    src={featuredPreview}
                     alt="Featured preview"
                     className="max-h-full max-w-full object-contain rounded"
-                    onError={(e) => {
-                      if (!e.target.dataset.triedFallback && currentFeaturedUrl?.includes('/backend/storage/')) {
-                        e.target.dataset.triedFallback = '1';
-                        e.target.src = currentFeaturedUrl.replace('/backend/storage/', '/backend/api/storage/');
-                      }
-                    }}
+                    onError={(e) => handleImageError(e, 'Preview', true)}
                   />
                 </div>
 
                 <div className="p-3 bg-white border-t border-slate-200 flex items-center justify-between gap-2">
                   <span className="text-[11px] text-slate-500 truncate max-w-[140px]">
-                    {stagedFeaturedFile ? stagedFeaturedFile.name : 'Uploaded Asset'}
+                    {featuredFile ? featuredFile.name : (removeFeaturedImage ? 'Marked for deletion' : 'Current Image')}
                   </span>
 
                   <div className="flex items-center gap-1.5">
@@ -774,7 +648,6 @@ export const CreateProduct = ({
                       variant="secondary"
                       icon={UploadCloud}
                       onClick={() => featuredInputRef.current?.click()}
-                      isLoading={isUploadingFeatured}
                     >
                       Replace
                     </Button>
@@ -784,7 +657,6 @@ export const CreateProduct = ({
                       variant="danger"
                       icon={Trash2}
                       onClick={handleDeleteFeaturedImage}
-                      isLoading={isDeletingFeatured}
                     >
                       Delete
                     </Button>
@@ -797,11 +669,7 @@ export const CreateProduct = ({
                 className="border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-xl p-6 flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-indigo-50/30 transition-colors cursor-pointer text-center"
               >
                 <div className="w-10 h-10 rounded-full bg-white border border-slate-200 shadow-xs flex items-center justify-center text-indigo-600">
-                  {isUploadingFeatured ? (
-                    <RefreshCw size={18} className="animate-spin" />
-                  ) : (
-                    <UploadCloud size={20} />
-                  )}
+                  <UploadCloud size={20} />
                 </div>
                 <div className="text-xs font-semibold text-slate-800">
                   Click to select featured image
@@ -819,7 +687,7 @@ export const CreateProduct = ({
               <div>
                 <h3 className="text-sm font-semibold text-slate-900">Photo Gallery</h3>
                 <span className="text-[11px] text-slate-500">
-                  {isEditing ? galleryList.length : stagedGalleryPreviews.length} photo(s)
+                  {totalGalleryCount} photo(s)
                 </span>
               </div>
 
@@ -828,69 +696,25 @@ export const CreateProduct = ({
                 variant="secondary"
                 icon={Plus}
                 onClick={() => galleryInputRef.current?.click()}
-                isLoading={isUploadingGallery}
               >
                 Add Photos
               </Button>
             </div>
 
-            {/* Existing Server Gallery (when editing) */}
-            {isEditing && galleryList.length > 0 && (
-              <div className="grid grid-cols-2 gap-2.5 max-h-60 overflow-y-auto p-0.5">
-                {galleryList.map((item, idx) => {
-                  const isDeletingThis = deletingGalleryId === (item.id || item.index);
-                  return (
-                    <div
-                      key={item.id || idx}
-                      className="group relative rounded-lg border border-slate-200 overflow-hidden bg-slate-100 aspect-square flex items-center justify-center"
-                    >
-                      <img
-                        src={item.url}
-                        alt={`Gallery ${idx + 1}`}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          if (!e.target.dataset.triedFallback && item.url?.includes('/backend/storage/')) {
-                            e.target.dataset.triedFallback = '1';
-                            e.target.src = item.url.replace('/backend/storage/', '/backend/api/storage/');
-                          }
-                        }}
-                      />
-                      <div className="absolute top-1 left-1 px-1 py-0.5 rounded bg-slate-900/70 text-[9px] text-white font-mono">
-                        #{idx + 1}
-                      </div>
-                      <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <button
-                          type="button"
-                          disabled={isDeletingThis}
-                          onClick={() => handleDeleteGalleryImage(item)}
-                          className="p-1.5 rounded-full bg-red-600 text-white hover:bg-red-700 shadow-sm cursor-pointer"
-                          title="Remove image"
-                        >
-                          {isDeletingThis ? (
-                            <RefreshCw size={13} className="animate-spin" />
-                          ) : (
-                            <Trash2 size={13} />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Staged Gallery (when creating) */}
-            {!isEditing && stagedGalleryPreviews.length > 0 && (
-              <div className="grid grid-cols-2 gap-2.5 max-h-60 overflow-y-auto p-0.5">
-                {stagedGalleryPreviews.map((item, idx) => (
+            {/* Gallery Grid: Display existing + staged new photos */}
+            {totalGalleryCount > 0 ? (
+              <div className="grid grid-cols-2 gap-2.5 max-h-72 overflow-y-auto p-0.5">
+                {/* 1. Existing Gallery Photos */}
+                {existingGallery.map((item, idx) => (
                   <div
-                    key={idx}
+                    key={item.id || `exist-${idx}`}
                     className="group relative rounded-lg border border-slate-200 overflow-hidden bg-slate-100 aspect-square flex items-center justify-center"
                   >
                     <img
                       src={item.url}
-                      alt={`Staged ${idx + 1}`}
+                      alt={`Gallery ${idx + 1}`}
                       className="w-full h-full object-cover"
+                      onError={(e) => handleImageError(e, `Gallery #${idx + 1}`)}
                     />
                     <div className="absolute top-1 left-1 px-1 py-0.5 rounded bg-slate-900/70 text-[9px] text-white font-mono">
                       #{idx + 1}
@@ -898,7 +722,7 @@ export const CreateProduct = ({
                     <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <button
                         type="button"
-                        onClick={() => handleDeleteGalleryImage({ index: idx })}
+                        onClick={() => handleDeleteExistingGalleryImage(item, idx)}
                         className="p-1.5 rounded-full bg-red-600 text-white hover:bg-red-700 shadow-sm cursor-pointer"
                         title="Remove image"
                       >
@@ -907,12 +731,36 @@ export const CreateProduct = ({
                     </div>
                   </div>
                 ))}
-              </div>
-            )}
 
-            {/* Empty gallery dropzone */}
-            {((isEditing && galleryList.length === 0) ||
-              (!isEditing && stagedGalleryPreviews.length === 0)) && (
+                {/* 2. Newly Staged Gallery Photos */}
+                {stagedGalleryPreviews.map((item, idx) => (
+                  <div
+                    key={item.id || `staged-${idx}`}
+                    className="group relative rounded-lg border-2 border-indigo-300 overflow-hidden bg-slate-100 aspect-square flex items-center justify-center"
+                  >
+                    <img
+                      src={item.url}
+                      alt={`New Staged ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-indigo-600 text-[9px] text-white font-semibold uppercase tracking-wider">
+                      New
+                    </div>
+                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteStagedGalleryImage(idx)}
+                        className="p-1.5 rounded-full bg-red-600 text-white hover:bg-red-700 shadow-sm cursor-pointer"
+                        title="Remove staged photo"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              /* Empty gallery dropzone */
               <div
                 onClick={() => galleryInputRef.current?.click()}
                 className="border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-xl p-5 flex flex-col items-center justify-center gap-1.5 bg-slate-50 hover:bg-indigo-50/30 transition-colors cursor-pointer text-center"

@@ -32,6 +32,7 @@ import {
   unpublishService,
 } from '../../../utils/ourservice.service';
 import { API_BASE_URL } from '../../../utils/main.service';
+import { formatImageUrl, handleImageError } from '../../../utils/image.helper';
 
 const generateSlug = (text) => {
   return (text || '')
@@ -43,16 +44,6 @@ const generateSlug = (text) => {
     .replace(/--+/g, '-')
     .replace(/^-+/, '')
     .replace(/-+$/, '');
-};
-
-const formatImageUrl = (url) => {
-  if (!url) return '';
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
-    return url;
-  }
-  const baseUrl = API_BASE_URL.replace(/\/api\/?$/, '');
-  const cleanPath = url.startsWith('/') ? url : `/${url}`;
-  return `${baseUrl}${cleanPath}`;
 };
 
 export const CreateService = ({
@@ -84,7 +75,11 @@ export const CreateService = ({
   // Featured Image File & Preview
   const [featuredFile, setFeaturedFile] = useState(null);
   const [featuredPreview, setFeaturedPreview] = useState(
-    formatImageUrl(initialService?.featured_image_url || initialService?.featured_image) || null
+    formatImageUrl(
+      initialService?.featured_image_path ||
+      initialService?.featured_image_url ||
+      initialService?.featured_image
+    ) || null
   );
 
   const fileInputRef = useRef(null);
@@ -459,6 +454,7 @@ export const CreateService = ({
                     src={featuredPreview}
                     alt="Featured preview"
                     className="max-w-full max-h-full object-contain p-2"
+                    onError={(e) => handleImageError(e, 'Preview', true)}
                   />
                   <button
                     type="button"

@@ -30,16 +30,7 @@ import {
   unpublishProduct,
 } from '../../../utils/product.service';
 import { API_BASE_URL } from '../../../utils/main.service';
-
-const formatImageUrl = (url) => {
-  if (!url) return '';
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
-    return url;
-  }
-  const baseUrl = API_BASE_URL.replace(/\/api\/?$/, '');
-  const cleanPath = url.startsWith('/') ? url : `/${url}`;
-  return `${baseUrl}${cleanPath}`;
-};
+import { formatImageUrl, handleImageError } from '../../../utils/image.helper';
 
 const parseGalleryImages = (prod) => {
   if (!prod) return [];
@@ -292,7 +283,9 @@ export const ProductsView = ({ onNavigate }) => {
       key: 'name',
       sortable: true,
       render: (row) => {
-        const thumb = formatImageUrl(row.featured_image_url || row.featured_image);
+        const thumb = formatImageUrl(
+          row.featured_image_path || row.featured_image_url || row.featured_image
+        );
         return (
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
@@ -302,13 +295,13 @@ export const ProductsView = ({ onNavigate }) => {
                   alt={row.name}
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    if (!e.target.dataset.triedFallback && thumb?.includes('/backend/storage/')) {
-                      e.target.dataset.triedFallback = '1';
-                      e.target.src = thumb.replace('/backend/storage/', '/backend/api/storage/');
-                    } else {
-                      e.target.onerror = null;
-                      e.target.style.display = 'none';
-                    }
+                    const initials = (row.name || 'P')
+                      .split(' ')
+                      .map((w) => w[0])
+                      .join('')
+                      .slice(0, 2)
+                      .toUpperCase();
+                    handleImageError(e, initials);
                   }}
                 />
               ) : (

@@ -30,16 +30,7 @@ import {
   deleteService,
 } from '../../../utils/ourservice.service';
 import { API_BASE_URL } from '../../../utils/main.service';
-
-const formatImageUrl = (url) => {
-  if (!url) return '';
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
-    return url;
-  }
-  const baseUrl = API_BASE_URL.replace(/\/api\/?$/, '');
-  const cleanPath = url.startsWith('/') ? url : `/${url}`;
-  return `${baseUrl}${cleanPath}`;
-};
+import { formatImageUrl, handleImageError } from '../../../utils/image.helper';
 
 const formatDate = (dateStr) => {
   if (!dateStr) return 'Unscheduled';
@@ -288,18 +279,25 @@ export const ServiceList = ({ onNavigate }) => {
       key: 'name',
       sortable: true,
       render: (row) => {
-        const thumb = formatImageUrl(row.featured_image_url || row.featured_image);
+        const thumb = formatImageUrl(
+          row.featured_image_path || row.featured_image_url || row.featured_image
+        );
         return (
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0 overflow-hidden shadow-2xs">
+            <div className="w-11 h-11 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0 overflow-hidden shadow-2xs relative">
               {thumb ? (
                 <img
                   src={thumb}
                   alt={row.name}
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.style.display = 'none';
+                    const initials = (row.name || 'S')
+                      .split(' ')
+                      .map((w) => w[0])
+                      .join('')
+                      .slice(0, 2)
+                      .toUpperCase();
+                    handleImageError(e, initials);
                   }}
                 />
               ) : (
@@ -562,14 +560,17 @@ export const ServiceList = ({ onNavigate }) => {
         {viewingService && (
           <div className="flex flex-col gap-5">
             {/* Featured Image Hero */}
-            {viewingService.featured_image || viewingService.featured_image_url ? (
+            {viewingService.featured_image || viewingService.featured_image_url || viewingService.featured_image_path ? (
               <div className="w-full h-56 rounded-xl bg-slate-900 border border-slate-200 overflow-hidden flex items-center justify-center p-3 relative">
                 <img
                   src={formatImageUrl(
-                    viewingService.featured_image_url || viewingService.featured_image
+                    viewingService.featured_image_path ||
+                    viewingService.featured_image_url ||
+                    viewingService.featured_image
                   )}
                   alt={viewingService.name}
                   className="max-w-full max-h-full object-contain rounded"
+                  onError={(e) => handleImageError(e, 'Image Not Available', true)}
                 />
               </div>
             ) : null}

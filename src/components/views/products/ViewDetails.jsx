@@ -36,19 +36,7 @@ import {
   deleteProduct,
 } from '../../../utils/product.service';
 import { API_BASE_URL } from '../../../utils/main.service';
-
-const formatImageUrl = (url) => {
-  if (!url) return '';
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
-    return url;
-  }
-  const baseUrl = API_BASE_URL.replace(/\/api\/?$/, '');
-  const cleanPath = url.startsWith('/') ? url.slice(1) : url;
-  if (cleanPath.startsWith('storage/')) {
-    return `${baseUrl}/${cleanPath}`;
-  }
-  return `${baseUrl}/storage/${cleanPath}`;
-};
+import { formatImageUrl, handleImageError } from '../../../utils/image.helper';
 
 const formatDate = (dateStr) => {
   if (!dateStr) return 'Unscheduled';
@@ -122,13 +110,15 @@ export const ViewDetails = ({
   const rawGalleryPaths = product?.gallery_image_paths || [];
   const galleryItems = Array.isArray(rawGalleryUrls)
     ? rawGalleryUrls.map((url, idx) => ({
-        url: formatImageUrl(typeof url === 'string' ? url : url?.url || ''),
+        url: formatImageUrl(rawGalleryPaths[idx] || (typeof url === 'string' ? url : url?.url || '')),
         path: rawGalleryPaths[idx] || (typeof url === 'object' ? url?.path : null) || `gallery-image-${idx + 1}.jpg`,
         index: idx + 1,
       }))
     : [];
 
-  const featuredImage = formatImageUrl(product?.featured_image_url || product?.featured_image);
+  const featuredImage = formatImageUrl(
+    product?.featured_image_path || product?.featured_image_url || product?.featured_image
+  );
 
   // All viewable media items for lightbox (featured + gallery)
   const allMediaItems = [];
@@ -635,15 +625,7 @@ export const ViewDetails = ({
                         src={item.url}
                         alt={`Gallery ${idx + 1}`}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                        onError={(e) => {
-                          if (!e.target.dataset.triedFallback && item.url?.includes('/backend/storage/')) {
-                            e.target.dataset.triedFallback = '1';
-                            e.target.src = item.url.replace('/backend/storage/', '/backend/api/storage/');
-                          } else {
-                            e.target.onerror = null;
-                            e.target.src = 'https://placehold.co/400x400/f1f5f9/94a3b8?text=Image+Not+Found';
-                          }
-                        }}
+                        onError={(e) => handleImageError(e, `Gallery #${idx + 1}`)}
                       />
 
                       <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-slate-900/75 text-[10px] text-white font-mono backdrop-blur-xs">
@@ -741,15 +723,7 @@ export const ViewDetails = ({
                     src={featuredImage}
                     alt={product?.name}
                     className="max-w-full max-h-full object-contain p-2 group-hover:scale-102 transition-transform duration-200"
-                    onError={(e) => {
-                      if (!e.target.dataset.triedFallback && featuredImage?.includes('/backend/storage/')) {
-                        e.target.dataset.triedFallback = '1';
-                        e.target.src = featuredImage.replace('/backend/storage/', '/backend/api/storage/');
-                      } else {
-                        e.target.onerror = null;
-                        e.target.src = 'https://placehold.co/600x400/0f172a/94a3b8?text=Image+Not+Available';
-                      }
-                    }}
+                    onError={(e) => handleImageError(e, 'Image Not Available', true)}
                   />
 
                   <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
@@ -934,6 +908,7 @@ export const ViewDetails = ({
                 src={lightboxState.items[lightboxState.currentIndex]?.url}
                 alt="Enlarged view"
                 className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl"
+                onError={(e) => handleImageError(e, 'Image Not Found', true)}
               />
 
               {lightboxState.items.length > 1 && (
