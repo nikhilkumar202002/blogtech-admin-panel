@@ -291,7 +291,7 @@ export const CreateProduct = ({
       }
 
       // Featured Image handling
-      if (featuredFile instanceof File) {
+      if (featuredFile) {
         formDataPayload.append('featured_image', featuredFile);
       } else if (removeFeaturedImage) {
         formDataPayload.append('remove_featured_image', '1');
@@ -301,6 +301,17 @@ export const CreateProduct = ({
       if (stagedGalleryFiles && stagedGalleryFiles.length > 0) {
         stagedGalleryFiles.forEach((file) => {
           formDataPayload.append('gallery_images[]', file);
+        });
+      }
+
+      // Existing retained gallery images handling (in edit mode)
+      if (isEditing && existingGallery && existingGallery.length > 0) {
+        existingGallery.forEach((item) => {
+          if (item.path) {
+            formDataPayload.append('existing_gallery_images[]', item.path);
+          } else if (item.url) {
+            formDataPayload.append('existing_gallery_images[]', item.url);
+          }
         });
       }
 

@@ -50,14 +50,28 @@ export const getService = async (id) => {
 // 3. POST /admin/services - Create new service
 export const createService = async (serviceData) => {
   const payload = toFormData(serviceData);
-  const response = await mainAxios.post('/admin/services', payload);
+  const isMultipart =
+    payload instanceof FormData ||
+    (payload && typeof payload.append === 'function');
+  const response = await mainAxios.post(
+    '/admin/services',
+    payload,
+    isMultipart ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined
+  );
   return response.data;
 };
 
 // 4. POST /admin/services/:id - Edit service
 export const updateService = async (id, serviceData) => {
   const payload = toFormData(serviceData);
-  const response = await mainAxios.post(`/admin/services/${id}`, payload);
+  const isMultipart =
+    payload instanceof FormData ||
+    (payload && typeof payload.append === 'function');
+  const response = await mainAxios.post(
+    `/admin/services/${id}`,
+    payload,
+    isMultipart ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined
+  );
   return response.data;
 };
 

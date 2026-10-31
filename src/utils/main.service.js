@@ -1,15 +1,14 @@
 import axios from 'axios';
 
 export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'https://blogtec.co.in/backend/api';
+  import.meta.env.VITE_API_BASE_URL || 'https://api.blogtec.co.in/api';
 
 const mainAxios = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    Accept: 'application/json',
   },
-  timeout: 15000,
+  timeout: 30000,
 });
 
 // Request Interceptor: Attach authentication tokens if available
@@ -22,15 +21,17 @@ mainAxios.interceptors.request.use(
 
     // When sending FormData (e.g. image/file uploads), delete Content-Type so Axios and
     // the browser automatically compute multipart/form-data with the correct boundary parameter.
-    if (config.data instanceof FormData) {
-      if (config.headers) {
-        if (typeof config.headers.delete === 'function') {
-          config.headers.delete('Content-Type');
-          config.headers.delete('content-type');
-        } else {
-          delete config.headers['Content-Type'];
-          delete config.headers['content-type'];
-        }
+    const isFormData =
+      config.data instanceof FormData ||
+      (config.data && typeof config.data.append === 'function');
+
+    if (isFormData && config.headers) {
+      if (typeof config.headers.delete === 'function') {
+        config.headers.delete('Content-Type');
+        config.headers.delete('content-type');
+      } else {
+        delete config.headers['Content-Type'];
+        delete config.headers['content-type'];
       }
     }
 

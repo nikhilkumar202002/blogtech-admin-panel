@@ -1,5 +1,9 @@
 import { API_BASE_URL } from './main.service';
 
+// Default live storage domain where files are hosted
+export const STORAGE_BASE_URL = 'https://api.blogtec.co.in/storage';
+export const API_STREAM_URL = 'https://api.blogtec.co.in/api/storage';
+
 /**
  * Normalizes any image identifier (relative storage path, full URL from different domains,
  * base64, or blob URL) into a reliable, directly fetchable URL.
@@ -7,13 +11,24 @@ import { API_BASE_URL } from './main.service';
 export const formatImageUrl = (url) => {
   if (!url || typeof url !== 'string') return '';
 
+  const trimmed = url.trim();
+
   // Keep data URIs and blob URLs unchanged (used for instant image upload previews)
-  if (url.startsWith('data:') || url.startsWith('blob:')) {
-    return url;
+  if (trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
+    return trimmed;
+  }
+
+  // If it's a 3rd party external image (Unsplash, external CDN, etc.) that doesn't reference our backend storage
+  if (
+    (trimmed.startsWith('http://') || trimmed.startsWith('https://')) &&
+    !trimmed.includes('/storage/') &&
+    !trimmed.includes('blogtec.co.in')
+  ) {
+    return trimmed;
   }
 
   // Extract relative storage path if embedded in any URL
-  let path = url.trim();
+  let path = trimmed;
   if (path.includes('/storage/')) {
     path = path.substring(path.indexOf('/storage/') + 9);
   } else if (path.startsWith('http://') || path.startsWith('https://')) {
@@ -28,23 +43,25 @@ export const formatImageUrl = (url) => {
     }
   }
 
-  // Strip leading slash or accidental "storage/"
+  // Strip leading slash or accidental "storage/" or "public/"
   let cleanPath = path.startsWith('/') ? path.slice(1) : path;
-  if (cleanPath.startsWith('storage/')) {
+  while (cleanPath.startsWith('storage/')) {
     cleanPath = cleanPath.slice(8);
+  }
+  while (cleanPath.startsWith('public/')) {
+    cleanPath = cleanPath.slice(7);
   }
   if (!cleanPath) return '';
 
-  // Local development
-  if (API_BASE_URL.includes('localhost') || API_BASE_URL.includes('127.0.0.1')) {
+  // Local development if API_BASE_URL points to localhost
+  if (API_BASE_URL && (API_BASE_URL.includes('localhost') || API_BASE_URL.includes('127.0.0.1'))) {
     const baseUrl = API_BASE_URL.replace(/\/api\/?$/, '');
     return `${baseUrl}/storage/${cleanPath}`;
   }
 
   // Live production:
   // api.blogtec.co.in/storage/ is the dedicated LiteSpeed document root hosting public/storage.
-  // It serves storage assets directly with HTTP 200.
-  return `https://api.blogtec.co.in/storage/${cleanPath}`;
+  return `${STORAGE_BASE_URL}/${cleanPath}`;
 };
 
 /**
@@ -71,33 +88,31 @@ export const createSvgPlaceholder = (
 
 /**
  * Multi-domain fallback handler for <img> onError events.
- * 1. Tries api.blogtec.co.in/storage/
- * 2. Tries blogtec.co.in/backend/storage/
- * 3. Tries backend API streaming route /api/storage/
- * 4. Falls back to offline SVG placeholder
+ * 1. Tries api.blogtec.co.in/storage/ if failed on backend domain
+ * 2. Tries PHP streaming controller route https://api.blogtec.co.in/api/storage/ (with CORS)
+ * 3. Falls back to offline SVG placeholder
  */
 export const handleImageError = (e, fallbackText = 'Image Not Found', isDark = false) => {
   const target = e.target;
   const currentSrc = target.src || '';
 
-  // Attempt 1: Try api.blogtec.co.in if it failed on backend domain
+  // Extract relative storage path
+  let relativePath = '';
+  if (currentSrc.includes('/storage/')) {
+    relativePath = currentSrc.substring(currentSrc.indexOf('/storage/') + 9);
+  }
+
+  // Attempt 1: Try api.blogtec.co.in/storage/ if it failed on backend domain
   if (!target.dataset.triedApiDomain && currentSrc.includes('blogtec.co.in/backend/storage/')) {
     target.dataset.triedApiDomain = '1';
     target.src = currentSrc.replace('blogtec.co.in/backend/storage/', 'api.blogtec.co.in/storage/');
     return;
   }
 
-  // Attempt 2: Try backend domain if it failed on api subdomain
-  if (!target.dataset.triedBackendDomain && currentSrc.includes('api.blogtec.co.in/storage/')) {
-    target.dataset.triedBackendDomain = '1';
-    target.src = currentSrc.replace('api.blogtec.co.in/storage/', 'blogtec.co.in/backend/storage/');
-    return;
-  }
-
-  // Attempt 3: Try streaming /api/storage/ controller route
-  if (!target.dataset.triedApiStream && currentSrc.includes('/storage/')) {
+  // Attempt 2: Try streaming /api/storage/ route (has CORS and PHP disk fallback)
+  if (!target.dataset.triedApiStream && relativePath) {
     target.dataset.triedApiStream = '1';
-    target.src = currentSrc.replace('/storage/', '/api/storage/');
+    target.src = `${API_STREAM_URL}/${relativePath}`;
     return;
   }
 

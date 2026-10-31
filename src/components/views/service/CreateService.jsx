@@ -207,7 +207,7 @@ export const CreateService = ({
         payload.append('published_at', formData.published_at);
       }
 
-      if (featuredFile instanceof File) {
+      if (featuredFile) {
         payload.append('featured_image', featuredFile);
       }
 
