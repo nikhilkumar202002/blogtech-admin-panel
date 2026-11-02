@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
-  Bell,
   Search,
   User,
   Shield,
@@ -33,9 +32,6 @@ export const Header = ({
   publishingStatus = 'Synced',
   onToggleMobileSidebar,
 }) => {
-  const [showNotifications, setShowNotifications] = useState(false);
-  const unreadNotifsCount = notifications.filter((n) => !n.read).length;
-
   return (
     <header className="header-responsive h-16 shrink-0 bg-white border-b border-slate-200 sticky top-0 z-40 flex items-center justify-between px-3 sm:px-6">
     
@@ -74,63 +70,6 @@ export const Header = ({
 
 
         <div className="w-px h-6 bg-slate-200 mx-0.5 sm:mx-1" />
-
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setShowNotifications(!showNotifications)}
-            className="w-9 h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 cursor-pointer flex items-center justify-center relative transition-colors"
-            title="Notifications"
-          >
-            <Bell size={17} />
-            {unreadNotifsCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
-            )}
-          </button>
-
-          {showNotifications && (
-            <div className="absolute top-full right-0 mt-2 w-[calc(100vw-32px)] max-w-xs sm:w-80 bg-white rounded-xl border border-slate-200 shadow-xl z-50 overflow-hidden animate-pop-in">
-              <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-                <span className="text-[13px] font-semibold text-slate-900">
-                  Notifications ({unreadNotifsCount})
-                </span>
-                <span className="text-[11px] text-indigo-600 cursor-pointer font-medium hover:underline">
-                  Mark all read
-                </span>
-              </div>
-              <div className="max-h-72 overflow-y-auto divide-y divide-slate-100">
-                {notifications.length === 0 ? (
-                  <div className="p-5 text-center text-slate-400 text-[13px]">
-                    No notifications
-                  </div>
-                ) : (
-                  notifications.map((n) => (
-                    <div
-                      key={n.id}
-                      onClick={() => {
-                        onNotificationClick && onNotificationClick(n);
-                        setShowNotifications(false);
-                      }}
-                      className={`p-3.5 px-4 cursor-pointer transition-colors hover:bg-slate-100 ${
-                        n.read ? 'bg-white' : 'bg-slate-50'
-                      }`}
-                    >
-                      <div className="text-[13px] font-semibold text-slate-900">
-                        {n.title}
-                      </div>
-                      <div className="text-xs text-slate-600 mt-0.5 leading-snug">
-                        {n.message}
-                      </div>
-                      <div className="text-[11px] text-slate-400 mt-1">
-                        {n.time}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          )}
-        </div>
 
         <DropdownMenu
           width="268px"
