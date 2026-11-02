@@ -37,24 +37,25 @@ import {
   reopenCareer,
 } from '../../../utils/career.service';
 
-const DEPARTMENT_OPTIONS = [
-  'Technology',
-  'Engineering',
-  'Design',
-  'Product',
-  'Marketing',
-  'Sales',
-  'Human Resources',
-  'Operations',
-];
+const normalizeEmploymentType = (val) => {
+  if (!val || typeof val !== 'string') return 'full_time';
+  const clean = val.toLowerCase().replace(/[\s-]+/g, '_').trim();
+  if (clean.includes('part')) return 'part_time';
+  if (clean.includes('contract') || clean.includes('freelance')) return 'contract';
+  if (clean.includes('intern') || clean.includes('trainee')) return 'internship';
+  if (clean.includes('full')) return 'full_time';
+  if (['full_time', 'part_time', 'contract', 'internship'].includes(clean)) return clean;
+  return 'full_time';
+};
 
-const EMPLOYMENT_TYPES = [
-  { value: 'full_time', label: 'Full Time' },
-  { value: 'part_time', label: 'Part Time' },
-  { value: 'contract', label: 'Contract' },
-  { value: 'internship', label: 'Internship' },
-  { value: 'remote', label: 'Remote' },
-];
+const displayEmploymentType = (val) => {
+  if (!val) return '';
+  if (val === 'full_time') return 'Full Time';
+  if (val === 'part_time') return 'Part Time';
+  if (val === 'contract') return 'Contract';
+  if (val === 'internship') return 'Internship';
+  return val.replace(/_/g, ' ');
+};
 
 const COMMON_SKILLS = [
   'HTML',
@@ -102,8 +103,10 @@ export const CreateCareer = ({
     qualification: currentItem?.qualification || '',
     description: currentItem?.description || '',
     requirements: currentItem?.requirements || '',
-    department: currentItem?.department || 'Technology',
-    employment_type: currentItem?.employment_type || 'full_time',
+    department: currentItem?.department || '',
+    employment_type: currentItem?.employment_type
+      ? displayEmploymentType(currentItem.employment_type)
+      : 'Full Time',
     status: currentItem?.status || 'draft',
   });
 
@@ -159,6 +162,12 @@ export const CreateCareer = ({
     if (!formData.description.trim()) {
       errors.description = 'Job overview description is required.';
     }
+    if (!formData.department.trim()) {
+      errors.department = 'Department is required (e.g. Technology).';
+    }
+    if (!formData.employment_type.trim()) {
+      errors.employment_type = 'Employment type is required (e.g. Full Time).';
+    }
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -186,7 +195,7 @@ export const CreateCareer = ({
       description: formData.description.trim(),
       requirements: formData.requirements.trim(),
       department: formData.department.trim(),
-      employment_type: formData.employment_type,
+      employment_type: normalizeEmploymentType(formData.employment_type),
       status: targetStatus,
     };
 
@@ -417,42 +426,50 @@ export const CreateCareer = ({
               <FormField
                 label="Department"
                 required
-                helperText="Select or assign this vacancy to a department."
+                error={formErrors.department}
+                helperText="Specify the department for this position."
               >
                 <div className="relative">
                   <Building2 size={16} className="absolute left-3 top-3 text-slate-400 pointer-events-none" />
-                  <select
+                  <input
+                    type="text"
                     value={formData.department}
-                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                    className="w-full pl-9 pr-8 py-2.5 rounded-lg border border-slate-300 bg-white text-sm text-slate-800 focus:border-indigo-500 focus:outline-hidden focus:ring-2 focus:ring-indigo-100"
-                  >
-                    {DEPARTMENT_OPTIONS.map((dept) => (
-                      <option key={dept} value={dept}>
-                        {dept}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(e) => {
+                      setFormData({ ...formData, department: e.target.value });
+                      if (formErrors.department) setFormErrors({ ...formErrors, department: '' });
+                    }}
+                    placeholder="e.g. Technology, Engineering, Design"
+                    className={`w-full pl-9 pr-3.5 py-2.5 rounded-lg border text-sm transition-all focus:outline-hidden focus:ring-2 ${
+                      formErrors.department
+                        ? 'border-red-300 focus:ring-red-200 bg-red-50/20'
+                        : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-100'
+                    }`}
+                  />
                 </div>
               </FormField>
 
               <FormField
                 label="Employment Type"
                 required
+                error={formErrors.employment_type}
                 helperText="Working arrangement and commitment."
               >
                 <div className="relative">
                   <Clock size={16} className="absolute left-3 top-3 text-slate-400 pointer-events-none" />
-                  <select
+                  <input
+                    type="text"
                     value={formData.employment_type}
-                    onChange={(e) => setFormData({ ...formData, employment_type: e.target.value })}
-                    className="w-full pl-9 pr-8 py-2.5 rounded-lg border border-slate-300 bg-white text-sm text-slate-800 focus:border-indigo-500 focus:outline-hidden focus:ring-2 focus:ring-indigo-100"
-                  >
-                    {EMPLOYMENT_TYPES.map((type) => (
-                      <option key={type.value} value={type.value}>
-                        {type.label}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(e) => {
+                      setFormData({ ...formData, employment_type: e.target.value });
+                      if (formErrors.employment_type) setFormErrors({ ...formErrors, employment_type: '' });
+                    }}
+                    placeholder="e.g. Full Time, Part Time, Contract, Internship"
+                    className={`w-full pl-9 pr-3.5 py-2.5 rounded-lg border text-sm transition-all focus:outline-hidden focus:ring-2 ${
+                      formErrors.employment_type
+                        ? 'border-red-300 focus:ring-red-200 bg-red-50/20'
+                        : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-100'
+                    }`}
+                  />
                 </div>
               </FormField>
             </div>
@@ -805,7 +822,7 @@ export const CreateCareer = ({
             <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider pb-2 border-b border-slate-100 flex items-center justify-between">
               <span>Card Preview</span>
               <span className="text-[11px] font-normal text-slate-400 capitalize">
-                {formData.employment_type.replace('_', ' ')}
+                {displayEmploymentType(formData.employment_type) || 'Full Time'}
               </span>
             </h3>
 
