@@ -83,3 +83,4 @@ export const escapeXml = (text) => {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 };
+

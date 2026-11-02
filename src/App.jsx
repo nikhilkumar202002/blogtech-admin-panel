@@ -36,6 +36,10 @@ import {
   getStoredUser,
   isAuthenticated as checkIsAuthenticated,
 } from './utils/auth.service';
+import { getCareers } from './utils/career.service';
+import { getBlogs, createBlog, updateBlog, deleteBlog } from './utils/blog.service';
+import { getProducts } from './utils/product.service';
+import { getServices } from './utils/ourservice.service';
 
 const VALID_TABS = ['dashboard', 'products', 'services', 'careers', 'blogs', 'enquiries', 'settings'];
 
@@ -184,15 +188,88 @@ const MainApp = () => {
   const [quickCreateJob, setQuickCreateJob] = useState(false);
   const [quickCreateBlog, setQuickCreateBlog] = useState(false);
 
-  // Core Data State
+  // Core Live Data State
   const [stats, setStats] = useState(INITIAL_STATS);
-  const [jobs, setJobs] = useState(INITIAL_JOBS);
+  const [jobs, setJobs] = useState([]);
   const [applicants, setApplicants] = useState(INITIAL_APPLICANTS);
-  const [blogs, setBlogs] = useState(INITIAL_BLOGS);
+  const [blogs, setBlogs] = useState([]);
+  const [productsList, setProductsList] = useState([]);
+  const [servicesList, setServicesList] = useState([]);
   const [enquiries, setEnquiries] = useState(INITIAL_ENQUIRIES);
   const [publishingLogs, setPublishingLogs] = useState(INITIAL_PUBLISHING_LOGS);
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
-  const [activityLog, setActivityLog] = useState(ACTIVITY_LOG);
+  const [activityLog, setActivityLog] = useState([]);
+  const [isDataLoading, setIsDataLoading] = useState(false);
+
+  // Synchronize actual live platform collections across all modules
+  const refreshAllData = async () => {
+    if (!checkIsAuthenticated()) return;
+    setIsDataLoading(true);
+    try {
+      const results = await Promise.allSettled([
+        getCareers(),
+        getBlogs(),
+        canAccessTab(currentUser?.role, 'products') ? getProducts() : Promise.resolve([]),
+        canAccessTab(currentUser?.role, 'services') ? getServices() : Promise.resolve([]),
+      ]);
+
+      // 1. Careers (GET /admin/careers)
+      if (results[0].status === 'fulfilled') {
+        const res = results[0].value;
+        const list = Array.isArray(res?.data)
+          ? res.data
+          : Array.isArray(res?.data?.data)
+          ? res.data.data
+          : Array.isArray(res)
+          ? res
+          : [];
+        setJobs(list);
+      }
+
+      // 2. Blogs (GET /admin/blogs)
+      if (results[1].status === 'fulfilled') {
+        const res = results[1].value;
+        const list = Array.isArray(res?.data)
+          ? res.data
+          : Array.isArray(res?.data?.data)
+          ? res.data.data
+          : Array.isArray(res)
+          ? res
+          : [];
+        setBlogs(list);
+      }
+
+      // 3. Products (GET /admin/products)
+      if (results[2].status === 'fulfilled') {
+        const res = results[2].value;
+        const list = Array.isArray(res?.data)
+          ? res.data
+          : Array.isArray(res?.data?.data)
+          ? res.data.data
+          : Array.isArray(res)
+          ? res
+          : [];
+        setProductsList(list);
+      }
+
+      // 4. Services (GET /admin/services)
+      if (results[3].status === 'fulfilled') {
+        const res = results[3].value;
+        const list = Array.isArray(res?.data)
+          ? res.data
+          : Array.isArray(res?.data?.data)
+          ? res.data.data
+          : Array.isArray(res)
+          ? res
+          : [];
+        setServicesList(list);
+      }
+    } catch (err) {
+      console.warn('Could not sync live platform collections:', err);
+    } finally {
+      setIsDataLoading(false);
+    }
+  };
 
   // Fetch authoritative user profile from /admin/me API on load
   useEffect(() => {
@@ -225,74 +302,91 @@ const MainApp = () => {
             setCurrentUser(null);
           }
         });
+
+      // Fetch live actual collections
+      refreshAllData();
     }
   }, [isAuthenticated, addToast]);
 
-  // Helper Badge Counts for Sidebar
+  // Re-sync catalog when role changes
+  useEffect(() => {
+    if (isAuthenticated && currentUser?.role) {
+      refreshAllData();
+    }
+  }, [currentUser?.role]);
+
+  // Helper Badge Counts for Sidebar from actual counts
   const badgeCounts = {
-    enquiries: enquiries.filter((e) => e.status === 'Unread').length || 14,
-    jobs: jobs.filter((j) => j.status === 'Active').length || 12,
-    blogs: blogs.filter((b) => b.status === 'Published').length || 45,
-    products: 5,
-    services: 6,
+    enquiries: 0,
+    jobs: jobs.filter((j) => (j.status || '').toLowerCase() === 'published' || (j.status || '').toLowerCase() === 'active').length,
+    blogs: blogs.filter((b) => (b.status || '').toLowerCase() === 'published').length,
+    products: productsList.length,
+    services: servicesList.length,
   };
 
   // Job CRUD Handlers
   const handleAddJob = (newJob) => {
     setJobs([newJob, ...jobs]);
-    setStats((prev) => ({
-      ...prev,
-      activeJobs: newJob.status === 'Active' ? prev.activeJobs + 1 : prev.activeJobs,
-      totalJobs: prev.totalJobs + 1,
-      publishingStatus: 'Changes Pending',
-      pendingPublishCount: prev.pendingPublishCount + 1,
-    }));
+    refreshAllData();
   };
 
   const handleUpdateJob = (updatedJob) => {
     setJobs(jobs.map((j) => (j.id === updatedJob.id ? updatedJob : j)));
-    setStats((prev) => ({
-      ...prev,
-      activeJobs: jobs.filter((j) => (j.id === updatedJob.id ? updatedJob : j).status === 'Active').length,
-      publishingStatus: 'Changes Pending',
-    }));
+    refreshAllData();
   };
 
   const handleDeleteJob = (id) => {
     setJobs(jobs.filter((j) => j.id !== id));
-    setStats((prev) => ({
-      ...prev,
-      totalJobs: Math.max(0, prev.totalJobs - 1),
-      publishingStatus: 'Changes Pending',
-    }));
+    refreshAllData();
   };
 
   // Blog CRUD Handlers
-  const handleAddBlog = (newBlog) => {
-    const authorName = currentUser?.name || getStoredUser()?.name || 'Administrator';
-    const blogWithAuthor = { ...newBlog, author: authorName };
-    setBlogs([blogWithAuthor, ...blogs]);
-    setStats((prev) => ({
-      ...prev,
-      publishedBlogs: newBlog.status === 'Published' ? prev.publishedBlogs + 1 : prev.publishedBlogs,
-      draftBlogs: newBlog.status === 'Draft' ? prev.draftBlogs + 1 : prev.draftBlogs,
-      publishingStatus: 'Changes Pending',
-      pendingPublishCount: prev.pendingPublishCount + 1,
-    }));
+  const handleAddBlog = async (newBlog) => {
+    try {
+      const response = await createBlog(newBlog);
+      const created = response?.data || response;
+      setBlogs((prev) => [created, ...prev]);
+      addToast({
+        title: 'Blog Article Saved',
+        message: `Article "${newBlog.title || ''}" was saved to server successfully.`,
+        type: 'success',
+      });
+      refreshAllData();
+    } catch (err) {
+      console.warn('Could not save blog to API, keeping local copy:', err?.message || err);
+      const authorName = currentUser?.name || getStoredUser()?.name || 'Administrator';
+      const blogWithAuthor = { ...newBlog, author: authorName };
+      setBlogs((prev) => [blogWithAuthor, ...prev]);
+    }
   };
 
-  const handleUpdateBlog = (updatedBlog) => {
-    const authorName = currentUser?.name || getStoredUser()?.name || 'Administrator';
-    const blogWithAuthor = { ...updatedBlog, author: authorName };
-    setBlogs(blogs.map((b) => (b.id === updatedBlog.id ? blogWithAuthor : b)));
-    setStats((prev) => ({
-      ...prev,
-      publishingStatus: 'Changes Pending',
-    }));
+  const handleUpdateBlog = async (updatedBlog) => {
+    try {
+      if (updatedBlog?.id && !String(updatedBlog.id).startsWith('BLOG-')) {
+        const response = await updateBlog(updatedBlog.id, updatedBlog);
+        const updated = response?.data || updatedBlog;
+        setBlogs((prev) => prev.map((b) => (b.id === updated.id ? updated : b)));
+      } else {
+        setBlogs((prev) => prev.map((b) => (b.id === updatedBlog.id ? updatedBlog : b)));
+      }
+      refreshAllData();
+    } catch (err) {
+      console.warn('Could not update blog on API, updating local copy:', err?.message || err);
+      setBlogs((prev) => prev.map((b) => (b.id === updatedBlog.id ? updatedBlog : b)));
+    }
   };
 
-  const handleDeleteBlog = (id) => {
-    setBlogs(blogs.filter((b) => b.id !== id));
+  const handleDeleteBlog = async (id) => {
+    try {
+      if (id && !String(id).startsWith('BLOG-')) {
+        await deleteBlog(id);
+      }
+      setBlogs((prev) => prev.filter((b) => b.id !== id));
+      refreshAllData();
+    } catch (err) {
+      console.warn('Could not delete blog on API, removing local copy:', err?.message || err);
+      setBlogs((prev) => prev.filter((b) => b.id !== id));
+    }
   };
 
   // Enquiry Handlers
@@ -410,12 +504,14 @@ const MainApp = () => {
       >
         {activeTab === 'dashboard' && (
           <DashboardView
-            stats={stats}
             jobs={jobs}
             blogs={blogs}
-            enquiries={enquiries}
-            publishingLogs={publishingLogs}
+            products={productsList}
+            services={servicesList}
             activityLog={activityLog}
+            currentUser={currentUser}
+            isLoading={isDataLoading}
+            onRefresh={refreshAllData}
             onNavigate={setActiveTab}
             onOpenNewJobModal={() => {
               setActiveTab('careers');
@@ -425,7 +521,6 @@ const MainApp = () => {
               setActiveTab('blogs');
               setQuickCreateBlog(true);
             }}
-            onOpenPublishModal={() => setIsPublishModalOpen(true)}
           />
         )}
 
