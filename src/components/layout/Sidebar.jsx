@@ -5,7 +5,6 @@ import {
   Wrench,
   Briefcase,
   FileText,
-  Mail,
   Settings,
   LogOut,
   X,
@@ -35,7 +34,6 @@ export const Sidebar = ({
         { id: 'services', label: 'Services', icon: Wrench },
         { id: 'careers', label: 'Careers', icon: Briefcase },
         { id: 'blogs', label: 'Blogs', icon: FileText },
-        { id: 'enquiries', label: 'Enquiries', icon: Mail },
       ],
     },
     {
