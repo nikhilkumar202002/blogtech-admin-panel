@@ -104,6 +104,14 @@ Options -Indexes
   # Security Headers
   Header always set X-Content-Type-Options "nosniff"
   Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set X-XSS-Protection "1; mode=block"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+  
+  # Strict-Transport-Security (HSTS - 1 year, include subdomains)
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" env=HTTPS
+
+  # Content Security Policy (CSP)
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://api.blogtec.co.in https://blogtec.co.in; connect-src 'self' https://api.blogtec.co.in https://blogtec.co.in; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self';"
 </IfModule>
 

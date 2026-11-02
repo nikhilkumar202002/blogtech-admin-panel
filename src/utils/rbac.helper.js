@@ -14,25 +14,33 @@ export const ROLE_PERMISSIONS = {
 
 /**
  * Checks if a user's role has permission to access a given navigation tab
- * @param {string} role - 'super_admin' | 'admin' | 'editor'
+ * Accepts either a role string ('super_admin') or a user object ({ role: 'super_admin' }).
+ * @param {string|object} roleOrUser
  * @param {string} tab - tab identifier ('dashboard', 'products', etc.)
  * @returns {boolean}
  */
-export const canAccessTab = (role, tab) => {
-  if (!tab) return false;
-  const cleanRole = (role || ROLES.EDITOR).toLowerCase();
-  const allowed = ROLE_PERMISSIONS[cleanRole] || ROLE_PERMISSIONS[ROLES.EDITOR];
+export const canAccessTab = (roleOrUser, tab) => {
+  if (!tab || !roleOrUser) return false;
+  const role = typeof roleOrUser === 'object' ? roleOrUser.role : roleOrUser;
+  if (!role || typeof role !== 'string') return false;
+  const cleanRole = role.toLowerCase().trim();
+  const allowed = ROLE_PERMISSIONS[cleanRole];
+  // Unknown or unrecognized roles are strictly denied all access
+  if (!allowed || !Array.isArray(allowed)) return false;
   return allowed.includes(tab.toLowerCase());
 };
 
 /**
- * Returns array of permitted navigation tabs for a role
- * @param {string} role
+ * Returns array of permitted navigation tabs for a role or user
+ * @param {string|object} roleOrUser
  * @returns {string[]}
  */
-export const getAllowedTabs = (role) => {
-  const cleanRole = (role || ROLES.EDITOR).toLowerCase();
-  return ROLE_PERMISSIONS[cleanRole] || ROLE_PERMISSIONS[ROLES.EDITOR];
+export const getAllowedTabs = (roleOrUser) => {
+  if (!roleOrUser) return [];
+  const role = typeof roleOrUser === 'object' ? roleOrUser.role : roleOrUser;
+  if (!role || typeof role !== 'string') return [];
+  const cleanRole = role.toLowerCase().trim();
+  return ROLE_PERMISSIONS[cleanRole] || [];
 };
 
 /**

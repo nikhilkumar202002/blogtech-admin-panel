@@ -157,6 +157,15 @@ export const CreateProduct = ({
     }
   }, [initialProduct]);
 
+  // Clean up object URLs on component unmount to prevent browser memory leaks
+  useEffect(() => {
+    return () => {
+      if (featuredPreview && featuredPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(featuredPreview);
+      }
+    };
+  }, [featuredPreview]);
+
   // Handle Featured Image Selection (Staged locally, saved atomically on submit)
   const handleSelectFeaturedFile = (file) => {
     if (!file) return;
@@ -168,6 +177,10 @@ export const CreateProduct = ({
         type: 'error',
       });
       return;
+    }
+
+    if (featuredPreview && featuredPreview.startsWith('blob:')) {
+      URL.revokeObjectURL(featuredPreview);
     }
 
     setFeaturedFile(file);
@@ -183,6 +196,9 @@ export const CreateProduct = ({
 
   // Handle Delete Featured Image (Staged locally, saved atomically on submit)
   const handleDeleteFeaturedImage = () => {
+    if (featuredPreview && featuredPreview.startsWith('blob:')) {
+      URL.revokeObjectURL(featuredPreview);
+    }
     setFeaturedFile(null);
     setFeaturedPreview(null);
     setRemoveFeaturedImage(true);
@@ -249,6 +265,10 @@ export const CreateProduct = ({
 
   // Delete single staged new gallery image
   const handleDeleteStagedGalleryImage = (idx) => {
+    const item = stagedGalleryPreviews[idx];
+    if (item?.url && item.url.startsWith('blob:')) {
+      URL.revokeObjectURL(item.url);
+    }
     setStagedGalleryFiles((prev) => prev.filter((_, i) => i !== idx));
     setStagedGalleryPreviews((prev) => prev.filter((_, i) => i !== idx));
   };

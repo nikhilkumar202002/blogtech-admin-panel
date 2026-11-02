@@ -31,6 +31,7 @@ import {
 } from '../../../utils/ourservice.service';
 import { API_BASE_URL } from '../../../utils/main.service';
 import { formatImageUrl, handleImageError } from '../../../utils/image.helper';
+import { sanitizeHtml } from '../../../utils/sanitize.helper';
 
 const formatDate = (dateStr) => {
   if (!dateStr) return 'Unscheduled';
@@ -654,7 +655,7 @@ export const ServiceList = ({ onNavigate }) => {
                 </span>
                 <div
                   className="product-rich-content bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs"
-                  dangerouslySetInnerHTML={{ __html: viewingService.content }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(viewingService.content) }}
                 />
               </div>
             )}

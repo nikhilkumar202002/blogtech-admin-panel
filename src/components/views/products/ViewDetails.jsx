@@ -37,6 +37,7 @@ import {
 } from '../../../utils/product.service';
 import { API_BASE_URL } from '../../../utils/main.service';
 import { formatImageUrl, handleImageError } from '../../../utils/image.helper';
+import { sanitizeHtml } from '../../../utils/sanitize.helper';
 
 const formatDate = (dateStr) => {
   if (!dateStr) return 'Unscheduled';
@@ -568,7 +569,7 @@ export const ViewDetails = ({
               contentViewMode === 'rendered' ? (
                 <div
                   className="product-rich-content bg-slate-50/60 p-6 rounded-xl border border-slate-200/80 shadow-2xs"
-                  dangerouslySetInnerHTML={{ __html: product.content }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.content) }}
                 />
               ) : (
                 <div className="relative">

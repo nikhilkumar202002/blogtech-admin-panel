@@ -109,6 +109,9 @@ export const CreateService = ({
         });
         return;
       }
+      if (featuredPreview && featuredPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(featuredPreview);
+      }
       setFeaturedFile(file);
       setFeaturedPreview(URL.createObjectURL(file));
       addToast({
@@ -120,6 +123,9 @@ export const CreateService = ({
   };
 
   const handleRemoveImage = () => {
+    if (featuredPreview && featuredPreview.startsWith('blob:')) {
+      URL.revokeObjectURL(featuredPreview);
+    }
     setFeaturedFile(null);
     setFeaturedPreview(null);
     if (fileInputRef.current) {

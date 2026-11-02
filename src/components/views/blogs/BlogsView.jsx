@@ -21,6 +21,7 @@ import { Breadcrumb } from '../../ui/Breadcrumb';
 import { DropdownMenu } from '../../ui/DropdownMenu';
 import { CreateBlog } from './CreateBlog';
 import { getStoredUser } from '../../../utils/auth.service';
+import { sanitizeHtml } from '../../../utils/sanitize.helper';
 
 export const BlogsView = ({
   blogs = [],
@@ -374,7 +375,9 @@ export const BlogsView = ({
                 fontFamily: 'Inter, sans-serif',
               }}
               dangerouslySetInnerHTML={{
-                __html: previewBlog.content || previewBlog.excerpt || '<p style="color:#94a3b8;font-style:italic;">No article content available to preview.</p>',
+                __html: sanitizeHtml(
+                  previewBlog.content || previewBlog.excerpt || '<p style="color:#94a3b8;font-style:italic;">No article content available to preview.</p>'
+                ),
               }}
             />
           </div>

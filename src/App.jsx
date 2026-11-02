@@ -77,15 +77,44 @@ const MainApp = () => {
     return getStoredUser() || null;
   });
 
-  // Listen for global unauthorized events (e.g. 401 on expired session)
+  // Listen for global authentication & API security events
   useEffect(() => {
-    const handleUnauthorized = () => {
+    const handleUnauthorized = (e) => {
       setIsAuthenticated(false);
       setCurrentUser(null);
+      addToast({
+        title: 'Session Expired',
+        message: e?.detail?.message || 'Your session has expired. Please sign in again.',
+        type: 'warning',
+      });
     };
+
+    const handleForbidden = (e) => {
+      addToast({
+        title: 'Access Denied',
+        message: e?.detail?.message || 'You do not have permission to perform this action.',
+        type: 'warning',
+      });
+    };
+
+    const handleRateLimited = (e) => {
+      addToast({
+        title: 'Rate Limit Exceeded',
+        message: e?.detail?.message || 'Too many requests. Please wait a moment before trying again.',
+        type: 'error',
+      });
+    };
+
     window.addEventListener('auth:unauthorized', handleUnauthorized);
-    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
-  }, []);
+    window.addEventListener('auth:forbidden', handleForbidden);
+    window.addEventListener('api:ratelimited', handleRateLimited);
+
+    return () => {
+      window.removeEventListener('auth:unauthorized', handleUnauthorized);
+      window.removeEventListener('auth:forbidden', handleForbidden);
+      window.removeEventListener('api:ratelimited', handleRateLimited);
+    };
+  }, [addToast]);
 
   // Navigation & Layout State (Synced with clean URL pathnames and localStorage)
   const [activeTab, setActiveTabState] = useState(getInitialTab);
@@ -165,25 +194,39 @@ const MainApp = () => {
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
   const [activityLog, setActivityLog] = useState(ACTIVITY_LOG);
 
-  // Fetch logged in user profile from /admin/me API on load
+  // Fetch authoritative user profile from /admin/me API on load
   useEffect(() => {
     if (isAuthenticated) {
       getCurrentUser()
         .then((response) => {
           const userData = response?.data || response?.user || (response?.id ? response : null) || response;
           if (userData && (userData.name || userData.email || userData.id)) {
+            // Security Check: If administrator account has been deactivated/suspended on backend
+            if (userData.status === 'inactive') {
+              authLogout();
+              setIsAuthenticated(false);
+              setCurrentUser(null);
+              addToast({
+                title: 'Account Deactivated',
+                message: 'Your administrator account has been deactivated. Please contact the super administrator.',
+                type: 'error',
+              });
+              return;
+            }
             setCurrentUser(userData);
           }
         })
         .catch((err) => {
           console.warn('Could not sync admin profile from /admin/me:', err?.message || err);
-          if (err.response?.status === 401 || err.response?.status === 403) {
+          // Only clear session on 401 Unauthorized (session dead), never on 403 Forbidden
+          if (err.response?.status === 401) {
             authLogout();
             setIsAuthenticated(false);
+            setCurrentUser(null);
           }
         });
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, addToast]);
 
   // Helper Badge Counts for Sidebar
   const badgeCounts = {
@@ -323,7 +366,7 @@ const MainApp = () => {
                 setCurrentUser(fresh);
               }
             })
-            .catch(() => {});
+            .catch(() => { });
 
           const adminName = userObj?.name || 'Admin';
           const rawRole = userObj?.role || 'super_admin';
@@ -513,6 +556,9 @@ const MainApp = () => {
             console.warn('Logout API error:', err);
           } finally {
             setIsAuthenticated(false);
+            setCurrentUser(null);
+            setActiveTabState('dashboard');
+            localStorage.setItem('blogtech_active_tab', 'dashboard');
             window.history.pushState({}, '', '/login');
             addToast({
               title: 'Logged Out',

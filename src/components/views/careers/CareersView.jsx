@@ -34,6 +34,7 @@ import { useToast } from '../../ui/ToastContext';
 import { Breadcrumb } from '../../ui/Breadcrumb';
 import { CreateCareer } from './CreateCareer';
 import { CarrerStatusUpdate } from '../../ui/CarrerStatusUpdate';
+import { sanitizeHtml } from '../../../utils/sanitize.helper';
 import {
   getCareers,
   publishCareer,
@@ -719,7 +720,7 @@ export const CareersView = ({
               <div
                 className="text-sm leading-relaxed text-slate-800 prose max-w-none"
                 dangerouslySetInnerHTML={{
-                  __html: viewingJob.description || '<p>No description content provided.</p>',
+                  __html: sanitizeHtml(viewingJob.description || '<p>No description content provided.</p>'),
                 }}
               />
             </div>
@@ -735,7 +736,7 @@ export const CareersView = ({
               <div
                 className="text-sm leading-relaxed text-slate-800 prose max-w-none"
                 dangerouslySetInnerHTML={{
-                  __html: viewingJob.requirements || '<p>No additional requirements provided.</p>',
+                  __html: sanitizeHtml(viewingJob.requirements || '<p>No additional requirements provided.</p>'),
                 }}
               />
             </div>

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { sanitizeHtml, isSafeUrl } from '../../utils/sanitize.helper';
 import {
   Bold,
   Italic,
@@ -86,6 +87,10 @@ export const RichTextEditor = ({
   // Insert Hyperlink
   const handleInsertLink = () => {
     if (!linkUrl.trim() || linkUrl === 'https://') return;
+    if (!isSafeUrl(linkUrl)) {
+      alert('Security Warning: Only http, https, mailto, and tel links are permitted.');
+      return;
+    }
     execCmd('createLink', linkUrl);
     setIsLinkDialogOpen(false);
     setLinkUrl('https://');
@@ -336,9 +341,10 @@ export const RichTextEditor = ({
             style={{ minHeight }}
             className="p-5 sm:p-6 text-sm text-slate-900 bg-slate-50/30 leading-relaxed prose prose-slate max-w-none"
             dangerouslySetInnerHTML={{
-              __html:
+              __html: sanitizeHtml(
                 value ||
-                '<p class="text-slate-400 italic">No content written yet. Switch to Word View to compose.</p>',
+                '<p class="text-slate-400 italic">No content written yet. Switch to Word View to compose.</p>'
+              ),
             }}
           />
         )}

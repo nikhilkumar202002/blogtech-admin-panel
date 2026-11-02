@@ -1,4 +1,5 @@
 import { API_BASE_URL } from './main.service';
+import { escapeXml } from './sanitize.helper';
 
 // Default live storage domain where files are hosted
 export const STORAGE_BASE_URL = 'https://api.blogtec.co.in/storage';
@@ -75,7 +76,7 @@ export const createSvgPlaceholder = (
   width = 200,
   height = 200
 ) => {
-  const cleanText = (text || 'NA').toString().slice(0, 20);
+  const cleanText = escapeXml((text || 'NA').toString().slice(0, 20));
   const fontSize = Math.max(12, Math.min(22, Math.floor(width / Math.max(cleanText.length, 6))));
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
     <rect width="100%" height="100%" fill="${bgColor}"/>
