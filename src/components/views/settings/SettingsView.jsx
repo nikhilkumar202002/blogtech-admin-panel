@@ -50,6 +50,13 @@ export const SettingsView = ({
   // Navigation Tabs: 'profile' | 'security' | 'users' | 'roles'
   const [activeSection, setActiveSection] = useState('profile');
 
+  // Enforce access control on section state
+  useEffect(() => {
+    if (!isSuperAdmin && (activeSection === 'users' || activeSection === 'roles')) {
+      setActiveSection('profile');
+    }
+  }, [isSuperAdmin, activeSection]);
+
   // ==========================================
   // 1. PROFILE SECTION
   // ==========================================

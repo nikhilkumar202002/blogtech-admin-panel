@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Search, LayoutDashboard, Package, Wrench, Briefcase, FileText, Settings, Plus, Send, X } from 'lucide-react';
+import { canAccessTab, isEditor } from '../../utils/rbac.helper';
 
-export const CommandPalette = ({ isOpen, onClose, onNavigate, onAction }) => {
+export const CommandPalette = ({ isOpen, onClose, onNavigate, onAction, userRole = null }) => {
   const [query, setQuery] = useState('');
 
   useEffect(() => {
@@ -34,7 +35,15 @@ export const CommandPalette = ({ isOpen, onClose, onNavigate, onAction }) => {
     { type: 'action', id: 'new-blog', label: 'Create New Blog Article', icon: Plus, category: 'Quick Action' },
     { type: 'action', id: 'new-job', label: 'Create New Job Opening', icon: Plus, category: 'Quick Action' },
     { type: 'action', id: 'publish-site', label: 'Publish Website Updates to Production', icon: Send, category: 'Quick Action' },
-  ];
+  ].filter((item) => {
+    if (item.type === 'nav') {
+      return canAccessTab(userRole, item.id);
+    }
+    if (item.id === 'publish-site' && isEditor(userRole)) {
+      return false;
+    }
+    return true;
+  });
 
   const filteredItems = commandItems.filter((item) =>
     item.label.toLowerCase().includes(query.toLowerCase()) ||

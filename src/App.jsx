@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ShieldAlert, ArrowLeft } from 'lucide-react';
 import { Layout } from './components/layout/Layout';
 import { ToastProvider, useToast } from './components/ui/ToastContext';
 import { CommandPalette } from './components/ui/CommandPalette';
@@ -6,6 +7,7 @@ import { Modal } from './components/ui/Modal';
 import { Button } from './components/ui/Button';
 import { ConfirmDialog } from './components/ui/ConfirmDialog';
 import { Badge } from './components/ui/Badge';
+import { canAccessTab, formatRoleLabel, isEditor } from './utils/rbac.helper';
 
 import {
   DashboardView,
@@ -49,11 +51,31 @@ const getInitialTab = () => {
   return 'dashboard';
 };
 
+const AccessDeniedNotice = ({ role, moduleName = 'this catalog section', onBack }) => (
+  <div className="flex flex-col items-center justify-center min-h-[460px] p-6 text-center animate-fade-in bg-white border border-slate-200 rounded-2xl shadow-xs my-6">
+    <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 mb-4 shadow-xs">
+      <ShieldAlert size={32} />
+    </div>
+    <h2 className="text-xl font-bold text-slate-900 mb-1.5">Access Restricted</h2>
+    <p className="text-sm text-slate-500 max-w-md mb-6 leading-relaxed">
+      Your account role (<strong className="text-slate-800">{formatRoleLabel(role)}</strong>) does not have permission to view or manage {moduleName}.
+    </p>
+    <Button variant="primary" icon={ArrowLeft} onClick={onBack}>
+      Return to Dashboard
+    </Button>
+  </div>
+);
+
 const MainApp = () => {
   const { addToast } = useToast();
 
   // Authentication State (Requires valid token; redirect to login if unauthenticated)
   const [isAuthenticated, setIsAuthenticated] = useState(() => checkIsAuthenticated());
+
+  // Authenticated User Profile (Fetched directly from API, no hardcoded dummy variables)
+  const [currentUser, setCurrentUser] = useState(() => {
+    return getStoredUser() || null;
+  });
 
   // Listen for global unauthorized events (e.g. 401 on expired session)
   useEffect(() => {
@@ -69,6 +91,16 @@ const MainApp = () => {
   const [activeTab, setActiveTabState] = useState(getInitialTab);
 
   const setActiveTab = (tab) => {
+    // RBAC: Check role permission before navigating
+    if (currentUser?.role && !canAccessTab(currentUser.role, tab)) {
+      addToast({
+        title: 'Access Restricted',
+        message: `The ${formatRoleLabel(currentUser.role)} role does not have permission to access this module.`,
+        type: 'warning',
+      });
+      return;
+    }
+
     if (VALID_TABS.includes(tab)) {
       setActiveTabState(tab);
       const targetPath = tab === 'dashboard' ? '/' : `/${tab}`;
@@ -90,13 +122,29 @@ const MainApp = () => {
     const handlePopState = () => {
       const path = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase() || 'dashboard';
       const active = VALID_TABS.includes(path) ? path : 'dashboard';
+      if (currentUser?.role && !canAccessTab(currentUser.role, active)) {
+        setActiveTabState('dashboard');
+        localStorage.setItem('blogtech_active_tab', 'dashboard');
+        return;
+      }
       setActiveTabState(active);
       localStorage.setItem('blogtech_active_tab', active);
     };
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+  }, [currentUser?.role]);
+
+  // If user role is loaded and currently on an unauthorized tab (e.g. Editor directly visiting /products), bounce to dashboard
+  useEffect(() => {
+    if (currentUser?.role && !canAccessTab(currentUser.role, activeTab)) {
+      setActiveTabState('dashboard');
+      localStorage.setItem('blogtech_active_tab', 'dashboard');
+      if (window.location.pathname !== '/') {
+        window.history.replaceState({}, '', '/');
+      }
+    }
+  }, [currentUser?.role, activeTab]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
@@ -116,11 +164,6 @@ const MainApp = () => {
   const [publishingLogs, setPublishingLogs] = useState(INITIAL_PUBLISHING_LOGS);
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
   const [activityLog, setActivityLog] = useState(ACTIVITY_LOG);
-
-  // Authenticated User Profile (Fetched directly from API, no hardcoded dummy variables)
-  const [currentUser, setCurrentUser] = useState(() => {
-    return getStoredUser() || null;
-  });
 
   // Fetch logged in user profile from /admin/me API on load
   useEffect(() => {
@@ -183,7 +226,9 @@ const MainApp = () => {
 
   // Blog CRUD Handlers
   const handleAddBlog = (newBlog) => {
-    setBlogs([newBlog, ...blogs]);
+    const authorName = currentUser?.name || getStoredUser()?.name || 'Administrator';
+    const blogWithAuthor = { ...newBlog, author: authorName };
+    setBlogs([blogWithAuthor, ...blogs]);
     setStats((prev) => ({
       ...prev,
       publishedBlogs: newBlog.status === 'Published' ? prev.publishedBlogs + 1 : prev.publishedBlogs,
@@ -194,7 +239,9 @@ const MainApp = () => {
   };
 
   const handleUpdateBlog = (updatedBlog) => {
-    setBlogs(blogs.map((b) => (b.id === updatedBlog.id ? updatedBlog : b)));
+    const authorName = currentUser?.name || getStoredUser()?.name || 'Administrator';
+    const blogWithAuthor = { ...updatedBlog, author: authorName };
+    setBlogs(blogs.map((b) => (b.id === updatedBlog.id ? blogWithAuthor : b)));
     setStats((prev) => ({
       ...prev,
       publishingStatus: 'Changes Pending',
@@ -340,11 +387,27 @@ const MainApp = () => {
         )}
 
         {activeTab === 'products' && (
-          <ProductsView onNavigate={setActiveTab} />
+          canAccessTab(currentUser?.role, 'products') ? (
+            <ProductsView onNavigate={setActiveTab} />
+          ) : (
+            <AccessDeniedNotice
+              role={currentUser?.role}
+              moduleName="Products catalog"
+              onBack={() => setActiveTab('dashboard')}
+            />
+          )
         )}
 
         {activeTab === 'services' && (
-          <ServicesView onNavigate={setActiveTab} />
+          canAccessTab(currentUser?.role, 'services') ? (
+            <ServicesView onNavigate={setActiveTab} />
+          ) : (
+            <AccessDeniedNotice
+              role={currentUser?.role}
+              moduleName="Services catalog"
+              onBack={() => setActiveTab('dashboard')}
+            />
+          )
         )}
 
         {activeTab === 'careers' && (
@@ -362,6 +425,7 @@ const MainApp = () => {
         {activeTab === 'blogs' && (
           <BlogsView
             blogs={blogs}
+            currentUser={currentUser}
             onAddBlog={handleAddBlog}
             onUpdateBlog={handleUpdateBlog}
             onDeleteBlog={handleDeleteBlog}
@@ -371,11 +435,19 @@ const MainApp = () => {
         )}
 
         {activeTab === 'enquiries' && (
-          <EnquiriesView
-            enquiries={enquiries}
-            onUpdateEnquiry={handleUpdateEnquiry}
-            onDeleteEnquiry={handleDeleteEnquiry}
-          />
+          canAccessTab(currentUser?.role, 'enquiries') ? (
+            <EnquiriesView
+              enquiries={enquiries}
+              onUpdateEnquiry={handleUpdateEnquiry}
+              onDeleteEnquiry={handleDeleteEnquiry}
+            />
+          ) : (
+            <AccessDeniedNotice
+              role={currentUser?.role}
+              moduleName="Customer enquiries"
+              onBack={() => setActiveTab('dashboard')}
+            />
+          )
         )}
 
         {activeTab === 'settings' && (
@@ -393,6 +465,7 @@ const MainApp = () => {
         onClose={() => setIsCommandPaletteOpen(false)}
         onNavigate={(tab) => setActiveTab(tab)}
         onAction={handleCommandAction}
+        userRole={currentUser?.role}
       />
 
       {/* Publish Website Changes Modal */}

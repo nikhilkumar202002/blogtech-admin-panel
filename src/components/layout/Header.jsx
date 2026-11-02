@@ -11,12 +11,7 @@ import {
 } from 'lucide-react';
 import { DropdownMenu } from '../ui/DropdownMenu';
 import { Avatar } from '../ui/Avatar';
-
-const formatRole = (role) => {
-  if (!role) return 'Super Admin';
-  if (role === 'super_admin') return 'Super Admin';
-  return role.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-};
+import { formatRoleLabel } from '../../utils/rbac.helper';
 
 export const Header = ({
   activeTab = 'dashboard',
@@ -86,7 +81,7 @@ export const Header = ({
                   {user?.name || 'Admin'}
                 </div>
                 <div className="text-[11px] text-slate-500 mt-0.5">
-                  {formatRole(user?.role)}
+                  {formatRoleLabel(user?.role)}
                 </div>
               </div>
               <ChevronDown size={14} className="text-slate-400 hidden sm:block" />
@@ -106,7 +101,7 @@ export const Header = ({
                     {user?.name || 'Admin'}
                   </span>
                   <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600 uppercase tracking-wider whitespace-nowrap">
-                    {formatRole(user?.role)}
+                    {formatRoleLabel(user?.role)}
                   </span>
                 </div>
                 {user?.email && (

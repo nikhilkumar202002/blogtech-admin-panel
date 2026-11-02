@@ -15,9 +15,11 @@ import { DatePicker } from '../../ui/DatePicker';
 import { ImageUploader } from '../../ui/ImageUploader';
 import { useToast } from '../../ui/ToastContext';
 import { BLOG_CATEGORIES } from '../../../mockData';
+import { getStoredUser } from '../../../utils/auth.service';
 
 export const CreateBlog = ({
   initialBlog = null,
+  currentUser = null,
   onSave,
   onAddBlog,
   onUpdateBlog,
@@ -27,6 +29,12 @@ export const CreateBlog = ({
 }) => {
   const { addToast } = useToast();
   const isEditing = Boolean(initialBlog?.id);
+
+  // Author is always dynamically resolved to current logged in user
+  const currentUserName =
+    currentUser?.name ||
+    getStoredUser()?.name ||
+    'Administrator';
 
   // SEO Accordion Collapse State
   const [isSeoOpen, setIsSeoOpen] = useState(
@@ -38,7 +46,7 @@ export const CreateBlog = ({
     title: initialBlog?.title || '',
     slug: initialBlog?.slug || '',
     category: initialBlog?.category || 'Engineering',
-    author: initialBlog?.author || 'Sarah Jenkins (Lead Editor)',
+    author: currentUserName,
     status: initialBlog?.status || 'Published',
     coverImage: initialBlog?.coverImage || '',
     excerpt: initialBlog?.excerpt || '',
@@ -68,6 +76,7 @@ export const CreateBlog = ({
     const previewData = {
       ...(initialBlog || {}),
       ...formData,
+      author: currentUserName,
       slug: formData.slug.trim() || generateSlug(formData.title || 'untitled-article'),
       id: initialBlog?.id || 'preview-temp-id',
       readTime: initialBlog?.readTime || '5 min read',
@@ -93,6 +102,7 @@ export const CreateBlog = ({
     const savedBlog = {
       ...(initialBlog || {}),
       ...formData,
+      author: currentUserName,
       slug: finalSlug,
       status: finalStatus,
       id: initialBlog?.id || `BLOG-${Math.floor(200 + Math.random() * 800)}`,
@@ -415,7 +425,7 @@ export const CreateBlog = ({
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: '#64748b' }}>Author</span>
-                  <span style={{ color: '#0f172a', fontWeight: 500 }}>{formData.author || 'Sarah Jenkins'}</span>
+                  <span style={{ color: '#0f172a', fontWeight: 600 }}>{currentUserName}</span>
                 </div>
               </div>
             </div>

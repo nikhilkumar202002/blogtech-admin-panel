@@ -10,6 +10,7 @@ import {
   X,
 } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
+import { canAccessTab, formatRoleLabel } from '../../utils/rbac.helper';
 
 export const Sidebar = ({
   activeTab = 'dashboard',
@@ -41,6 +42,14 @@ export const Sidebar = ({
       items: [{ id: 'settings', label: 'Settings', icon: Settings }],
     },
   ];
+
+  // RBAC Filter: Only include items allowed for current user's role (e.g. Editor only sees Careers, Blogs, Dashboard, Settings)
+  const accessibleSections = navSections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => canAccessTab(user?.role, item.id)),
+    }))
+    .filter((section) => section.items.length > 0);
 
   const handleNavClick = (id) => {
     onTabChange(id);
@@ -93,7 +102,7 @@ export const Sidebar = ({
 
         {/* NAVIGATION SECTIONS */}
         <div className="p-3 flex-1 overflow-y-auto flex flex-col gap-5">
-          {navSections.map((section, idx) => (
+          {accessibleSections.map((section, idx) => (
             <div key={idx} className="flex flex-col gap-1">
               {!isCollapsed ? (
                 <div className="text-[10.5px] font-bold text-slate-400 tracking-wider px-2.5 pb-1.5 uppercase">
@@ -165,11 +174,11 @@ export const Sidebar = ({
                 <div className="text-[13px] font-semibold text-slate-900 truncate">
                   {user?.name || 'Admin'}
                 </div>
-                {user?.email && (
-                  <div className="text-[11px] text-slate-500 truncate mt-0.5">
-                    {user.email}
-                  </div>
-                )}
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="text-[10px] font-medium text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-1.5 py-0.5 rounded leading-none">
+                    {formatRoleLabel(user?.role)}
+                  </span>
+                </div>
               </div>
             )}
           </div>

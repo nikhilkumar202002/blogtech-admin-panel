@@ -20,9 +20,11 @@ import { useToast } from '../../ui/ToastContext';
 import { Breadcrumb } from '../../ui/Breadcrumb';
 import { DropdownMenu } from '../../ui/DropdownMenu';
 import { CreateBlog } from './CreateBlog';
+import { getStoredUser } from '../../../utils/auth.service';
 
 export const BlogsView = ({
   blogs = [],
+  currentUser = null,
   onAddBlog,
   onUpdateBlog,
   onDeleteBlog,
@@ -31,6 +33,11 @@ export const BlogsView = ({
   isLoading = false,
 }) => {
   const { addToast } = useToast();
+
+  const currentUserName =
+    currentUser?.name ||
+    getStoredUser()?.name ||
+    'Administrator';
 
   // View Mode: 'list' (Table view) | 'form' (Create / Edit Article) | 'preview' (Blog Article Preview Page)
   const [viewMode, setViewMode] = useState('list');
@@ -344,13 +351,13 @@ export const BlogsView = ({
               }}
             >
               <Avatar
-                name={previewBlog.author || 'Sarah Jenkins'}
+                name={currentUserName}
                 size="lg"
                 showStatus={false}
               />
               <div>
                 <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>
-                  {previewBlog.author || 'Sarah Jenkins'}
+                  {currentUserName}
                 </div>
                 <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
                   Published on {previewBlog.publishedAt} • {previewBlog.readTime || '5 min read'}
@@ -455,6 +462,7 @@ export const BlogsView = ({
       <CreateBlog
         key={editingBlog?.id || 'new-blog'}
         initialBlog={editingBlog}
+        currentUser={currentUser}
         onBack={() => {
           setViewMode('list');
           setEditingBlog(null);
