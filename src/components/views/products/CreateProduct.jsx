@@ -677,6 +677,13 @@ export const CreateProduct = ({
             ) : (
               <div
                 onClick={() => featuredInputRef.current?.click()}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    handleSelectFeaturedFile(e.dataTransfer.files[0]);
+                  }
+                }}
                 className="border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-xl p-6 flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-indigo-50/30 transition-colors cursor-pointer text-center"
               >
                 <div className="w-10 h-10 rounded-full bg-white border border-slate-200 shadow-xs flex items-center justify-center text-indigo-600">
@@ -774,6 +781,13 @@ export const CreateProduct = ({
               /* Empty gallery dropzone */
               <div
                 onClick={() => galleryInputRef.current?.click()}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    handleSelectGalleryFiles(e.dataTransfer.files);
+                  }
+                }}
                 className="border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-xl p-5 flex flex-col items-center justify-center gap-1.5 bg-slate-50 hover:bg-indigo-50/30 transition-colors cursor-pointer text-center"
               >
                 <Layers size={18} className="text-slate-400" />

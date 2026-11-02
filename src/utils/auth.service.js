@@ -125,11 +125,43 @@ export const getCurrentUser = async () => {
 // Alias for convenience
 export const getMe = getCurrentUser;
 
+/**
+ * Update Admin Profile
+ * PUT /admin/profile
+ * @param {Object} profileData - { name, email }
+ * @returns {Promise<Object>} API response data
+ */
+export const updateProfile = async (profileData) => {
+  const response = await mainAxios.put('/admin/profile', profileData);
+  const data = response.data;
+  const rawUser = data?.data || data?.user || (data?.id ? data : null);
+  const cleanUser = sanitizeUserData(rawUser);
+
+  if (cleanUser) {
+    localStorage.setItem(USER_KEY, JSON.stringify(cleanUser));
+  }
+
+  return data;
+};
+
+/**
+ * Change Admin Password
+ * PUT /admin/change-password
+ * @param {Object} passwordData - { current_password, password, password_confirmation }
+ * @returns {Promise<Object>} API response data
+ */
+export const changePassword = async (passwordData) => {
+  const response = await mainAxios.put('/admin/change-password', passwordData);
+  return response.data;
+};
+
 const authService = {
   login,
   logout,
   getCurrentUser,
   getMe,
+  updateProfile,
+  changePassword,
   getToken,
   setToken,
   removeToken,

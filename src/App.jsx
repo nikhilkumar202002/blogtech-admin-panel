@@ -381,6 +381,7 @@ const MainApp = () => {
         {activeTab === 'settings' && (
           <SettingsView
             user={currentUser}
+            onUserUpdated={(updated) => setCurrentUser(updated)}
             onLogoutAll={() => setIsLogoutConfirmOpen(true)}
           />
         )}

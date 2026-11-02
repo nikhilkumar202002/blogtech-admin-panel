@@ -55,28 +55,14 @@ export const getProduct = async (id) => {
 // 3. POST /admin/products - Create new product with all details, featured image & gallery in single API
 export const createProduct = async (productData) => {
   const payload = toFormData(productData);
-  const isMultipart =
-    payload instanceof FormData ||
-    (payload && typeof payload.append === 'function');
-  const response = await mainAxios.post(
-    '/admin/products',
-    payload,
-    isMultipart ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined
-  );
+  const response = await mainAxios.post('/admin/products', payload);
   return response.data;
 };
 
 // 4. POST /admin/products/:id - Update product details, replace/remove featured image & gallery in single API
 export const updateProduct = async (id, productData) => {
   const payload = toFormData(productData);
-  const isMultipart =
-    payload instanceof FormData ||
-    (payload && typeof payload.append === 'function');
-  const response = await mainAxios.post(
-    `/admin/products/${id}`,
-    payload,
-    isMultipart ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined
-  );
+  const response = await mainAxios.post(`/admin/products/${id}`, payload);
   return response.data;
 };
 
