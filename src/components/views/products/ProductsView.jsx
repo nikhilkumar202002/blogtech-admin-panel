@@ -109,7 +109,6 @@ export const ProductsView = ({ onNavigate }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
-  const [bulkDeleteEndpoint, setBulkDeleteEndpoint] = useState('DELETE /admin/products/bulk-delete');
 
   // Status Action Loading tracker (id -> boolean)
   const [statusActionLoading, setStatusActionLoading] = useState({});
@@ -256,21 +255,16 @@ export const ProductsView = ({ onNavigate }) => {
   };
 
   // Bulk Delete Products Handler
-  // Supports:
-  // - DELETE /admin/products/bulk-delete
-  // - POST /admin/products/bulk-delete
-  // - DELETE /admin/products
   const handleConfirmBulkDelete = async () => {
     if (!selectedRows.length) return;
     setIsBulkDeleting(true);
     try {
       let res;
-      if (bulkDeleteEndpoint === 'POST /admin/products/bulk-delete') {
-        res = await bulkDeleteProductsPost(selectedRows);
-      } else if (bulkDeleteEndpoint === 'DELETE /admin/products') {
-        res = await deleteProducts(selectedRows);
-      } else {
+      try {
         res = await bulkDeleteProducts(selectedRows);
+      } catch (firstErr) {
+        // Fallback to POST /admin/products/bulk-delete if proxy/client restricts DELETE body
+        res = await bulkDeleteProductsPost(selectedRows);
       }
 
       addToast({
@@ -613,26 +607,14 @@ export const ProductsView = ({ onNavigate }) => {
         onSelectRow={handleSelectRow}
         onSelectAll={handleSelectAll}
         bulkActions={
-          <div className="flex items-center gap-2">
-            <select
-              value={bulkDeleteEndpoint}
-              onChange={(e) => setBulkDeleteEndpoint(e.target.value)}
-              className="text-xs bg-white border border-indigo-200 text-indigo-900 rounded-lg px-2.5 py-1.5 font-medium focus:outline-none cursor-pointer"
-              title="Select Bulk Delete API Endpoint"
-            >
-              <option value="DELETE /admin/products/bulk-delete">DELETE /admin/products/bulk-delete</option>
-              <option value="POST /admin/products/bulk-delete">POST /admin/products/bulk-delete</option>
-              <option value="DELETE /admin/products">DELETE /admin/products</option>
-            </select>
-            <Button
-              size="sm"
-              variant="danger"
-              icon={Trash2}
-              onClick={() => setIsBulkDeleteOpen(true)}
-            >
-              Delete Selected ({selectedRows.length})
-            </Button>
-          </div>
+          <Button
+            size="sm"
+            variant="danger"
+            icon={Trash2}
+            onClick={() => setIsBulkDeleteOpen(true)}
+          >
+            Delete Selected ({selectedRows.length})
+          </Button>
         }
         emptyTitle="No Products Found"
         emptyDescription={
@@ -663,7 +645,7 @@ export const ProductsView = ({ onNavigate }) => {
         onClose={() => setIsBulkDeleteOpen(false)}
         onConfirm={handleConfirmBulkDelete}
         title={`Delete ${selectedRows.length} Products?`}
-        message={`Are you sure you want to permanently delete ${selectedRows.length} selected product(s) using ${bulkDeleteEndpoint}? All associated gallery images and data will be removed.`}
+        message={`Are you sure you want to permanently delete ${selectedRows.length} selected product(s)? All associated gallery images and data will be removed.`}
         confirmLabel={isBulkDeleting ? 'Deleting...' : `Delete ${selectedRows.length} Products`}
         type="danger"
         isLoading={isBulkDeleting}

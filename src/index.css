@@ -3,6 +3,29 @@
 
 @theme {
   --font-sans: 'Google Sans', 'Google Sans Text', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Primary Color (#a34b03) */
+  --color-primary: #a34b03;
+  --color-primary-hover: #8a3f02;
+  --color-primary-light: #fdf6ee;
+  --color-primary-subtle: #faead8;
+
+  /* Secondary Color (#844414) */
+  --color-secondary: #844414;
+  --color-secondary-hover: #6e370e;
+  --color-secondary-light: #fbf5f0;
+  --color-secondary-subtle: #f5e8de;
+
+  /* Yellow Accent (#cb9706) */
+  --color-yellow: #cb9706;
+  --color-yellow-hover: #b08204;
+  --color-yellow-light: #fef9ed;
+  --color-yellow-subtle: #fbf0d0;
+
+  /* Cream Color (#edd8bb) */
+  --color-cream: #edd8bb;
+  --color-cream-light: #faf5ed;
+  --color-cream-dark: #dfc49f;
 }
 
 
@@ -21,12 +44,45 @@
   --border-main: #e2e8f0;
   --border-strong: #cbd5e1;
 
+  /* Brand Palette Variables */
+  --primary: #a34b03;
+  --primary-hover: #8a3f02;
+  --primary-light: #fdf6ee;
+  --secondary: #844414;
+  --secondary-hover: #6e370e;
+  --secondary-light: #fbf5f0;
+  --yellow: #cb9706;
+  --yellow-hover: #b08204;
+  --yellow-light: #fef9ed;
+  --cream: #edd8bb;
+  --cream-light: #faf5ed;
+  --cream-dark: #dfc49f;
+
   /* Accent Colors */
-  --primary: #0f172a;
-  --primary-hover: #1e293b;
-  --accent: #4f46e5;
-  --accent-light: #eef2ff;
-  --accent-hover: #4338ca;
+  --accent: #a34b03;
+  --accent-light: #fdf6ee;
+  --accent-hover: #8a3f02;
+
+  /* SaaS Admin Status Badge System Colors */
+  --badge-primary-bg: rgba(163, 75, 3, 0.09);
+  --badge-primary-text: #a34b03;
+  --badge-primary-border: rgba(163, 75, 3, 0.25);
+  --badge-primary-dot: #a34b03;
+
+  --badge-secondary-bg: rgba(132, 68, 20, 0.09);
+  --badge-secondary-text: #844414;
+  --badge-secondary-border: rgba(132, 68, 20, 0.25);
+  --badge-secondary-dot: #844414;
+
+  --badge-yellow-bg: rgba(203, 151, 6, 0.13);
+  --badge-yellow-text: #966f03;
+  --badge-yellow-border: rgba(203, 151, 6, 0.32);
+  --badge-yellow-dot: #cb9706;
+
+  --badge-cream-bg: #edd8bb;
+  --badge-cream-text: #844414;
+  --badge-cream-border: #dfc49f;
+  --badge-cream-dot: #844414;
 
   /* Status Colors */
   --status-active-bg: #ecfdf5;
@@ -129,6 +185,28 @@ html, body {
     background-color: var(--border-main);
     width: 100%;
     margin: 16px 0;
+  }
+
+  /* SaaS Admin Badge Utility Classes */
+  .badge-primary {
+    background-color: var(--badge-primary-bg);
+    color: var(--badge-primary-text);
+    border-color: var(--badge-primary-border);
+  }
+  .badge-secondary {
+    background-color: var(--badge-secondary-bg);
+    color: var(--badge-secondary-text);
+    border-color: var(--badge-secondary-border);
+  }
+  .badge-yellow {
+    background-color: var(--badge-yellow-bg);
+    color: var(--badge-yellow-text);
+    border-color: var(--badge-yellow-border);
+  }
+  .badge-cream {
+    background-color: var(--badge-cream-bg);
+    color: var(--badge-cream-text);
+    border-color: var(--badge-cream-border);
   }
 }
 

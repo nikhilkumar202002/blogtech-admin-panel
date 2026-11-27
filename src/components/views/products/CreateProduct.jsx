@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   ArrowLeft,
-  Package,
   Plus,
   Trash2,
   UploadCloud,
   Globe,
-  Calendar,
   FileText,
   Layers,
   Sparkles,
   Save,
   Image as ImageIcon,
+  Monitor,
+  Smartphone,
+  PhoneCall,
 } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import { FormField } from '../../ui/FormField';
@@ -45,10 +46,15 @@ export const CreateProduct = ({
   const { addToast } = useToast();
   const isEditing = Boolean(initialProduct?.id);
 
-  // Form State
   const [formData, setFormData] = useState({
     name: initialProduct?.name || '',
     slug: initialProduct?.slug || '',
+    banner_title: initialProduct?.banner_title || initialProduct?.banner?.title || '',
+    banner_title_highlight: initialProduct?.banner_title_highlight || initialProduct?.banner?.title_highlight || '',
+    banner_subtitle: initialProduct?.banner_subtitle || initialProduct?.banner?.subtitle || '',
+    banner_description: initialProduct?.banner_description || initialProduct?.banner?.description || '',
+    banner_button_text: initialProduct?.banner_button_text || initialProduct?.banner?.button_text || initialProduct?.banner?.cta_text || '',
+    banner_button_link: initialProduct?.banner_button_link || initialProduct?.banner?.button_link || initialProduct?.banner?.cta_link || '',
     short_description: initialProduct?.short_description || '',
     description: initialProduct?.description || '',
     content: initialProduct?.content || '',
@@ -58,16 +64,12 @@ export const CreateProduct = ({
     meta_description: initialProduct?.meta_description || '',
     published_at: initialProduct?.published_at
       ? initialProduct.published_at.split('T')[0]
-      : new Date().toISOString().split('T')[0],
+      : '',
   });
 
   const [formErrors, setFormErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
-
-  // Active product details (keeps sync with fresh server data)
   const [activeProduct, setActiveProduct] = useState(initialProduct);
-
-  // Featured Image State
   const [featuredFile, setFeaturedFile] = useState(null);
   const [featuredPreview, setFeaturedPreview] = useState(
     formatImageUrl(
@@ -77,21 +79,33 @@ export const CreateProduct = ({
     ) || null
   );
   const [removeFeaturedImage, setRemoveFeaturedImage] = useState(false);
-
-  // Gallery Images State
-  // Existing images retrieved from server: [{ id, index, url, path }]
-  const [existingGallery, setExistingGallery] = useState([]);
-  // Newly staged gallery files for upload: File[]
-  const [stagedGalleryFiles, setStagedGalleryFiles] = useState([]);
-  // Newly staged gallery preview objects: [{ id, url, name }]
+  const [bannerDesktopFile, setBannerDesktopFile] = useState(null);
+  const [bannerDesktopPreview, setBannerDesktopPreview] = useState(
+    formatImageUrl(
+      initialProduct?.banner_image_desktop_path ||
+      initialProduct?.banner_image_desktop_url ||
+      initialProduct?.banner_image_desktop
+    ) || null
+  );
+  const [removeBannerDesktop, setRemoveBannerDesktop] = useState(false);
+  const [bannerMobileFile, setBannerMobileFile] = useState(null);
+  const [bannerMobilePreview, setBannerMobilePreview] = useState(
+    formatImageUrl(
+      initialProduct?.banner_image_mobile_path ||
+      initialProduct?.banner_image_mobile_url ||
+      initialProduct?.banner_image_mobile
+    ) || null
+  );
+  const [removeBannerMobile, setRemoveBannerMobile] = useState(false);
+  const [existingGallery, setExistingGallery] = useState([])
+  const [stagedGalleryFiles, setStagedGalleryFiles] = useState([])
   const [stagedGalleryPreviews, setStagedGalleryPreviews] = useState([]);
-  // Paths or indices of existing gallery items marked for removal: string[]
   const [removedGalleryImages, setRemovedGalleryImages] = useState([]);
-
   const featuredInputRef = useRef(null);
+  const bannerDesktopInputRef = useRef(null);
+  const bannerMobileInputRef = useRef(null);
   const galleryInputRef = useRef(null);
 
-  // Sync gallery list from product object
   const syncGallery = (prod) => {
     if (!prod) return [];
     const urls = prod.gallery_image_urls || prod.gallery_images || prod.images || [];
@@ -124,7 +138,6 @@ export const CreateProduct = ({
       setActiveProduct(initialProduct);
       setExistingGallery(syncGallery(initialProduct));
 
-      // Fetch fresh details from GET /admin/products/:id
       getProduct(initialProduct.id)
         .then((res) => {
           const fresh = res?.data || res?.product || res;
@@ -134,6 +147,12 @@ export const CreateProduct = ({
             setFormData({
               name: fresh.name || '',
               slug: fresh.slug || '',
+              banner_title: fresh.banner_title || fresh.banner?.title || '',
+              banner_title_highlight: fresh.banner_title_highlight || fresh.banner?.title_highlight || '',
+              banner_subtitle: fresh.banner_subtitle || fresh.banner?.subtitle || '',
+              banner_description: fresh.banner_description || fresh.banner?.description || '',
+              banner_button_text: fresh.banner_button_text || fresh.banner?.button_text || fresh.banner?.cta_text || '',
+              banner_button_link: fresh.banner_button_link || fresh.banner?.button_link || fresh.banner?.cta_link || '',
               short_description: fresh.short_description || '',
               description: fresh.description || '',
               content: fresh.content || '',
@@ -151,22 +170,44 @@ export const CreateProduct = ({
             if (freshImg) {
               setFeaturedPreview(freshImg);
             }
+
+            const freshDesktop = formatImageUrl(
+              fresh.banner_image_desktop_path ||
+              fresh.banner_image_desktop_url ||
+              fresh.banner_image_desktop
+            );
+            if (freshDesktop) {
+              setBannerDesktopPreview(freshDesktop);
+            }
+
+            const freshMobile = formatImageUrl(
+              fresh.banner_image_mobile_path ||
+              fresh.banner_image_mobile_url ||
+              fresh.banner_image_mobile
+            );
+            if (freshMobile) {
+              setBannerMobilePreview(freshMobile);
+            }
           }
         })
         .catch((err) => console.warn('Could not sync fresh product:', err));
     }
   }, [initialProduct]);
 
-  // Clean up object URLs on component unmount to prevent browser memory leaks
   useEffect(() => {
     return () => {
       if (featuredPreview && featuredPreview.startsWith('blob:')) {
         URL.revokeObjectURL(featuredPreview);
       }
+      if (bannerDesktopPreview && bannerDesktopPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(bannerDesktopPreview);
+      }
+      if (bannerMobilePreview && bannerMobilePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(bannerMobilePreview);
+      }
     };
-  }, [featuredPreview]);
+  }, [featuredPreview, bannerDesktopPreview, bannerMobilePreview]);
 
-  // Handle Featured Image Selection (Staged locally, saved atomically on submit)
   const handleSelectFeaturedFile = (file) => {
     if (!file) return;
 
@@ -194,7 +235,6 @@ export const CreateProduct = ({
     });
   };
 
-  // Handle Delete Featured Image (Staged locally, saved atomically on submit)
   const handleDeleteFeaturedImage = () => {
     if (featuredPreview && featuredPreview.startsWith('blob:')) {
       URL.revokeObjectURL(featuredPreview);
@@ -209,6 +249,100 @@ export const CreateProduct = ({
     addToast({
       title: 'Featured Image Removed',
       message: 'Image will be deleted upon saving.',
+      type: 'info',
+    });
+  };
+
+  // Handle Banner Desktop Image Selection
+  const handleSelectBannerDesktop = (file) => {
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      addToast({
+        title: 'File Too Large',
+        message: 'Desktop banner image must be under 5MB.',
+        type: 'error',
+      });
+      return;
+    }
+
+    if (bannerDesktopPreview && bannerDesktopPreview.startsWith('blob:')) {
+      URL.revokeObjectURL(bannerDesktopPreview);
+    }
+
+    setBannerDesktopFile(file);
+    setBannerDesktopPreview(URL.createObjectURL(file));
+    setRemoveBannerDesktop(false);
+
+    addToast({
+      title: 'Desktop Banner Selected',
+      message: `${file.name} ready to save.`,
+      type: 'info',
+    });
+  };
+
+  // Handle Delete Banner Desktop Image
+  const handleDeleteBannerDesktop = () => {
+    if (bannerDesktopPreview && bannerDesktopPreview.startsWith('blob:')) {
+      URL.revokeObjectURL(bannerDesktopPreview);
+    }
+    setBannerDesktopFile(null);
+    setBannerDesktopPreview(null);
+    setRemoveBannerDesktop(true);
+    if (bannerDesktopInputRef.current) {
+      bannerDesktopInputRef.current.value = '';
+    }
+
+    addToast({
+      title: 'Desktop Banner Removed',
+      message: 'Desktop banner will be deleted upon saving.',
+      type: 'info',
+    });
+  };
+
+  // Handle Banner Mobile Image Selection
+  const handleSelectBannerMobile = (file) => {
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      addToast({
+        title: 'File Too Large',
+        message: 'Mobile banner image must be under 5MB.',
+        type: 'error',
+      });
+      return;
+    }
+
+    if (bannerMobilePreview && bannerMobilePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(bannerMobilePreview);
+    }
+
+    setBannerMobileFile(file);
+    setBannerMobilePreview(URL.createObjectURL(file));
+    setRemoveBannerMobile(false);
+
+    addToast({
+      title: 'Mobile Banner Selected',
+      message: `${file.name} ready to save.`,
+      type: 'info',
+    });
+  };
+
+  // Handle Delete Banner Mobile Image
+  const handleDeleteBannerMobile = () => {
+    if (bannerMobilePreview && bannerMobilePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(bannerMobilePreview);
+    }
+    setBannerMobileFile(null);
+    setBannerMobilePreview(null);
+    setRemoveBannerMobile(true);
+    if (bannerMobileInputRef.current) {
+      bannerMobileInputRef.current.value = '';
+    }
+
+    addToast({
+      title: 'Mobile Banner Removed',
+      message: 'Mobile banner will be deleted upon saving.',
       type: 'info',
     });
   };
@@ -273,7 +407,7 @@ export const CreateProduct = ({
     setStagedGalleryPreviews((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  // Form Submit Handler: unified atomic request for product data and all media
+  // Form Submit Handler: unified atomic request for product data, banner, and all media
   const handleSubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     const errors = {};
@@ -294,23 +428,24 @@ export const CreateProduct = ({
 
     setIsSaving(true);
     try {
-      // Build FormData payload
       const formDataPayload = new FormData();
       formDataPayload.append('name', formData.name.trim());
       formDataPayload.append('slug', formData.slug.trim() || generateSlug(formData.name));
+      formDataPayload.append('banner_title', formData.banner_title?.trim() || '');
+      formDataPayload.append('banner_title_highlight', formData.banner_title_highlight?.trim() || '');
+      formDataPayload.append('banner_subtitle', formData.banner_subtitle?.trim() || '');
+      formDataPayload.append('banner_description', formData.banner_description?.trim() || '');
+      formDataPayload.append('banner_button_text', formData.banner_button_text?.trim() || '');
+      formDataPayload.append('banner_button_link', formData.banner_button_link?.trim() || '');
       formDataPayload.append('short_description', formData.short_description?.trim() || '');
       formDataPayload.append('description', formData.description?.trim() || '');
       formDataPayload.append('content', formData.content || '');
       formDataPayload.append('status', formData.status || 'published');
       formDataPayload.append('sort_order', String(Number(formData.sort_order) || 1));
+      formDataPayload.append('published_at', formData.published_at || '');
       formDataPayload.append('meta_title', formData.meta_title?.trim() || '');
       formDataPayload.append('meta_description', formData.meta_description?.trim() || '');
 
-      if (formData.published_at) {
-        formDataPayload.append('published_at', formData.published_at);
-      }
-
-      // Featured Image handling
       if (featuredFile) {
         formDataPayload.append('featured_image', featuredFile);
       } else if (removeFeaturedImage) {
@@ -340,6 +475,20 @@ export const CreateProduct = ({
         removedGalleryImages.forEach((item) => {
           formDataPayload.append('removed_gallery_images[]', String(item));
         });
+      }
+
+      // Banner Desktop Image handling
+      if (bannerDesktopFile) {
+        formDataPayload.append('banner_image_desktop', bannerDesktopFile);
+      } else if (removeBannerDesktop) {
+        formDataPayload.append('remove_banner_image_desktop', '1');
+      }
+
+      // Banner Mobile Image handling
+      if (bannerMobileFile) {
+        formDataPayload.append('banner_image_mobile', bannerMobileFile);
+      } else if (removeBannerMobile) {
+        formDataPayload.append('remove_banner_image_mobile', '1');
       }
 
       if (isEditing && activeProduct?.id) {
@@ -391,6 +540,30 @@ export const CreateProduct = ({
         onChange={(e) => {
           if (e.target.files && e.target.files[0]) {
             handleSelectFeaturedFile(e.target.files[0]);
+          }
+          e.target.value = '';
+        }}
+      />
+      <input
+        type="file"
+        ref={bannerDesktopInputRef}
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          if (e.target.files && e.target.files[0]) {
+            handleSelectBannerDesktop(e.target.files[0]);
+          }
+          e.target.value = '';
+        }}
+      />
+      <input
+        type="file"
+        ref={bannerMobileInputRef}
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          if (e.target.files && e.target.files[0]) {
+            handleSelectBannerMobile(e.target.files[0]);
           }
           e.target.value = '';
         }}
@@ -527,6 +700,166 @@ export const CreateProduct = ({
                 className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 font-sans leading-relaxed"
               />
             </FormField>
+          </div>
+
+          {/* CARD 2: HERO BANNER CONFIGURATION */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-5">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <Monitor size={18} className="text-indigo-600" />
+                <h2 className="text-base font-semibold text-slate-900">Hero Banner Configuration</h2>
+              </div>
+              <span className="text-xs font-medium text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full">
+                Public Header Banner
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField
+                label="Banner Title"
+                hint="Main headline prefix before highlight"
+              >
+                <input
+                  type="text"
+                  value={formData.banner_title}
+                  onChange={(e) =>
+                    setFormData({ ...formData, banner_title: e.target.value })
+                  }
+                  placeholder="e.g. Every Aspect of Your"
+                  className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20"
+                />
+              </FormField>
+
+              <FormField
+                label="Banner Highlight Title"
+                hint="Highlighted emphasis in brand color"
+              >
+                <input
+                  type="text"
+                  value={formData.banner_title_highlight}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      banner_title_highlight: e.target.value,
+                    })
+                  }
+                  placeholder="e.g. Jewellery Business. Simplified."
+                  className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 font-semibold text-indigo-700"
+                />
+              </FormField>
+            </div>
+
+            <FormField
+              label="Banner Subtitle"
+              hint="Top tag or eyebrow text above headline"
+            >
+              <input
+                type="text"
+                value={formData.banner_subtitle}
+                onChange={(e) =>
+                  setFormData({ ...formData, banner_subtitle: e.target.value })
+                }
+                placeholder="e.g. One Software. Complete Management."
+                className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 font-medium"
+              />
+            </FormField>
+
+            <FormField
+              label="Banner Description"
+              hint="Hero introductory paragraph under headline"
+            >
+              <textarea
+                rows={2}
+                value={formData.banner_description}
+                onChange={(e) =>
+                  setFormData({ ...formData, banner_description: e.target.value })
+                }
+                placeholder="e.g. AURIX is a comprehensive jewellery management solution built to streamline day-to-day operations."
+                className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 font-sans"
+              />
+            </FormField>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField
+                label="CTA Button Label"
+                hint="Hero call-to-action button text"
+              >
+                <input
+                  type="text"
+                  value={formData.banner_button_text}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      banner_button_text: e.target.value,
+                    })
+                  }
+                  placeholder="e.g. Call Now or Request Demo"
+                  className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 font-medium"
+                />
+              </FormField>
+
+              <FormField
+                label="CTA Button Link"
+                hint="Phone number, email, or catalog URL"
+              >
+                <input
+                  type="text"
+                  value={formData.banner_button_link}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      banner_button_link: e.target.value,
+                    })
+                  }
+                  placeholder="e.g. tel:+919876543210 or /contact"
+                  className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 font-mono"
+                />
+              </FormField>
+            </div>
+
+            {/* Visual Live Hero Banner Preview */}
+            <div className="rounded-xl border border-slate-800 bg-slate-950 p-5 text-white flex flex-col gap-2.5 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-600/20 rounded-full blur-2xl pointer-events-none" />
+              <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                <span>Hero Banner Preview</span>
+                <span className="text-emerald-400 font-mono font-normal flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Live Rendering
+                </span>
+              </div>
+
+              {formData.banner_subtitle && (
+                <div className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">
+                  {formData.banner_subtitle}
+                </div>
+              )}
+
+              <div className="text-lg sm:text-xl font-bold text-white tracking-tight leading-snug">
+                {formData.banner_title || 'Banner Title'}{' '}
+                <span className="text-indigo-400">
+                  {formData.banner_title_highlight || 'Highlighted Accent'}
+                </span>
+              </div>
+
+              <div className="text-xs text-slate-400 line-clamp-2 leading-relaxed max-w-xl">
+                {formData.banner_description ||
+                  'Enter a banner description to see how it will preview on your landing page hero section.'}
+              </div>
+
+              {formData.banner_button_text && (
+                <div className="pt-2 flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold shadow-xs">
+                    <PhoneCall size={12} />
+                    {formData.banner_button_text}
+                  </span>
+                  {formData.banner_button_link && (
+                    <span className="text-[11px] text-slate-400 font-mono truncate max-w-xs">
+                      {formData.banner_button_link}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* CARD 2: DETAILED PRODUCT CONTENT (MS WORD-STYLE WYSIWYG) */}
@@ -714,6 +1047,158 @@ export const CreateProduct = ({
                 </div>
                 <div className="text-[11px] text-slate-400">
                   JPG, PNG, WebP up to 5MB
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* CARD B.2: DESKTOP BANNER IMAGE */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col gap-4">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <Monitor size={16} className="text-indigo-600" />
+                <h3 className="text-sm font-semibold text-slate-900">Desktop Banner</h3>
+              </div>
+              <span className="text-[11px] text-slate-400">1920 × 600px</span>
+            </div>
+
+            {bannerDesktopPreview ? (
+              <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-900 flex flex-col relative group">
+                <div className="h-32 w-full flex items-center justify-center bg-slate-950 p-2 overflow-hidden">
+                  <img
+                    src={bannerDesktopPreview}
+                    alt="Desktop Banner preview"
+                    className="max-h-full max-w-full object-contain rounded"
+                    onError={(e) => handleImageError(e, 'Desktop Banner', true)}
+                  />
+                </div>
+
+                <div className="p-3 bg-white border-t border-slate-200 flex items-center justify-between gap-2">
+                  <span className="text-[11px] text-slate-500 truncate max-w-[140px]">
+                    {bannerDesktopFile
+                      ? bannerDesktopFile.name
+                      : removeBannerDesktop
+                      ? 'Marked for deletion'
+                      : 'Current Banner'}
+                  </span>
+
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      icon={UploadCloud}
+                      onClick={() => bannerDesktopInputRef.current?.click()}
+                    >
+                      Replace
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      icon={Trash2}
+                      onClick={handleDeleteBannerDesktop}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div
+                onClick={() => bannerDesktopInputRef.current?.click()}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    handleSelectBannerDesktop(e.dataTransfer.files[0]);
+                  }
+                }}
+                className="border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-xl p-5 flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-indigo-50/30 transition-colors cursor-pointer text-center"
+              >
+                <div className="w-9 h-9 rounded-full bg-white border border-slate-200 shadow-xs flex items-center justify-center text-indigo-600">
+                  <Monitor size={18} />
+                </div>
+                <div className="text-xs font-semibold text-slate-800">
+                  Select desktop banner
+                </div>
+                <div className="text-[11px] text-slate-400">
+                  Wide 1920×600 hero banner, up to 5MB
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* CARD B.3: MOBILE BANNER IMAGE */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col gap-4">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <Smartphone size={16} className="text-indigo-600" />
+                <h3 className="text-sm font-semibold text-slate-900">Mobile Banner</h3>
+              </div>
+              <span className="text-[11px] text-slate-400">750 × 600px</span>
+            </div>
+
+            {bannerMobilePreview ? (
+              <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-900 flex flex-col relative group">
+                <div className="h-32 w-full flex items-center justify-center bg-slate-950 p-2 overflow-hidden">
+                  <img
+                    src={bannerMobilePreview}
+                    alt="Mobile Banner preview"
+                    className="max-h-full max-w-full object-contain rounded"
+                    onError={(e) => handleImageError(e, 'Mobile Banner', true)}
+                  />
+                </div>
+
+                <div className="p-3 bg-white border-t border-slate-200 flex items-center justify-between gap-2">
+                  <span className="text-[11px] text-slate-500 truncate max-w-[140px]">
+                    {bannerMobileFile
+                      ? bannerMobileFile.name
+                      : removeBannerMobile
+                      ? 'Marked for deletion'
+                      : 'Current Mobile Banner'}
+                  </span>
+
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      icon={UploadCloud}
+                      onClick={() => bannerMobileInputRef.current?.click()}
+                    >
+                      Replace
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      icon={Trash2}
+                      onClick={handleDeleteBannerMobile}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div
+                onClick={() => bannerMobileInputRef.current?.click()}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    handleSelectBannerMobile(e.dataTransfer.files[0]);
+                  }
+                }}
+                className="border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-xl p-5 flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-indigo-50/30 transition-colors cursor-pointer text-center"
+              >
+                <div className="w-9 h-9 rounded-full bg-white border border-slate-200 shadow-xs flex items-center justify-center text-indigo-600">
+                  <Smartphone size={18} />
+                </div>
+                <div className="text-xs font-semibold text-slate-800">
+                  Select mobile banner
+                </div>
+                <div className="text-[11px] text-slate-400">
+                  Responsive 750×600 banner, up to 5MB
                 </div>
               </div>
             )}

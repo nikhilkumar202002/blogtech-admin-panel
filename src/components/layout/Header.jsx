@@ -100,7 +100,7 @@ export const Header = ({
                   <span className="text-[13.5px] font-bold text-slate-900 truncate">
                     {user?.name || 'Admin'}
                   </span>
-                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600 uppercase tracking-wider whitespace-nowrap">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#a34b03]/10 text-[#a34b03] border border-[#a34b03]/25 uppercase tracking-wider whitespace-nowrap">
                     {formatRoleLabel(user?.role)}
                   </span>
                 </div>

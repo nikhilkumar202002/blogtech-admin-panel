@@ -126,19 +126,19 @@ export const Sidebar = ({
                       isCollapsed ? 'justify-center py-2.5 px-0' : 'justify-start py-2.5 px-3'
                     } ${
                       isActive
-                        ? 'bg-indigo-50 text-indigo-600 font-semibold'
+                        ? 'bg-[#a34b03]/10 text-[#a34b03] font-semibold'
                         : 'bg-transparent text-slate-600 font-medium hover:bg-slate-50 hover:text-slate-900'
                     }`}
                   >
                     {/* Active Left Indicator Bar */}
                     {isActive && (
-                      <div className="absolute left-0 top-[18%] bottom-[18%] w-[3.5px] rounded-r bg-indigo-600" />
+                      <div className="absolute left-0 top-[18%] bottom-[18%] w-[3.5px] rounded-r bg-[#a34b03]" />
                     )}
 
                     <div className="flex items-center gap-2.5">
                       <Icon
                         size={18}
-                        className={`shrink-0 ${isActive ? 'text-indigo-600' : 'text-slate-500'}`}
+                        className={`shrink-0 ${isActive ? 'text-[#a34b03]' : 'text-slate-500'}`}
                       />
                       {!isCollapsed && <span>{item.label}</span>}
                     </div>

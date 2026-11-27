@@ -25,12 +25,15 @@ export const Button = ({
 
   // Variant mappings
   const variantStyles = {
-    primary: 'bg-slate-900 text-white border-slate-900 hover:bg-slate-800 focus:ring-slate-900 shadow-xs',
+    primary: 'bg-[#a34b03] text-white border-[#a34b03] hover:bg-[#8a3f02] focus:ring-[#a34b03] shadow-xs',
     secondary: 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900 focus:ring-slate-300 shadow-xs',
+    'brand-secondary': 'bg-[#844414] text-white border-[#844414] hover:bg-[#6e370e] focus:ring-[#844414] shadow-xs',
+    yellow: 'bg-[#cb9706] text-white border-[#cb9706] hover:bg-[#b08204] focus:ring-[#cb9706] shadow-xs',
+    cream: 'bg-[#edd8bb] text-[#844414] border-[#dfc49f] hover:bg-[#e4cbab] focus:ring-[#844414] shadow-xs',
     ghost: 'bg-transparent text-slate-600 border-transparent hover:bg-slate-100 hover:text-slate-900 focus:ring-slate-300',
     danger: 'bg-rose-600 text-white border-rose-600 hover:bg-rose-700 focus:ring-rose-600 shadow-xs',
     outline: 'bg-transparent text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50 focus:ring-slate-300',
-    accent: 'bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700 focus:ring-indigo-600 shadow-xs',
+    accent: 'bg-[#a34b03] text-white border-[#a34b03] hover:bg-[#8a3f02] focus:ring-[#a34b03] shadow-xs',
   };
 
   // Size mappings
