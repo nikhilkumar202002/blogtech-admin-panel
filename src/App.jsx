@@ -193,7 +193,14 @@ const MainApp = () => {
   const [stats, setStats] = useState(INITIAL_STATS);
   const [jobs, setJobs] = useState([]);
   const [applicants, setApplicants] = useState(INITIAL_APPLICANTS);
-  const [blogs, setBlogs] = useState([]);
+  const [blogs, setBlogs] = useState(() => {
+    try {
+      const cached = localStorage.getItem('blogtech_cached_blogs');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
   const [productsList, setProductsList] = useState([]);
   const [servicesList, setServicesList] = useState([]);
   const [enquiries, setEnquiries] = useState(INITIAL_ENQUIRIES);
@@ -238,6 +245,9 @@ const MainApp = () => {
           ? res
           : [];
         setBlogs(list);
+        try {
+          localStorage.setItem('blogtech_cached_blogs', JSON.stringify(list));
+        } catch {}
       }
 
       // 3. Products (GET /admin/products)
@@ -343,10 +353,20 @@ const MainApp = () => {
 
   // Blog CRUD Handlers
   const handleAddBlog = async (newBlog) => {
+    // If newBlog is already created by CreateBlog (has valid ID from API)
+    if (newBlog?.id && !String(newBlog.id).startsWith('BLOG-')) {
+      setBlogs((prev) => [newBlog, ...prev.filter((b) => b.id !== newBlog.id)]);
+      refreshAllData();
+      return;
+    }
+
     try {
       const response = await createBlog(newBlog);
       const created = response?.data || response;
       setBlogs((prev) => [created, ...prev]);
+      try {
+        localStorage.setItem('blogtech_cached_blogs', JSON.stringify([created, ...blogs]));
+      } catch {}
       addToast({
         title: 'Blog Article Saved',
         message: `Article "${newBlog.title || ''}" was saved to server successfully.`,
@@ -355,6 +375,15 @@ const MainApp = () => {
       refreshAllData();
     } catch (err) {
       console.warn('Could not save blog to API, keeping local copy:', err?.message || err);
+      const errMsg =
+        err?.response?.data?.message ||
+        Object.values(err?.response?.data?.errors || {})[0]?.[0] ||
+        'Could not save article to database.';
+      addToast({
+        title: 'Save Failed',
+        message: errMsg,
+        type: 'error',
+      });
       const authorName = currentUser?.name || getStoredUser()?.name || 'Administrator';
       const blogWithAuthor = { ...newBlog, author: authorName };
       setBlogs((prev) => [blogWithAuthor, ...prev]);
@@ -565,6 +594,8 @@ const MainApp = () => {
           {activeTab === 'blogs' && (
             <BlogsView
               blogs={blogs}
+              isLoading={isDataLoading && blogs.length === 0}
+              onRefresh={refreshAllData}
               currentUser={currentUser}
               onAddBlog={handleAddBlog}
               onUpdateBlog={handleUpdateBlog}

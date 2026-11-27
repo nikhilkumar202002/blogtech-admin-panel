@@ -23,6 +23,7 @@ import { CreateBlog } from './CreateBlog';
 import { getStoredUser } from '../../../utils/auth.service';
 import { sanitizeHtml } from '../../../utils/sanitize.helper';
 import { formatImageUrl, handleImageError } from '../../../utils/image.helper';
+import { publishBlog, unpublishBlog } from '../../../utils/blog.service';
 
 // Safe helper to extract category name whether string or object { id, name, slug }
 const getCategoryName = (category) => {
@@ -47,6 +48,7 @@ export const BlogsView = ({
   isCreateOpen = false,
   onCloseCreateOpen,
   isLoading = false,
+  onRefresh,
 }) => {
   const { addToast } = useToast();
 
@@ -101,25 +103,35 @@ export const BlogsView = ({
     setViewMode('preview');
   };
 
-  // Contextual Status Toggle (Publish / Unpublish)
-  const handleToggleArticleStatus = (blog) => {
-    let nextStatus = 'Published';
-    if (blog.status === 'Published') {
-      nextStatus = 'Unpublished';
-    } else if (blog.status === 'Draft' || blog.status === 'Unpublished') {
-      nextStatus = 'Published';
-    }
+  // Contextual Status Toggle (Publish / Unpublish) via Native Backend Endpoint
+  const handleToggleArticleStatus = async (blog) => {
+    const isCurrentlyPublished = String(blog.status).toLowerCase() === 'published';
+    const nextStatus = isCurrentlyPublished ? 'Unpublished' : 'Published';
 
-    const updated = { ...blog, status: nextStatus };
-    onUpdateBlog(updated);
-    if (previewBlog && previewBlog.id === blog.id) {
-      setPreviewBlog(updated);
+    try {
+      if (blog.id && !String(blog.id).startsWith('BLOG-')) {
+        if (isCurrentlyPublished) {
+          await unpublishBlog(blog.id);
+        } else {
+          await publishBlog(blog.id);
+        }
+      }
+      const updated = { ...blog, status: nextStatus };
+      onUpdateBlog && onUpdateBlog(updated);
+      if (previewBlog && previewBlog.id === blog.id) {
+        setPreviewBlog(updated);
+      }
+      addToast({
+        title: isCurrentlyPublished ? 'Article Unpublished' : 'Article Published',
+        message: `Article "${blog.title}" status changed to ${nextStatus}.`,
+        type: 'info',
+      });
+      onRefresh && onRefresh();
+    } catch (err) {
+      console.warn('Could not toggle status via patch endpoint, falling back to full update:', err);
+      const updated = { ...blog, status: nextStatus };
+      onUpdateBlog && onUpdateBlog(updated);
     }
-    addToast({
-      title: nextStatus === 'Published' ? 'Article Published' : 'Article Unpublished',
-      message: `Article "${blog.title}" status changed to ${nextStatus}.`,
-      type: 'info',
-    });
   };
 
   // Confirm Delete Handler
@@ -132,6 +144,7 @@ export const BlogsView = ({
         setPreviewBlog(null);
         setViewMode('list');
       }
+      onRefresh && onRefresh();
     }
   };
 
@@ -520,6 +533,17 @@ export const BlogsView = ({
           setEditingBlog(null);
           onCloseCreateOpen && onCloseCreateOpen();
         }}
+        onSuccess={(savedBlog) => {
+          if (editingBlog) {
+            onUpdateBlog && onUpdateBlog(savedBlog);
+          } else {
+            onAddBlog && onAddBlog(savedBlog);
+          }
+          setViewMode('list');
+          setEditingBlog(null);
+          onCloseCreateOpen && onCloseCreateOpen();
+          onRefresh && onRefresh();
+        }}
         onSave={(savedBlog) => {
           if (editingBlog) {
             onUpdateBlog && onUpdateBlog(savedBlog);
@@ -529,6 +553,7 @@ export const BlogsView = ({
           setViewMode('list');
           setEditingBlog(null);
           onCloseCreateOpen && onCloseCreateOpen();
+          onRefresh && onRefresh();
         }}
         onPreview={(blogData) => {
           setEditingBlog(blogData);

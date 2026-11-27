@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ArrowLeft,
   Eye,
@@ -17,6 +17,7 @@ import { useToast } from '../../ui/ToastContext';
 import { BLOG_CATEGORIES } from '../../../mockData';
 import { getStoredUser } from '../../../utils/auth.service';
 import { formatImageUrl } from '../../../utils/image.helper';
+import { createBlog, updateBlog, getBlogCategories } from '../../../utils/blog.service';
 
 export const CreateBlog = ({
   initialBlog = null,
@@ -37,19 +38,50 @@ export const CreateBlog = ({
     getStoredUser()?.name ||
     'Administrator';
 
+  // Saving state
+  const [isSaving, setIsSaving] = useState(false);
+  const [featuredFile, setFeaturedFile] = useState(null);
+  const [apiCategories, setApiCategories] = useState([]);
+
+  // Fetch actual categories from database
+  useEffect(() => {
+    let isMounted = true;
+    getBlogCategories()
+      .then((res) => {
+        if (!isMounted) return;
+        const list = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+        if (list.length > 0) {
+          setApiCategories(list);
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not load categories:', err);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // SEO Accordion Collapse State
   const [isSeoOpen, setIsSeoOpen] = useState(
     Boolean(initialBlog?.seoTitle || initialBlog?.seoDescription || initialBlog?.meta_title || initialBlog?.meta_description)
   );
 
+  // Initial category value
+  const initialCategoryVal =
+    initialBlog?.category_id
+      ? String(initialBlog.category_id)
+      : typeof initialBlog?.category === 'object' && initialBlog?.category?.id
+      ? String(initialBlog.category.id)
+      : typeof initialBlog?.category === 'string'
+      ? initialBlog.category
+      : '1';
+
   // Form State initialized from initialBlog
   const [formData, setFormData] = useState({
     title: initialBlog?.title || '',
     slug: initialBlog?.slug || '',
-    category:
-      typeof initialBlog?.category === 'object'
-        ? initialBlog.category?.name || initialBlog.category?.title || 'Engineering'
-        : initialBlog?.category || 'Engineering',
+    category: initialCategoryVal,
     author:
       typeof initialBlog?.author === 'object'
         ? initialBlog.author?.name || currentUserName
@@ -102,8 +134,8 @@ export const CreateBlog = ({
     }
   };
 
-  // Form Submit Handler
-  const handleFormSubmit = (e, forcedStatus = null) => {
+  // Form Submit Handler with Direct API persistence
+  const handleFormSubmit = async (e, forcedStatus = null) => {
     if (e) e.preventDefault();
 
     if (!formData.title.trim()) {
@@ -112,39 +144,84 @@ export const CreateBlog = ({
       return;
     }
 
-    const finalStatus = forcedStatus || formData.status;
+    if (!formData.content || !formData.content.trim()) {
+      addToast({ title: 'Validation Error', message: 'Article content is required.', type: 'error' });
+      return;
+    }
+
+    const rawStatus = (forcedStatus || formData.status || 'Published').toLowerCase();
+    const finalStatus = ['published', 'draft', 'unpublished'].includes(rawStatus) ? rawStatus : 'published';
     const finalSlug = formData.slug.trim() || generateSlug(formData.title);
 
-    const savedBlog = {
-      ...(initialBlog || {}),
-      ...formData,
-      author: currentUserName,
+    // Resolve numeric category_id
+    let resolvedCategoryId = null;
+    if (formData.category) {
+      if (!isNaN(Number(formData.category))) {
+        resolvedCategoryId = Number(formData.category);
+      } else {
+        const found = apiCategories.find(
+          (c) => c.name.toLowerCase() === String(formData.category).toLowerCase()
+        );
+        if (found) resolvedCategoryId = found.id;
+      }
+    }
+
+    const payload = {
+      title: formData.title.trim(),
       slug: finalSlug,
+      content: formData.content,
+      excerpt: formData.excerpt,
+      description: formData.excerpt,
       status: finalStatus,
-      id: initialBlog?.id || `BLOG-${Math.floor(200 + Math.random() * 800)}`,
-      views: initialBlog?.views || '0',
-      readTime: initialBlog?.readTime || '5 min read',
+      published_at: formData.publishedAt,
+      category_id: resolvedCategoryId,
+      featured_image: featuredFile,
+      coverImage: formData.coverImage,
     };
 
-    if (onSave) {
-      onSave(savedBlog);
-    } else if (isEditing && onUpdateBlog) {
-      onUpdateBlog(savedBlog);
-    } else if (!isEditing && onAddBlog) {
-      onAddBlog(savedBlog);
-    }
+    setIsSaving(true);
+    try {
+      let savedBlog = null;
+      if (isEditing && initialBlog?.id && !String(initialBlog.id).startsWith('BLOG-')) {
+        const res = await updateBlog(initialBlog.id, payload);
+        savedBlog = res?.data || res;
+        addToast({
+          title: 'Article Updated',
+          message: `Article "${formData.title}" was updated successfully.`,
+          type: 'success',
+        });
+      } else {
+        const res = await createBlog(payload);
+        savedBlog = res?.data || res;
+        addToast({
+          title: 'Article Saved',
+          message: `Article "${formData.title}" was saved to database successfully.`,
+          type: 'success',
+        });
+      }
 
-    if (onSuccess) {
-      onSuccess(savedBlog);
+      if (onSuccess) {
+        onSuccess(savedBlog);
+      } else if (onSave) {
+        onSave(savedBlog);
+      } else if (isEditing && onUpdateBlog) {
+        onUpdateBlog(savedBlog);
+      } else if (!isEditing && onAddBlog) {
+        onAddBlog(savedBlog);
+      }
+    } catch (err) {
+      const errMsg =
+        err?.response?.data?.message ||
+        Object.values(err?.response?.data?.errors || {})[0]?.[0] ||
+        'Failed to save article to server. Please check inputs.';
+      addToast({
+        title: 'Save Failed',
+        message: errMsg,
+        type: 'error',
+      });
+    } finally {
+      setIsSaving(false);
     }
-
-    addToast({
-      title: 'Article Saved',
-      message: isEditing
-        ? `Article "${formData.title}" saved as ${finalStatus}.`
-        : `New article "${formData.title}" saved as ${finalStatus}.`,
-      type: 'success',
-    });
   };
 
   return (
@@ -211,13 +288,14 @@ export const CreateBlog = ({
         {/* Top Actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {onBack && (
-            <Button variant="secondary" onClick={onBack}>
+            <Button variant="secondary" onClick={onBack} disabled={isSaving}>
               Cancel
             </Button>
           )}
           <Button
             variant="ghost"
             onClick={(e) => handleFormSubmit(e, 'Draft')}
+            disabled={isSaving}
           >
             Save Draft
           </Button>
@@ -226,6 +304,7 @@ export const CreateBlog = ({
               variant="secondary"
               icon={Eye}
               onClick={handlePreview}
+              disabled={isSaving}
             >
               Preview
             </Button>
@@ -233,6 +312,7 @@ export const CreateBlog = ({
           <Button
             variant="accent"
             icon={Send}
+            isLoading={isSaving}
             onClick={(e) => handleFormSubmit(e, 'Published')}
           >
             {isEditing ? 'Save Changes' : 'Publish'}
@@ -409,7 +489,11 @@ export const CreateBlog = ({
                   fullWidth
                   value={formData.category}
                   onChange={(val) => setFormData({ ...formData, category: val })}
-                  options={BLOG_CATEGORIES}
+                  options={
+                    apiCategories.length > 0
+                      ? apiCategories.map((c) => ({ value: String(c.id), label: c.name }))
+                      : BLOG_CATEGORIES.map((cat, idx) => ({ value: String(idx + 1), label: cat }))
+                  }
                 />
               </FormField>
             </div>
@@ -422,6 +506,10 @@ export const CreateBlog = ({
               <ImageUploader
                 value={formData.coverImage}
                 onChange={(img) => setFormData({ ...formData, coverImage: img })}
+                onFileSelect={(file, dataUrl) => {
+                  setFeaturedFile(file);
+                  setFormData((prev) => ({ ...prev, coverImage: dataUrl }));
+                }}
               />
             </div>
 
@@ -450,6 +538,7 @@ export const CreateBlog = ({
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
               <Button
                 variant="secondary"
+                disabled={isSaving}
                 onClick={(e) => handleFormSubmit(e, 'Draft')}
               >
                 Save Draft
@@ -458,6 +547,7 @@ export const CreateBlog = ({
                 <Button
                   variant="secondary"
                   icon={Eye}
+                  disabled={isSaving}
                   onClick={handlePreview}
                 >
                   Preview
@@ -467,6 +557,7 @@ export const CreateBlog = ({
                 type="submit"
                 variant="accent"
                 icon={Send}
+                isLoading={isSaving}
                 onClick={(e) => handleFormSubmit(e, 'Published')}
               >
                 {isEditing ? 'Save Changes' : 'Publish Article'}
@@ -480,6 +571,7 @@ export const CreateBlog = ({
           <Button
             type="button"
             variant="secondary"
+            disabled={isSaving}
             onClick={(e) => handleFormSubmit(e, 'Draft')}
             style={{ flex: 1, minHeight: '44px' }}
           >
@@ -489,6 +581,7 @@ export const CreateBlog = ({
             type="submit"
             variant="accent"
             icon={Send}
+            isLoading={isSaving}
             onClick={(e) => handleFormSubmit(e, 'Published')}
             style={{ flex: 1, minHeight: '44px' }}
           >
