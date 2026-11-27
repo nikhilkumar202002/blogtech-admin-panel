@@ -18,6 +18,7 @@ import { Button } from '../../ui/Button';
 import { FormField } from '../../ui/FormField';
 import { Breadcrumb } from '../../ui/Breadcrumb';
 import { RichTextEditor } from '../../ui/RichTextEditor';
+import { Badge } from '../../ui/Badge';
 import { useToast } from '../../ui/ToastContext';
 import {
   createProduct,
@@ -592,7 +593,7 @@ export const CreateProduct = ({
               { label: isEditing ? 'Edit Product' : 'Create Product' },
             ]}
           />
-          <div className="flex items-center gap-3 mt-2.5">
+          <div className="flex items-center gap-3 mt-2.5 flex-wrap">
             <button
               type="button"
               onClick={onBack}
@@ -604,11 +605,14 @@ export const CreateProduct = ({
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
               {isEditing ? `Edit: ${activeProduct?.name || formData.name}` : 'Create New Product'}
             </h1>
+            <Badge status={formData.status}>
+              {formData.status ? formData.status.charAt(0).toUpperCase() + formData.status.slice(1) : 'Published'}
+            </Badge>
           </div>
           <p className="text-sm text-slate-500 mt-1">
             {isEditing
-              ? 'Update catalog specifications, manage media assets, and adjust publishing status in a single save.'
-              : 'Add a new software solution or catalog item with specifications, media, and SEO.'}
+              ? 'Update catalog specifications, hero banner copy & graphics, and publication lifecycle in a single save.'
+              : 'Add a new software solution or catalog item with specifications, responsive hero media, and SEO.'}
           </p>
         </div>
 
@@ -635,9 +639,16 @@ export const CreateProduct = ({
         <div className="lg:col-span-2 flex flex-col gap-6">
           {/* CARD 1: GENERAL INFORMATION */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-5">
-            <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
-              <FileText size={18} className="text-indigo-600" />
-              <h2 className="text-base font-semibold text-slate-900">General Information</h2>
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-[#a34b03]/10 border border-[#a34b03]/20 flex items-center justify-center text-[#a34b03]">
+                  <FileText size={17} />
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold text-slate-900">General Information</h2>
+                  <p className="text-xs text-slate-500">Core software identification, catalog title, and address slug</p>
+                </div>
+              </div>
             </div>
 
             <FormField label="Product Title" required error={formErrors.name}>
@@ -655,13 +666,13 @@ export const CreateProduct = ({
                   if (formErrors.name) setFormErrors({ ...formErrors, name: null });
                 }}
                 placeholder="e.g. Jewellery ERP Software"
-                className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 font-medium"
+                className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 font-medium transition-all"
               />
             </FormField>
 
-            <FormField label="URL Slug" hint="Unique address slug for public catalog route">
-              <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 overflow-hidden">
-                <span className="px-3.5 py-2 text-xs text-slate-500 bg-slate-100 border-r border-slate-200 select-none font-mono">
+            <FormField label="URL Slug" hint="Unique route identifier for public catalog page">
+              <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 overflow-hidden focus-within:border-[#a34b03] focus-within:ring-2 focus-within:ring-[#a34b03]/15 transition-all">
+                <span className="px-3.5 py-2.5 text-xs text-slate-500 bg-slate-100 border-r border-slate-200 select-none font-mono">
                   /products/
                 </span>
                 <input
@@ -671,14 +682,14 @@ export const CreateProduct = ({
                     setFormData({ ...formData, slug: generateSlug(e.target.value) })
                   }
                   placeholder="jewellery-erp-software"
-                  className="w-full px-3 py-2 text-sm text-slate-900 bg-white outline-none font-mono"
+                  className="w-full px-3.5 py-2 text-sm text-slate-900 bg-white outline-none font-mono"
                 />
               </div>
             </FormField>
 
             <FormField
               label="Short Description"
-              hint="Concise 1-2 sentence summary displayed on catalog cards and previews"
+              hint="Concise 1-2 sentence overview shown on catalog preview cards"
             >
               <input
                 type="text"
@@ -687,33 +698,39 @@ export const CreateProduct = ({
                   setFormData({ ...formData, short_description: e.target.value })
                 }
                 placeholder="Simplify jewellery business operations with an integrated ERP solution."
-                className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20"
+                className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 transition-all"
               />
             </FormField>
 
-            <FormField label="Overview / Description" hint="General overview of the product capabilities">
+            <FormField label="Overview / Description" hint="General overview of product capabilities and value proposition">
               <textarea
                 rows={3}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="A comprehensive jewellery ERP solution designed to streamline inventory, billing, sales, and operations..."
-                className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 font-sans leading-relaxed"
+                className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 font-sans leading-relaxed transition-all"
               />
             </FormField>
           </div>
 
-          {/* CARD 2: HERO BANNER CONFIGURATION */}
+          {/* CARD 2: HERO BANNER & LANDING PRESENTATION */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-5">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <Monitor size={18} className="text-indigo-600" />
-                <h2 className="text-base font-semibold text-slate-900">Hero Banner Configuration</h2>
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-[#cb9706]/15 border border-[#cb9706]/30 flex items-center justify-center text-[#cb9706]">
+                  <Sparkles size={17} />
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold text-slate-900">Hero Banner & Landing Presentation</h2>
+                  <p className="text-xs text-slate-500">Configure promotional headline, CTA buttons, and responsive banner graphics</p>
+                </div>
               </div>
-              <span className="text-xs font-medium text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full">
-                Public Header Banner
+              <span className="text-[11px] font-semibold text-[#844414] bg-[#edd8bb] border border-[#dfc49f] px-2.5 py-0.5 rounded-full">
+                Hero Section
               </span>
             </div>
 
+            {/* Banner Headline Group */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 label="Banner Title"
@@ -726,7 +743,7 @@ export const CreateProduct = ({
                     setFormData({ ...formData, banner_title: e.target.value })
                   }
                   placeholder="e.g. Every Aspect of Your"
-                  className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20"
+                  className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 transition-all"
                 />
               </FormField>
 
@@ -744,45 +761,49 @@ export const CreateProduct = ({
                     })
                   }
                   placeholder="e.g. Jewellery Business. Simplified."
-                  className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 font-semibold text-indigo-700"
+                  className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 font-semibold text-[#a34b03] transition-all"
                 />
               </FormField>
             </div>
 
-            <FormField
-              label="Banner Subtitle"
-              hint="Top tag or eyebrow text above headline"
-            >
-              <input
-                type="text"
-                value={formData.banner_subtitle}
-                onChange={(e) =>
-                  setFormData({ ...formData, banner_subtitle: e.target.value })
-                }
-                placeholder="e.g. One Software. Complete Management."
-                className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 font-medium"
-              />
-            </FormField>
+            {/* Subtitle & Description */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField
+                label="Banner Eyebrow / Subtitle"
+                hint="Top badge or eyebrow tag above headline"
+              >
+                <input
+                  type="text"
+                  value={formData.banner_subtitle}
+                  onChange={(e) =>
+                    setFormData({ ...formData, banner_subtitle: e.target.value })
+                  }
+                  placeholder="e.g. One Software. Complete Management."
+                  className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 font-medium transition-all"
+                />
+              </FormField>
 
-            <FormField
-              label="Banner Description"
-              hint="Hero introductory paragraph under headline"
-            >
-              <textarea
-                rows={2}
-                value={formData.banner_description}
-                onChange={(e) =>
-                  setFormData({ ...formData, banner_description: e.target.value })
-                }
-                placeholder="e.g. AURIX is a comprehensive jewellery management solution built to streamline day-to-day operations."
-                className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 font-sans"
-              />
-            </FormField>
+              <FormField
+                label="Banner Description"
+                hint="Hero introductory paragraph under headline"
+              >
+                <textarea
+                  rows={2}
+                  value={formData.banner_description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, banner_description: e.target.value })
+                  }
+                  placeholder="e.g. AURIX is a comprehensive jewellery management solution built to streamline day-to-day operations."
+                  className="w-full px-3.5 py-2 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 font-sans transition-all"
+                />
+              </FormField>
+            </div>
 
+            {/* CTA Buttons */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 label="CTA Button Label"
-                hint="Hero call-to-action button text"
+                hint="Call-to-action button text"
               >
                 <input
                   type="text"
@@ -794,13 +815,13 @@ export const CreateProduct = ({
                     })
                   }
                   placeholder="e.g. Call Now or Request Demo"
-                  className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 font-medium"
+                  className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 font-medium transition-all"
                 />
               </FormField>
 
               <FormField
                 label="CTA Button Link"
-                hint="Phone number, email, or catalog URL"
+                hint="Destination URL, phone number, or anchor"
               >
                 <input
                   type="text"
@@ -812,65 +833,190 @@ export const CreateProduct = ({
                     })
                   }
                   placeholder="e.g. tel:+919876543210 or /contact"
-                  className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 font-mono"
+                  className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 font-mono transition-all"
                 />
               </FormField>
             </div>
 
-            {/* Visual Live Hero Banner Preview */}
-            <div className="rounded-xl border border-slate-800 bg-slate-950 p-5 text-white flex flex-col gap-2.5 shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-600/20 rounded-full blur-2xl pointer-events-none" />
-              <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                <span>Hero Banner Preview</span>
-                <span className="text-emerald-400 font-mono font-normal flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Live Rendering
-                </span>
+            {/* Responsive Banner Graphics Section (Side-by-Side Desktop & Mobile) */}
+            <div className="pt-2 border-t border-slate-100 flex flex-col gap-3">
+              <div>
+                <h3 className="text-xs font-semibold text-slate-800 uppercase tracking-wider">
+                  Responsive Banner Graphics
+                </h3>
+                <p className="text-[11px] text-slate-400">
+                  Upload tailored image banners optimized for desktop monitors and mobile devices
+                </p>
               </div>
 
-              {formData.banner_subtitle && (
-                <div className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">
-                  {formData.banner_subtitle}
-                </div>
-              )}
-
-              <div className="text-lg sm:text-xl font-bold text-white tracking-tight leading-snug">
-                {formData.banner_title || 'Banner Title'}{' '}
-                <span className="text-indigo-400">
-                  {formData.banner_title_highlight || 'Highlighted Accent'}
-                </span>
-              </div>
-
-              <div className="text-xs text-slate-400 line-clamp-2 leading-relaxed max-w-xl">
-                {formData.banner_description ||
-                  'Enter a banner description to see how it will preview on your landing page hero section.'}
-              </div>
-
-              {formData.banner_button_text && (
-                <div className="pt-2 flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold shadow-xs">
-                    <PhoneCall size={12} />
-                    {formData.banner_button_text}
-                  </span>
-                  {formData.banner_button_link && (
-                    <span className="text-[11px] text-slate-400 font-mono truncate max-w-xs">
-                      {formData.banner_button_link}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* 1. Desktop Banner Upload Block */}
+                <div className="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50 flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800">
+                      <Monitor size={15} className="text-[#a34b03]" />
+                      <span>Desktop Banner</span>
+                    </div>
+                    <span className="text-[10.5px] font-mono text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded">
+                      1920 × 600
                     </span>
+                  </div>
+
+                  {bannerDesktopPreview ? (
+                    <div className="border border-slate-200 rounded-lg overflow-hidden bg-white flex flex-col">
+                      <div className="h-32 w-full bg-slate-950/90 flex items-center justify-center p-2 overflow-hidden">
+                        <img
+                          src={bannerDesktopPreview}
+                          alt="Desktop Banner preview"
+                          className="max-h-full max-w-full object-contain rounded"
+                          onError={(e) => handleImageError(e, 'Desktop Banner', true)}
+                        />
+                      </div>
+                      <div className="p-2.5 bg-white border-t border-slate-200 flex items-center justify-between gap-2">
+                        <span className="text-[11px] text-slate-500 truncate max-w-[120px]">
+                          {bannerDesktopFile
+                            ? bannerDesktopFile.name
+                            : removeBannerDesktop
+                            ? 'Marked for deletion'
+                            : 'Current Banner'}
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            icon={UploadCloud}
+                            onClick={() => bannerDesktopInputRef.current?.click()}
+                          >
+                            Replace
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="danger"
+                            icon={Trash2}
+                            onClick={handleDeleteBannerDesktop}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => bannerDesktopInputRef.current?.click()}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                          handleSelectBannerDesktop(e.dataTransfer.files[0]);
+                        }
+                      }}
+                      className="border-2 border-dashed border-slate-300 hover:border-[#a34b03] rounded-lg p-4 flex flex-col items-center justify-center gap-1.5 bg-white hover:bg-[#a34b03]/5 transition-colors cursor-pointer text-center"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[#a34b03]">
+                        <Monitor size={16} />
+                      </div>
+                      <div className="text-xs font-semibold text-slate-800">
+                        Select Desktop Banner
+                      </div>
+                      <div className="text-[10.5px] text-slate-400">
+                        1920×600 widescreen image (up to 5MB)
+                      </div>
+                    </div>
                   )}
                 </div>
-              )}
+
+                {/* 2. Mobile Banner Upload Block */}
+                <div className="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50 flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800">
+                      <Smartphone size={15} className="text-[#a34b03]" />
+                      <span>Mobile Banner</span>
+                    </div>
+                    <span className="text-[10.5px] font-mono text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded">
+                      750 × 600
+                    </span>
+                  </div>
+
+                  {bannerMobilePreview ? (
+                    <div className="border border-slate-200 rounded-lg overflow-hidden bg-white flex flex-col">
+                      <div className="h-32 w-full bg-slate-950/90 flex items-center justify-center p-2 overflow-hidden">
+                        <img
+                          src={bannerMobilePreview}
+                          alt="Mobile Banner preview"
+                          className="max-h-full max-w-full object-contain rounded"
+                          onError={(e) => handleImageError(e, 'Mobile Banner', true)}
+                        />
+                      </div>
+                      <div className="p-2.5 bg-white border-t border-slate-200 flex items-center justify-between gap-2">
+                        <span className="text-[11px] text-slate-500 truncate max-w-[120px]">
+                          {bannerMobileFile
+                            ? bannerMobileFile.name
+                            : removeBannerMobile
+                            ? 'Marked for deletion'
+                            : 'Current Mobile Banner'}
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            icon={UploadCloud}
+                            onClick={() => bannerMobileInputRef.current?.click()}
+                          >
+                            Replace
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="danger"
+                            icon={Trash2}
+                            onClick={handleDeleteBannerMobile}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => bannerMobileInputRef.current?.click()}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                          handleSelectBannerMobile(e.dataTransfer.files[0]);
+                        }
+                      }}
+                      className="border-2 border-dashed border-slate-300 hover:border-[#a34b03] rounded-lg p-4 flex flex-col items-center justify-center gap-1.5 bg-white hover:bg-[#a34b03]/5 transition-colors cursor-pointer text-center"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[#a34b03]">
+                        <Smartphone size={16} />
+                      </div>
+                      <div className="text-xs font-semibold text-slate-800">
+                        Select Mobile Banner
+                      </div>
+                      <div className="text-[10.5px] text-slate-400">
+                        750×600 responsive mobile image (up to 5MB)
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* CARD 2: DETAILED PRODUCT CONTENT (MS WORD-STYLE WYSIWYG) */}
+          {/* CARD 3: DETAILED PRODUCT CONTENT (MS WORD-STYLE WYSIWYG) */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-3">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <Sparkles size={18} className="text-indigo-600" />
-                <h2 className="text-base font-semibold text-slate-900">Product Content</h2>
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-[#a34b03]/10 border border-[#a34b03]/20 flex items-center justify-center text-[#a34b03]">
+                  <Sparkles size={17} />
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold text-slate-900">Product Content & Documentation</h2>
+                  <p className="text-xs text-slate-500">Rich formatted descriptions, key benefits, modules, and specifications</p>
+                </div>
               </div>
-              <span className="text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
+              <span className="text-xs font-medium text-[#a34b03] bg-[#a34b03]/10 border border-[#a34b03]/25 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#a34b03] animate-pulse" />
                 Word Editor
               </span>
             </div>
@@ -883,24 +1029,29 @@ export const CreateProduct = ({
             />
           </div>
 
-          {/* CARD 3: SEO & METADATA */}
+          {/* CARD 4: SEO & METADATA */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-5">
-            <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
-              <Globe size={18} className="text-indigo-600" />
-              <h2 className="text-base font-semibold text-slate-900">Search Engine Optimization (SEO)</h2>
+            <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
+                <Globe size={17} />
+              </div>
+              <div>
+                <h2 className="text-base font-semibold text-slate-900">Search Engine Optimization (SEO)</h2>
+                <p className="text-xs text-slate-500">Customize Google search appearance and social preview meta tags</p>
+              </div>
             </div>
 
-            <FormField label="Meta Title" hint="Search engine title tag">
+            <FormField label="Meta Title" hint="Search engine title tag (recommended 50-60 characters)">
               <input
                 type="text"
                 value={formData.meta_title}
                 onChange={(e) => setFormData({ ...formData, meta_title: e.target.value })}
                 placeholder="Jewellery ERP Software | BLOGTECH"
-                className="w-full px-3.5 py-2 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20"
+                className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 transition-all"
               />
             </FormField>
 
-            <FormField label="Meta Description" hint="Search result snippet summary">
+            <FormField label="Meta Description" hint="Search result snippet summary (recommended 150-160 characters)">
               <textarea
                 rows={2}
                 value={formData.meta_description}
@@ -908,22 +1059,22 @@ export const CreateProduct = ({
                   setFormData({ ...formData, meta_description: e.target.value })
                 }
                 placeholder="Manage jewellery inventory, billing, sales, and customers efficiently with BLOGTECH."
-                className="w-full px-3.5 py-2 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 font-sans"
+                className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 font-sans transition-all"
               />
             </FormField>
 
             {/* SERP Search Preview */}
             <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col gap-1">
               <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                Google Search Engine Result Snippet
+                Google Search Result Preview
               </div>
-              <div className="text-sm font-medium text-indigo-700 truncate">
+              <div className="text-sm font-semibold text-[#a34b03] truncate hover:underline cursor-pointer">
                 {formData.meta_title || `${formData.name || 'Product'} | BLOGTECH`}
               </div>
               <div className="text-xs text-emerald-700 font-mono">
                 https://blogtech.com/products/{formData.slug || 'product-slug'}
               </div>
-              <div className="text-xs text-slate-600 line-clamp-2 mt-0.5">
+              <div className="text-xs text-slate-600 line-clamp-2 mt-0.5 leading-relaxed">
                 {formData.meta_description ||
                   formData.short_description ||
                   'Enterprise software solution designed and provided by BLOGTECH.'}
@@ -936,15 +1087,20 @@ export const CreateProduct = ({
         <div className="lg:col-span-1 flex flex-col gap-6">
           {/* CARD A: PUBLISHING SETTINGS */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col gap-4">
-            <h3 className="text-sm font-semibold text-slate-900 pb-2 border-b border-slate-100">
-              Publishing Settings
-            </h3>
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <h3 className="text-sm font-semibold text-slate-900">
+                Publishing Settings
+              </h3>
+              <Badge status={formData.status}>
+                {formData.status ? formData.status.charAt(0).toUpperCase() + formData.status.slice(1) : 'Published'}
+              </Badge>
+            </div>
 
-            <FormField label="Status" required>
+            <FormField label="Publication Status" required>
               <select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                className="w-full px-3 py-2 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20"
+                className="w-full px-3 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 transition-all font-medium"
               >
                 <option value="published">Published</option>
                 <option value="draft">Draft</option>
@@ -952,41 +1108,56 @@ export const CreateProduct = ({
               </select>
             </FormField>
 
-            <FormField label="Catalog Sort Order" hint="Display sequence rank">
+            <FormField label="Catalog Sort Order" hint="Lower rank numbers appear first">
               <input
                 type="number"
                 min="1"
                 value={formData.sort_order}
                 onChange={(e) => setFormData({ ...formData, sort_order: e.target.value })}
-                className="w-full px-3 py-2 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20"
+                className="w-full px-3 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 transition-all font-mono"
               />
             </FormField>
 
-            <FormField label="Publication Date">
+            <FormField label="Publication Date" hint="Schedule or release date">
               <input
                 type="date"
                 value={formData.published_at}
                 onChange={(e) => setFormData({ ...formData, published_at: e.target.value })}
-                className="w-full px-3 py-2 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20"
+                className="w-full px-3 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 transition-all"
               />
             </FormField>
 
-            <Button
-              variant="primary"
-              icon={Save}
-              onClick={handleSubmit}
-              isLoading={isSaving}
-              fullWidth
-              className="mt-2"
-            >
-              {isEditing ? 'Save Product Changes' : 'Create & Publish'}
-            </Button>
+            <div className="pt-2 flex flex-col gap-2">
+              <Button
+                variant="primary"
+                icon={Save}
+                onClick={handleSubmit}
+                isLoading={isSaving}
+                fullWidth
+              >
+                {isEditing ? 'Save Product Changes' : 'Create & Publish'}
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={onBack}
+                disabled={isSaving}
+                fullWidth
+              >
+                Discard
+              </Button>
+            </div>
+            <p className="text-[11px] text-slate-400 text-center">
+              All 20 fields, media, and SEO sync atomically to API.
+            </p>
           </div>
 
           {/* CARD B: FEATURED IMAGE */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col gap-4">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-              <h3 className="text-sm font-semibold text-slate-900">Featured Image</h3>
+              <div className="flex items-center gap-1.5">
+                <ImageIcon size={16} className="text-[#a34b03]" />
+                <h3 className="text-sm font-semibold text-slate-900">Featured Image</h3>
+              </div>
               <span className="text-[11px] text-slate-400">Primary Thumbnail</span>
             </div>
 
@@ -1037,168 +1208,16 @@ export const CreateProduct = ({
                     handleSelectFeaturedFile(e.dataTransfer.files[0]);
                   }
                 }}
-                className="border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-xl p-6 flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-indigo-50/30 transition-colors cursor-pointer text-center"
+                className="border-2 border-dashed border-slate-300 hover:border-[#a34b03] rounded-xl p-6 flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-[#a34b03]/5 transition-colors cursor-pointer text-center"
               >
-                <div className="w-10 h-10 rounded-full bg-white border border-slate-200 shadow-xs flex items-center justify-center text-indigo-600">
+                <div className="w-10 h-10 rounded-full bg-white border border-slate-200 shadow-xs flex items-center justify-center text-[#a34b03]">
                   <UploadCloud size={20} />
                 </div>
                 <div className="text-xs font-semibold text-slate-800">
-                  Click to select featured image
+                  Select Featured Thumbnail
                 </div>
                 <div className="text-[11px] text-slate-400">
-                  JPG, PNG, WebP up to 5MB
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* CARD B.2: DESKTOP BANNER IMAGE */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col gap-4">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <Monitor size={16} className="text-indigo-600" />
-                <h3 className="text-sm font-semibold text-slate-900">Desktop Banner</h3>
-              </div>
-              <span className="text-[11px] text-slate-400">1920 × 600px</span>
-            </div>
-
-            {bannerDesktopPreview ? (
-              <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-900 flex flex-col relative group">
-                <div className="h-32 w-full flex items-center justify-center bg-slate-950 p-2 overflow-hidden">
-                  <img
-                    src={bannerDesktopPreview}
-                    alt="Desktop Banner preview"
-                    className="max-h-full max-w-full object-contain rounded"
-                    onError={(e) => handleImageError(e, 'Desktop Banner', true)}
-                  />
-                </div>
-
-                <div className="p-3 bg-white border-t border-slate-200 flex items-center justify-between gap-2">
-                  <span className="text-[11px] text-slate-500 truncate max-w-[140px]">
-                    {bannerDesktopFile
-                      ? bannerDesktopFile.name
-                      : removeBannerDesktop
-                      ? 'Marked for deletion'
-                      : 'Current Banner'}
-                  </span>
-
-                  <div className="flex items-center gap-1.5">
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      icon={UploadCloud}
-                      onClick={() => bannerDesktopInputRef.current?.click()}
-                    >
-                      Replace
-                    </Button>
-
-                    <Button
-                      size="sm"
-                      variant="danger"
-                      icon={Trash2}
-                      onClick={handleDeleteBannerDesktop}
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div
-                onClick={() => bannerDesktopInputRef.current?.click()}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                    handleSelectBannerDesktop(e.dataTransfer.files[0]);
-                  }
-                }}
-                className="border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-xl p-5 flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-indigo-50/30 transition-colors cursor-pointer text-center"
-              >
-                <div className="w-9 h-9 rounded-full bg-white border border-slate-200 shadow-xs flex items-center justify-center text-indigo-600">
-                  <Monitor size={18} />
-                </div>
-                <div className="text-xs font-semibold text-slate-800">
-                  Select desktop banner
-                </div>
-                <div className="text-[11px] text-slate-400">
-                  Wide 1920×600 hero banner, up to 5MB
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* CARD B.3: MOBILE BANNER IMAGE */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col gap-4">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <Smartphone size={16} className="text-indigo-600" />
-                <h3 className="text-sm font-semibold text-slate-900">Mobile Banner</h3>
-              </div>
-              <span className="text-[11px] text-slate-400">750 × 600px</span>
-            </div>
-
-            {bannerMobilePreview ? (
-              <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-900 flex flex-col relative group">
-                <div className="h-32 w-full flex items-center justify-center bg-slate-950 p-2 overflow-hidden">
-                  <img
-                    src={bannerMobilePreview}
-                    alt="Mobile Banner preview"
-                    className="max-h-full max-w-full object-contain rounded"
-                    onError={(e) => handleImageError(e, 'Mobile Banner', true)}
-                  />
-                </div>
-
-                <div className="p-3 bg-white border-t border-slate-200 flex items-center justify-between gap-2">
-                  <span className="text-[11px] text-slate-500 truncate max-w-[140px]">
-                    {bannerMobileFile
-                      ? bannerMobileFile.name
-                      : removeBannerMobile
-                      ? 'Marked for deletion'
-                      : 'Current Mobile Banner'}
-                  </span>
-
-                  <div className="flex items-center gap-1.5">
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      icon={UploadCloud}
-                      onClick={() => bannerMobileInputRef.current?.click()}
-                    >
-                      Replace
-                    </Button>
-
-                    <Button
-                      size="sm"
-                      variant="danger"
-                      icon={Trash2}
-                      onClick={handleDeleteBannerMobile}
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div
-                onClick={() => bannerMobileInputRef.current?.click()}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                    handleSelectBannerMobile(e.dataTransfer.files[0]);
-                  }
-                }}
-                className="border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-xl p-5 flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-indigo-50/30 transition-colors cursor-pointer text-center"
-              >
-                <div className="w-9 h-9 rounded-full bg-white border border-slate-200 shadow-xs flex items-center justify-center text-indigo-600">
-                  <Smartphone size={18} />
-                </div>
-                <div className="text-xs font-semibold text-slate-800">
-                  Select mobile banner
-                </div>
-                <div className="text-[11px] text-slate-400">
-                  Responsive 750×600 banner, up to 5MB
+                  Square or 4:3 catalog card image (up to 5MB)
                 </div>
               </div>
             )}
@@ -1207,11 +1226,14 @@ export const CreateProduct = ({
           {/* CARD C: GALLERY IMAGES */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col gap-4">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-              <div>
-                <h3 className="text-sm font-semibold text-slate-900">Photo Gallery</h3>
-                <span className="text-[11px] text-slate-500">
-                  {totalGalleryCount} photo(s)
-                </span>
+              <div className="flex items-center gap-1.5">
+                <Layers size={16} className="text-[#a34b03]" />
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-900">Photo Gallery</h3>
+                  <span className="text-[11px] text-slate-500">
+                    {totalGalleryCount} photo(s) attached
+                  </span>
+                </div>
               </div>
 
               <Button
@@ -1259,14 +1281,14 @@ export const CreateProduct = ({
                 {stagedGalleryPreviews.map((item, idx) => (
                   <div
                     key={item.id || `staged-${idx}`}
-                    className="group relative rounded-lg border-2 border-indigo-300 overflow-hidden bg-slate-100 aspect-square flex items-center justify-center"
+                    className="group relative rounded-lg border-2 border-[#a34b03]/50 overflow-hidden bg-slate-100 aspect-square flex items-center justify-center"
                   >
                     <img
                       src={item.url}
                       alt={`New Staged ${idx + 1}`}
                       className="w-full h-full object-cover"
                     />
-                    <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-indigo-600 text-[9px] text-white font-semibold uppercase tracking-wider">
+                    <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-[#a34b03] text-[9px] text-white font-semibold uppercase tracking-wider">
                       New
                     </div>
                     <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -1293,7 +1315,7 @@ export const CreateProduct = ({
                     handleSelectGalleryFiles(e.dataTransfer.files);
                   }
                 }}
-                className="border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-xl p-5 flex flex-col items-center justify-center gap-1.5 bg-slate-50 hover:bg-indigo-50/30 transition-colors cursor-pointer text-center"
+                className="border-2 border-dashed border-slate-300 hover:border-[#a34b03] rounded-xl p-5 flex flex-col items-center justify-center gap-1.5 bg-slate-50 hover:bg-[#a34b03]/5 transition-colors cursor-pointer text-center"
               >
                 <Layers size={18} className="text-slate-400" />
                 <div className="text-xs font-semibold text-slate-700">
