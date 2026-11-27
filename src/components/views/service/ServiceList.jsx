@@ -701,6 +701,38 @@ export const ServiceList = ({ onNavigate }) => {
               </div>
             )}
 
+            {/* Key Features List */}
+            {(() => {
+              let fList = viewingService.features || [];
+              if (typeof fList === 'string') {
+                try {
+                  fList = JSON.parse(fList);
+                } catch {
+                  fList = fList.split('\n').filter(Boolean);
+                }
+              }
+              if (!Array.isArray(fList) || fList.length === 0) return null;
+
+              return (
+                <div className="flex flex-col gap-2">
+                  <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                    Key Features & Deliverables ({fList.length})
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {fList.map((feat, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-700"
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#a34b03] shrink-0" />
+                        <span className="font-medium break-words">{feat}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Rendered HTML Content */}
             {viewingService.content && (
               <div className="flex flex-col gap-1.5">

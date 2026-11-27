@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   ArrowLeft,
   Wrench,
@@ -9,15 +9,14 @@ import {
   Calendar,
   FileText,
   Sparkles,
-  ExternalLink,
   Save,
   Image as ImageIcon,
-  Clock,
-  EyeOff,
-  AlertCircle,
-  Hash,
+  CheckCircle2,
+  Plus,
   X,
-  Layers,
+  ListPlus,
+  Tag,
+  Hash,
 } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import { Badge } from '../../ui/Badge';
@@ -26,12 +25,11 @@ import { Breadcrumb } from '../../ui/Breadcrumb';
 import { RichTextEditor } from '../../ui/RichTextEditor';
 import { useToast } from '../../ui/ToastContext';
 import {
+  getServices,
+  getService,
   createService,
   updateService,
-  publishService,
-  unpublishService,
 } from '../../../utils/ourservice.service';
-import { API_BASE_URL } from '../../../utils/main.service';
 import { formatImageUrl, handleImageError } from '../../../utils/image.helper';
 
 const generateSlug = (text) => {
@@ -46,6 +44,14 @@ const generateSlug = (text) => {
     .replace(/-+$/, '');
 };
 
+const getTodayDateString = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export const CreateService = ({
   initialService = null,
   onBack,
@@ -53,6 +59,7 @@ export const CreateService = ({
 }) => {
   const { addToast } = useToast();
   const isEditing = Boolean(initialService?.id);
+  const [isAutoCalculated, setIsAutoCalculated] = useState(!initialService?.id);
 
   // Form State matching backend payload
   const [formData, setFormData] = useState({
@@ -65,12 +72,25 @@ export const CreateService = ({
     sort_order: initialService?.sort_order ?? 1,
     published_at: initialService?.published_at
       ? initialService.published_at.split('T')[0]
-      : new Date().toISOString().split('T')[0],
+      : getTodayDateString(),
   });
+
+  // Features list state: array of feature string bullets
+  const [features, setFeatures] = useState(() => {
+    let raw = initialService?.features || [];
+    if (typeof raw === 'string') {
+      try {
+        raw = JSON.parse(raw);
+      } catch {
+        raw = raw.split('\n').filter(Boolean);
+      }
+    }
+    return Array.isArray(raw) ? raw : [];
+  });
+  const [featureInput, setFeatureInput] = useState('');
 
   const [formErrors, setFormErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
-  const [isStatusBusy, setIsStatusBusy] = useState(false);
 
   // Featured Image File & Preview
   const [featuredFile, setFeaturedFile] = useState(null);
@@ -81,8 +101,110 @@ export const CreateService = ({
       initialService?.featured_image
     ) || null
   );
+  const [removeFeaturedImage, setRemoveFeaturedImage] = useState(false);
 
   const fileInputRef = useRef(null);
+
+  // If editing an existing service, fetch fresh details to ensure latest features & content
+  useEffect(() => {
+    if (initialService?.id) {
+      getService(initialService.id)
+        .then((res) => {
+          const fresh = res?.data || res?.service || res;
+          if (fresh && fresh.id) {
+            setFormData({
+              name: fresh.name || '',
+              slug: fresh.slug || '',
+              short_description: fresh.short_description || '',
+              description: fresh.description || '',
+              content: fresh.content || '',
+              status: fresh.status || 'published',
+              sort_order: fresh.sort_order ?? 1,
+              published_at: fresh.published_at ? fresh.published_at.split('T')[0] : getTodayDateString(),
+            });
+
+            let fList = fresh.features || [];
+            if (typeof fList === 'string') {
+              try {
+                fList = JSON.parse(fList);
+              } catch {
+                fList = fList.split('\n').filter(Boolean);
+              }
+            }
+            if (Array.isArray(fList)) {
+              setFeatures(fList);
+            }
+
+            const freshImg = formatImageUrl(
+              fresh.featured_image_path ||
+              fresh.featured_image_url ||
+              fresh.featured_image
+            );
+            if (freshImg) {
+              setFeaturedPreview(freshImg);
+            }
+          }
+        })
+        .catch((err) => console.warn('Could not sync fresh service details:', err));
+    }
+  }, [initialService?.id]);
+
+  // Auto-calculate sort_order from database for new services
+  useEffect(() => {
+    if (!isEditing) {
+      const fetchLatestMaxSortOrder = async () => {
+        try {
+          const res = await getServices({ per_page: 100 });
+          let list = [];
+          if (Array.isArray(res?.data)) list = res.data;
+          else if (Array.isArray(res?.data?.data)) list = res.data.data;
+          else if (Array.isArray(res)) list = res;
+          else if (Array.isArray(res?.services)) list = res.services;
+
+          if (list.length > 0) {
+            const maxOrder = list.reduce((max, item) => {
+              const val = Number(item?.sort_order);
+              return !isNaN(val) ? Math.max(max, val) : max;
+            }, 0);
+            setFormData((prev) => ({
+              ...prev,
+              sort_order: maxOrder + 1,
+            }));
+            setIsAutoCalculated(true);
+          }
+        } catch (err) {
+          console.warn('Could not auto-calculate next sort order from database:', err);
+        }
+      };
+
+      fetchLatestMaxSortOrder();
+    }
+  }, [isEditing]);
+
+  const handleRecalculateSortOrder = async () => {
+    try {
+      const res = await getServices({ per_page: 100 });
+      let list = [];
+      if (Array.isArray(res?.data)) list = res.data;
+      else if (Array.isArray(res?.data?.data)) list = res.data.data;
+      else if (Array.isArray(res)) list = res;
+      else if (Array.isArray(res?.services)) list = res.services;
+
+      const maxOrder = list.reduce((max, item) => {
+        const val = Number(item?.sort_order);
+        return !isNaN(val) ? Math.max(max, val) : max;
+      }, 0);
+      setFormData((prev) => ({ ...prev, sort_order: maxOrder + 1 }));
+      setIsAutoCalculated(true);
+      addToast({
+        title: 'Sort Order Updated',
+        message: `Next catalog order position set to #${maxOrder + 1}.`,
+        type: 'info',
+      });
+    } catch (err) {
+      console.warn('Failed to recalculate sort order:', err);
+    }
+  };
 
   // Name change handler with auto-slug generation
   const handleNameChange = (e) => {
@@ -95,6 +217,33 @@ export const CreateService = ({
     if (formErrors.name) {
       setFormErrors((prev) => ({ ...prev, name: '' }));
     }
+  };
+
+  // Feature Points Management Handlers
+  const handleAddFeature = () => {
+    const trimmed = featureInput.trim();
+    if (!trimmed) return;
+    if (features.includes(trimmed)) {
+      addToast({
+        title: 'Duplicate Feature',
+        message: 'This feature item is already in the list.',
+        type: 'warning',
+      });
+      return;
+    }
+    setFeatures([...features, trimmed]);
+    setFeatureInput('');
+  };
+
+  const handleKeyDownFeature = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddFeature();
+    }
+  };
+
+  const handleRemoveFeature = (indexToRemove) => {
+    setFeatures(features.filter((_, idx) => idx !== indexToRemove));
   };
 
   // Image Selection
@@ -114,6 +263,7 @@ export const CreateService = ({
       }
       setFeaturedFile(file);
       setFeaturedPreview(URL.createObjectURL(file));
+      setRemoveFeaturedImage(false);
       addToast({
         title: 'Image Selected',
         message: `${file.name} ready for upload.`,
@@ -128,6 +278,7 @@ export const CreateService = ({
     }
     setFeaturedFile(null);
     setFeaturedPreview(null);
+    setRemoveFeaturedImage(true);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -139,52 +290,8 @@ export const CreateService = ({
     if (!formData.name.trim()) {
       errors.name = 'Service name is required.';
     }
-    if (!formData.short_description.trim()) {
-      errors.short_description = 'Short description is required.';
-    }
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
-  };
-
-  // Toggle Live Publish / Unpublish if already saved
-  const handleTogglePublish = async () => {
-    if (!initialService?.id) {
-      setFormData((prev) => ({
-        ...prev,
-        status: prev.status === 'published' ? 'draft' : 'published',
-      }));
-      return;
-    }
-
-    const isCurrentlyPublished = formData.status === 'published';
-    setIsStatusBusy(true);
-    try {
-      if (isCurrentlyPublished) {
-        await unpublishService(initialService.id);
-        addToast({
-          title: 'Service Unpublished',
-          message: `"${formData.name}" is now unpublished.`,
-          type: 'info',
-        });
-        setFormData((prev) => ({ ...prev, status: 'unpublished' }));
-      } else {
-        await publishService(initialService.id);
-        addToast({
-          title: 'Service Published',
-          message: `"${formData.name}" is now live and published!`,
-          type: 'success',
-        });
-        setFormData((prev) => ({ ...prev, status: 'published' }));
-      }
-    } catch (err) {
-      addToast({
-        title: 'Status Update Failed',
-        message: err?.response?.data?.message || 'Could not change status.',
-        type: 'error',
-      });
-    } finally {
-      setIsStatusBusy(false);
-    }
   };
 
   // Form Submit: POST /admin/services OR POST /admin/services/:id
@@ -192,8 +299,8 @@ export const CreateService = ({
     if (e) e.preventDefault();
     if (!validateForm()) {
       addToast({
-        title: 'Form Validation Failed',
-        message: 'Please review the highlighted fields before saving.',
+        title: 'Validation Error',
+        message: 'Please review the highlighted required fields.',
         type: 'error',
       });
       return;
@@ -203,30 +310,35 @@ export const CreateService = ({
     try {
       const payload = new FormData();
       payload.append('name', formData.name.trim());
-      payload.append('short_description', formData.short_description.trim());
-      payload.append('description', formData.description.trim());
-      payload.append('content', formData.content || '');
-      payload.append('status', formData.status || 'published');
-      payload.append('sort_order', String(formData.sort_order ?? 1));
-
-      if (formData.published_at) {
-        payload.append('published_at', formData.published_at);
+      if (formData.slug?.trim()) {
+        payload.append('slug', formData.slug.trim());
       }
+      payload.append('short_description', formData.short_description?.trim() || '');
+      payload.append('description', formData.description?.trim() || '');
+      payload.append('content', formData.content || '');
+
+      // Features array as JSON string
+      const cleanFeatures = features.map((f) => f.trim()).filter(Boolean);
+      payload.append('features', JSON.stringify(cleanFeatures));
+
+      payload.append('status', formData.status || 'published');
+      payload.append('sort_order', String(Number(formData.sort_order) || 1));
+      payload.append('published_at', formData.published_at || '');
 
       if (featuredFile) {
         payload.append('featured_image', featuredFile);
+      } else if (isEditing && removeFeaturedImage) {
+        payload.append('remove_featured_image', '1');
       }
 
       if (isEditing) {
-        // Edit Service: POST /admin/services/:id
         await updateService(initialService.id, payload);
         addToast({
           title: 'Service Updated',
-          message: `"${formData.name}" specifications updated successfully.`,
+          message: `"${formData.name}" updated successfully.`,
           type: 'success',
         });
       } else {
-        // Create Service: POST /admin/services
         await createService(payload);
         addToast({
           title: 'Service Created',
@@ -248,12 +360,6 @@ export const CreateService = ({
       setIsSaving(false);
     }
   };
-
-  const statusLabel = formData.status.toLowerCase();
-  let badgeType = 'default';
-  if (statusLabel === 'published') badgeType = 'Active';
-  else if (statusLabel === 'draft') badgeType = 'Draft';
-  else if (statusLabel === 'unpublished') badgeType = 'Closed';
 
   return (
     <div className="flex flex-col gap-6 animate-fade-in pb-16">
@@ -281,19 +387,19 @@ export const CreateService = ({
               {isEditing ? (formData.name ? `Edit: ${formData.name}` : 'Edit Service') : 'Create New Service'}
             </h1>
 
-            <Badge status={badgeType}>
-              {statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}
+            <Badge status={formData.status}>
+              {formData.status ? formData.status.charAt(0).toUpperCase() + formData.status.slice(1) : 'Published'}
             </Badge>
 
             {isEditing && initialService?.id && (
-              <span className="text-xs font-mono font-semibold px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200">
+              <span className="text-xs font-mono font-semibold px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
                 ID #{initialService.id}
               </span>
             )}
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Header Action Buttons */}
         <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
           <Button
             variant="secondary"
@@ -304,37 +410,34 @@ export const CreateService = ({
           </Button>
 
           <Button
-            variant="secondary"
-            icon={formData.status === 'published' ? EyeOff : Globe}
-            onClick={handleTogglePublish}
-            isLoading={isStatusBusy}
-            title="Toggle published status"
-          >
-            {formData.status === 'published' ? 'Unpublish' : 'Make Published'}
-          </Button>
-
-          <Button
             variant="primary"
-            icon={isSaving ? RefreshCw : Save}
+            icon={Save}
             onClick={handleSubmit}
             isLoading={isSaving}
           >
-            {isEditing ? 'Save Changes' : 'Create Service'}
+            {isEditing ? 'Save Changes' : 'Create & Publish'}
           </Button>
         </div>
       </div>
 
       {/* 2. TWO-COLUMN RESPONSIVE FORM LAYOUT */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        {/* LEFT COLUMN: PRIMARY FIELDS & CONTENT (2 Cols) */}
+        {/* LEFT COLUMN: PRIMARY DETAILS, PUBLISHING, FEATURES & CONTENT (2 Cols) */}
         <div className="lg:col-span-2 flex flex-col gap-6">
-          {/* GENERAL INFORMATION CARD */}
+          {/* CARD 1: GENERAL INFORMATION */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-5">
-            <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
-              <Wrench size={18} className="text-indigo-600" />
-              <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-                General Service Information
-              </h2>
+            <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+              <div className="w-8 h-8 rounded-lg bg-[#a34b03]/10 border border-[#a34b03]/20 flex items-center justify-center text-[#a34b03]">
+                <Wrench size={17} />
+              </div>
+              <div>
+                <h2 className="text-base font-semibold text-slate-900">
+                  General Information
+                </h2>
+                <p className="text-xs text-slate-500">
+                  Official service title, public URL slug, and summary overview
+                </p>
+              </div>
             </div>
 
             {/* Service Name */}
@@ -342,7 +445,7 @@ export const CreateService = ({
               label="Service Name"
               required
               error={formErrors.name}
-              helpText="Enter the official commercial name of this service offering."
+              hint="Enter the official commercial name of this service offering."
             >
               <input
                 type="text"
@@ -352,7 +455,7 @@ export const CreateService = ({
                 className={`w-full px-3.5 py-2.5 rounded-lg border text-sm transition-all focus:outline-hidden focus:ring-2 ${
                   formErrors.name
                     ? 'border-red-300 focus:ring-red-200 bg-red-50/20'
-                    : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-100'
+                    : 'border-slate-300 focus:border-[#a34b03] focus:ring-[#a34b03]/15'
                 }`}
               />
             </FormField>
@@ -360,10 +463,10 @@ export const CreateService = ({
             {/* Public URL Slug */}
             <FormField
               label="Public URL Route Slug"
-              helpText="Used for search engine URLs and public linking."
+              hint="Unique route identifier for public service page"
             >
-              <div className="flex rounded-lg shadow-2xs">
-                <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-slate-300 bg-slate-50 text-slate-500 text-xs font-mono">
+              <div className="flex rounded-lg shadow-2xs overflow-hidden border border-slate-200 focus-within:border-[#a34b03] focus-within:ring-2 focus-within:ring-[#a34b03]/15 transition-all">
+                <span className="inline-flex items-center px-3 border-r border-slate-200 bg-slate-50 text-slate-500 text-xs font-mono">
                   /services/
                 </span>
                 <input
@@ -371,7 +474,7 @@ export const CreateService = ({
                   value={formData.slug}
                   onChange={(e) => setFormData({ ...formData, slug: generateSlug(e.target.value) })}
                   placeholder="web-development"
-                  className="flex-1 px-3 py-2.5 rounded-r-lg border border-slate-300 text-xs font-mono focus:border-indigo-500 focus:outline-hidden focus:ring-2 focus:ring-indigo-100"
+                  className="flex-1 px-3 py-2 text-xs font-mono text-slate-900 bg-white outline-none"
                 />
               </div>
             </FormField>
@@ -379,122 +482,354 @@ export const CreateService = ({
             {/* Short Description */}
             <FormField
               label="Short Tagline / Summary"
-              required
-              error={formErrors.short_description}
-              helpText="High-impact 1-2 sentence elevator pitch displayed in catalog listings."
+              hint="Concise 1-2 sentence overview shown in service catalog cards"
             >
               <input
                 type="text"
                 value={formData.short_description}
-                onChange={(e) => {
-                  setFormData({ ...formData, short_description: e.target.value });
-                  if (formErrors.short_description) {
-                    setFormErrors((prev) => ({ ...prev, short_description: '' }));
-                  }
-                }}
-                placeholder="e.g. Modern, responsive websites built for scale, performance, and conversions."
-                className={`w-full px-3.5 py-2.5 rounded-lg border text-sm transition-all focus:outline-hidden focus:ring-2 ${
-                  formErrors.short_description
-                    ? 'border-red-300 focus:ring-red-200 bg-red-50/20'
-                    : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-100'
-                }`}
+                onChange={(e) => setFormData({ ...formData, short_description: e.target.value })}
+                placeholder="e.g. Modern, responsive websites built for business growth."
+                className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm text-slate-900 bg-white focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 outline-none transition-all"
               />
             </FormField>
 
             {/* Full Description / Overview */}
             <FormField
               label="Detailed Overview & Scope"
-              helpText="Comprehensive summary of engineering methodology and solution architecture."
+              hint="Comprehensive summary of engineering methodology and solution architecture."
             >
               <textarea
-                rows="4"
+                rows={3}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="e.g. We provide professional website development services using modern React, Next.js, and high-throughput backend APIs..."
-                className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm leading-relaxed focus:border-indigo-500 focus:outline-hidden focus:ring-2 focus:ring-indigo-100"
+                placeholder="e.g. We provide professional website development services to help businesses establish a strong digital presence..."
+                className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm text-slate-900 bg-white leading-relaxed focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 outline-none transition-all"
               />
             </FormField>
           </div>
 
-          {/* WYSIWYG MS WORD STYLE CONTENT EDITOR */}
+          {/* CARD 2: PUBLISHING SETTINGS (3 IN A ROW) */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 flex-wrap gap-2">
-              <div className="flex items-center gap-2">
-                <FileText size={18} className="text-indigo-600" />
-                <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-                  Service Content & Technical Guide
-                </h2>
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
+                  <Globe size={17} />
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold text-slate-900">Publishing Settings</h2>
+                  <p className="text-xs text-slate-500">Publication status, catalog display order, and release timestamp</p>
+                </div>
               </div>
-              <span className="text-xs text-slate-400 font-medium">MS Word Rich Editor</span>
+              <Badge status={formData.status}>
+                {formData.status ? formData.status.charAt(0).toUpperCase() + formData.status.slice(1) : 'Published'}
+              </Badge>
             </div>
 
-            <p className="text-xs text-slate-500 -mt-1">
-              Author rich marketing copy, feature bullet points, technical deliverables, and headings.
-            </p>
+            {/* 3 Fields in 1 row */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
+              {/* 1. Publication Status */}
+              <FormField label="Publication Status" required>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  className="w-full px-3 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 transition-all font-medium cursor-pointer"
+                >
+                  <option value="published">Published</option>
+                  <option value="draft">Draft</option>
+                  <option value="unpublished">Unpublished</option>
+                </select>
+              </FormField>
+
+              {/* 2. Catalog Sort Order */}
+              <FormField
+                label="Catalog Sort Order"
+                hint={
+                  !isEditing && isAutoCalculated
+                    ? 'Auto-calculated from DB (rank + 1)'
+                    : 'Lower ranks appear first'
+                }
+              >
+                <div className="relative flex items-center">
+                  <input
+                    type="number"
+                    min="1"
+                    value={formData.sort_order}
+                    onChange={(e) => {
+                      setIsAutoCalculated(false);
+                      setFormData({ ...formData, sort_order: parseInt(e.target.value, 10) || 1 });
+                    }}
+                    className="w-full px-3.5 py-2.5 pr-24 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 transition-all font-mono font-medium"
+                  />
+                  <div className="absolute right-2 flex items-center gap-1.5">
+                    {!isEditing && (
+                      <button
+                        type="button"
+                        onClick={handleRecalculateSortOrder}
+                        className="text-[10px] font-semibold text-[#844414] bg-[#edd8bb] hover:bg-[#e4cbab] border border-[#dfc49f] px-2 py-0.5 rounded-full transition-colors cursor-pointer"
+                        title="Click to recalculate next sort order from database"
+                      >
+                        {isAutoCalculated ? 'Auto (DB)' : 'Reset'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </FormField>
+
+              {/* 3. Publication Date */}
+              <div className="flex flex-col gap-1.5 w-full mb-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-[13px] font-medium text-slate-700">
+                    Publication Date
+                  </label>
+                  {formData.published_at !== getTodayDateString() ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormData({ ...formData, published_at: getTodayDateString() })
+                      }
+                      className="text-[11px] font-medium text-[#a34b03] hover:underline cursor-pointer"
+                      title="Reset date to today"
+                    >
+                      Reset to Today
+                    </button>
+                  ) : (
+                    <span className="text-[10px] font-semibold text-[#844414] bg-[#edd8bb] border border-[#dfc49f] px-2 py-0.5 rounded-full">
+                      Today (Auto)
+                    </span>
+                  )}
+                </div>
+
+                <input
+                  type="date"
+                  value={formData.published_at}
+                  onChange={(e) =>
+                    setFormData({ ...formData, published_at: e.target.value })
+                  }
+                  className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 transition-all font-medium cursor-pointer"
+                />
+
+                <span className="text-xs text-slate-500">
+                  {formData.published_at === getTodayDateString()
+                    ? "Automatically set to today • Click calendar to modify"
+                    : `Custom release date: ${formData.published_at}`}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* CARD 3: KEY FEATURES & DELIVERABLES */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 flex-wrap gap-2">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-[#cb9706]/15 border border-[#cb9706]/30 flex items-center justify-center text-[#cb9706]">
+                  <Sparkles size={17} />
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold text-slate-900">
+                    Key Features & Technical Highlights
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Bulleted service capabilities, deliverables, and architecture modules
+                  </p>
+                </div>
+              </div>
+
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#edd8bb] text-[#844414] border border-[#dfc49f]">
+                {features.length} {features.length === 1 ? 'Feature' : 'Features'} Defined
+              </span>
+            </div>
+
+            {/* Feature Input Row */}
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={featureInput}
+                onChange={(e) => setFeatureInput(e.target.value)}
+                onKeyDown={handleKeyDownFeature}
+                placeholder="e.g. AWS, GCP & Azure Architecture"
+                className="flex-1 px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 transition-all"
+              />
+              <Button
+                variant="primary"
+                icon={Plus}
+                onClick={handleAddFeature}
+                disabled={!featureInput.trim()}
+              >
+                Add Feature
+              </Button>
+            </div>
+
+            {/* Features List */}
+            {features.length > 0 ? (
+              <div className="flex flex-col gap-2 pt-1">
+                {features.map((feat, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between gap-3 p-3 rounded-lg bg-slate-50 border border-slate-200 hover:border-slate-300 transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="w-5 h-5 rounded-full bg-[#a34b03]/10 text-[#a34b03] flex items-center justify-center text-[11px] font-bold shrink-0">
+                        {idx + 1}
+                      </span>
+                      <span className="text-sm font-medium text-slate-800 break-words">
+                        {feat}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveFeature(idx)}
+                      className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer shrink-0"
+                      title="Remove feature"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-5 text-center text-slate-400 text-xs bg-slate-50 rounded-xl border border-dashed border-slate-200 flex flex-col items-center gap-1.5">
+                <ListPlus size={20} className="text-slate-400" />
+                <span>No features added yet. Type a capability above and click &quot;Add Feature&quot;.</span>
+              </div>
+            )}
+          </div>
+
+          {/* CARD 4: RICH TEXT CONTENT & SCOPE EDITOR */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 flex-wrap gap-2">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-[#a34b03]/10 border border-[#a34b03]/20 flex items-center justify-center text-[#a34b03]">
+                  <FileText size={17} />
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold text-slate-900">
+                    Service Content & Technical Guide
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    MS Word styled rich editor for detailed methodology, deliverables, and headings
+                  </p>
+                </div>
+              </div>
+            </div>
 
             <RichTextEditor
               value={formData.content}
               onChange={(newHtml) => setFormData({ ...formData, content: newHtml })}
               placeholder="<h2>Professional Web Development</h2><p>Write your detailed service breakdown, client deliverables, and technical features...</p>"
-              minHeight="320px"
+              minHeight="340px"
             />
           </div>
         </div>
 
-        {/* RIGHT COLUMN: MEDIA, SETTINGS & SEO PREVIEW (1 Col) */}
-        <div className="lg:col-span-1 flex flex-col gap-6">
-          {/* FEATURED IMAGE UPLOADER CARD */}
+        {/* RIGHT COLUMN: ACTIONS & FEATURED IMAGE (1 Col - Sticky on Desktop) */}
+        <div className="lg:col-span-1 lg:sticky lg:top-0 self-start flex flex-col gap-6">
+          {/* CARD A: ACTIONS CARD */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col gap-3">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <h3 className="text-sm font-semibold text-slate-900">
+                Actions
+              </h3>
+              <Badge status={formData.status}>
+                {formData.status ? formData.status.charAt(0).toUpperCase() + formData.status.slice(1) : 'Published'}
+              </Badge>
+            </div>
+
+            <p className="text-xs text-slate-500 leading-relaxed">
+              {formData.status === 'published'
+                ? 'This service offering will be publicly visible on the live catalog.'
+                : formData.status === 'draft'
+                ? 'This service is saved in draft mode (internal review only).'
+                : 'This service is archived and hidden from public catalog.'}
+            </p>
+
+            <div className="pt-2 flex items-center gap-2">
+              <Button
+                variant="primary"
+                icon={Save}
+                onClick={handleSubmit}
+                isLoading={isSaving}
+                className="flex-1"
+              >
+                {isEditing ? 'Save Changes' : 'Create & Publish'}
+              </Button>
+
+              <Button
+                variant="secondary"
+                onClick={onBack}
+                disabled={isSaving}
+                className="px-4 shrink-0"
+              >
+                Discard
+              </Button>
+            </div>
+
+            <p className="text-[11px] text-slate-400 text-center">
+              All fields, features, and media sync atomically to API.
+            </p>
+          </div>
+
+          {/* CARD B: FEATURED IMAGE */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col gap-4">
-            <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <div className="flex items-center gap-1.5">
-                <ImageIcon size={15} className="text-indigo-600" />
-                <h3 className="text-sm font-bold text-slate-900">Featured Image</h3>
+                <ImageIcon size={16} className="text-[#a34b03]" />
+                <h3 className="text-sm font-semibold text-slate-900">Featured Image</h3>
               </div>
-              <span className="text-[11px] text-slate-400 font-mono">Catalog Cover</span>
+              <span className="text-[11px] text-slate-400">Catalog Cover</span>
             </div>
 
             {featuredPreview ? (
-              <div className="flex flex-col gap-3">
-                <div className="relative rounded-xl border border-slate-200 overflow-hidden bg-slate-950 h-52 flex items-center justify-center shadow-xs">
+              <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-900 flex flex-col relative group">
+                <div className="h-44 w-full flex items-center justify-center bg-slate-950 p-2 overflow-hidden">
                   <img
                     src={featuredPreview}
                     alt="Featured preview"
-                    className="max-w-full max-h-full object-contain p-2"
+                    className="max-h-full max-w-full object-contain rounded"
                     onError={(e) => handleImageError(e, 'Preview', true)}
                   />
-                  <button
-                    type="button"
-                    onClick={handleRemoveImage}
-                    className="absolute top-2.5 right-2.5 p-1.5 rounded-lg bg-red-600/90 hover:bg-red-700 text-white transition-colors cursor-pointer shadow-md"
-                    title="Remove featured image"
-                  >
-                    <Trash2 size={15} />
-                  </button>
                 </div>
 
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500 truncate font-mono text-[11px]">
-                    {featuredFile?.name || 'Current image uploaded'}
+                <div className="p-3 bg-white border-t border-slate-200 flex items-center justify-between gap-2">
+                  <span className="text-[11px] text-slate-500 truncate max-w-[140px]">
+                    {featuredFile ? featuredFile.name : (removeFeaturedImage ? 'Marked for deletion' : 'Current Image')}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="text-xs text-indigo-600 font-semibold hover:underline cursor-pointer"
-                  >
-                    Replace Image
-                  </button>
+
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      icon={UploadCloud}
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      Replace
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      icon={Trash2}
+                      onClick={handleRemoveImage}
+                    >
+                      Delete
+                    </Button>
+                  </div>
                 </div>
               </div>
             ) : (
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="h-44 rounded-xl border-2 border-dashed border-slate-200 hover:border-indigo-400 bg-slate-50/60 hover:bg-indigo-50/30 flex flex-col items-center justify-center gap-2 text-slate-400 hover:text-indigo-600 cursor-pointer transition-all p-4 text-center"
+                className="border-2 border-dashed border-slate-300 hover:border-[#a34b03] rounded-xl p-6 flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-[#a34b03]/5 transition-colors cursor-pointer text-center"
               >
-                <div className="p-3 rounded-full bg-slate-100 text-slate-500">
-                  <UploadCloud size={24} />
+                <div className="w-10 h-10 rounded-full bg-white border border-slate-200 shadow-xs flex items-center justify-center text-[#a34b03]">
+                  <UploadCloud size={20} />
                 </div>
-                <div className="text-xs font-semibold text-slate-700">Click to upload featured image</div>
-                <div className="text-[11px] text-slate-400">JPEG, PNG, WebP up to 5MB</div>
+                <div className="text-xs font-semibold text-slate-800">
+                  Select Featured Image
+                </div>
+                <div className="text-[11px] text-slate-400">
+                  Square, 4:3, or 16:9 banner (JPEG, PNG, WebP up to 5MB)
+                </div>
               </div>
             )}
 
@@ -505,143 +840,6 @@ export const CreateService = ({
               onChange={handleFileChange}
               className="hidden"
             />
-          </div>
-
-          {/* PUBLISHING & CATALOG SETTINGS */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-5">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <Globe size={16} className="text-indigo-600" />
-                <h3 className="text-sm font-bold text-slate-900 tracking-tight">Publishing Settings</h3>
-              </div>
-              <Badge status={badgeType}>
-                {statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}
-              </Badge>
-            </div>
-
-            {/* Lifecycle Status - Tactile 3-Pill Selector */}
-            <div className="flex flex-col gap-1.5">
-              <label className="block text-xs font-semibold text-slate-700">
-                Lifecycle Status
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { value: 'published', label: 'Published', sub: 'Live on site', dot: 'bg-emerald-500' },
-                  { value: 'draft', label: 'Draft', sub: 'Work in progress', dot: 'bg-amber-500' },
-                  { value: 'unpublished', label: 'Unpublished', sub: 'Hidden / Closed', dot: 'bg-slate-400' },
-                ].map((opt) => {
-                  const isSelected = formData.status === opt.value;
-                  return (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, status: opt.value })}
-                      className={`p-2.5 rounded-xl text-left border cursor-pointer transition-all flex flex-col gap-1 ${
-                        isSelected
-                          ? 'bg-indigo-50/70 border-indigo-500 text-indigo-950 ring-2 ring-indigo-500/20 shadow-xs'
-                          : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'
-                      }`}
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <span className={`w-2 h-2 rounded-full shrink-0 ${opt.dot}`} />
-                        <span className="text-xs font-bold truncate">{opt.label}</span>
-                      </div>
-                      <span className="text-[10px] text-slate-500 truncate leading-tight">
-                        {opt.sub}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Catalog Sort Order */}
-            <div className="flex flex-col gap-1.5">
-              <label className="block text-xs font-semibold text-slate-700">
-                Catalog Sort Order
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                  <Hash size={14} />
-                </div>
-                <input
-                  type="number"
-                  min="1"
-                  value={formData.sort_order}
-                  onChange={(e) =>
-                    setFormData({ ...formData, sort_order: parseInt(e.target.value, 10) || 1 })
-                  }
-                  className="w-full pl-8 pr-3 py-2 rounded-lg border border-slate-300 text-xs font-mono text-slate-800 bg-white focus:border-indigo-500 focus:outline-hidden focus:ring-2 focus:ring-indigo-100 transition-all"
-                  placeholder="1"
-                />
-              </div>
-              <p className="text-[11px] text-slate-400">
-                Controls display order in the services catalog (e.g. 1 appears first).
-              </p>
-            </div>
-
-            {/* Publication Date */}
-            <div className="flex flex-col gap-1.5">
-              <label className="block text-xs font-semibold text-slate-700">
-                Publication Date
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                  <Calendar size={14} />
-                </div>
-                <input
-                  type="date"
-                  value={formData.published_at}
-                  onChange={(e) => setFormData({ ...formData, published_at: e.target.value })}
-                  className="w-full pl-8 pr-3 py-2 rounded-lg border border-slate-300 text-xs text-slate-800 bg-white focus:border-indigo-500 focus:outline-hidden focus:ring-2 focus:ring-indigo-100 transition-all"
-                />
-              </div>
-              <p className="text-[11px] text-slate-400">
-                Scheduled release date or original publication timestamp.
-              </p>
-            </div>
-
-            {/* Real-time Status Explanation Banner */}
-            <div className="p-3 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center gap-2.5 text-xs text-slate-600 mt-1">
-              <div
-                className={`w-2 h-2 rounded-full shrink-0 ${
-                  formData.status === 'published'
-                    ? 'bg-emerald-500 animate-pulse'
-                    : formData.status === 'draft'
-                    ? 'bg-amber-500'
-                    : 'bg-slate-400'
-                }`}
-              />
-              <span className="text-[11.5px] leading-relaxed">
-                {formData.status === 'published'
-                  ? 'This service will be visible to clients on the live website.'
-                  : formData.status === 'draft'
-                  ? 'This service will remain in draft mode (internal review only).'
-                  : 'This service will be archived and hidden from the public catalog.'}
-              </span>
-            </div>
-
-            {/* Publishing Container Actions */}
-            <div className="pt-3 flex flex-col gap-2 border-t border-slate-100">
-              <Button
-                variant="primary"
-                icon={isSaving ? RefreshCw : Save}
-                onClick={handleSubmit}
-                isLoading={isSaving}
-                fullWidth
-                className="py-2.5 shadow-sm"
-              >
-                {isEditing ? 'Save Changes' : 'Publish Service'}
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={onBack}
-                disabled={isSaving}
-                fullWidth
-              >
-                Cancel & Return
-              </Button>
-            </div>
           </div>
         </div>
       </div>
