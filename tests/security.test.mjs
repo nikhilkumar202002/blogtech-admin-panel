@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { canAccessTab, getAllowedTabs, isSuperAdmin, isAdmin, isEditor } from '../src/utils/rbac.helper.js';
-import { isSafeUrl, escapeXml } from '../src/utils/sanitize.helper.js';
+import { isSafeUrl, escapeXml, cleanArticleHtml } from '../src/utils/sanitize.helper.js';
 
 /* -------------------------------------------------------------------------- */
 /* Part 1: Role-Based Access Control (RBAC) Hardening Tests                   */
@@ -163,3 +163,35 @@ test('HTTP Status - 403 Forbidden does not purge authentication tokens', () => {
   handleResponseError(401);
   assert.strictEqual(tokenCleared, true, '401 Unauthorized must trigger session cleanup');
 });
+
+/* -------------------------------------------------------------------------- */
+/* Part 5: Article HTML Normalization & Typography Sanitization Tests         */
+/* -------------------------------------------------------------------------- */
+
+test('Article HTML Cleaner - Unwraps paragraphs and lists mistakenly nested in headings', () => {
+  const dirty = '<h2>Introduction</h2><h2><p>In today competitive digital world...</p><p>Custom software...</p></h2><h2>1. Solutions</h2><h2><p>Every business...</p><ul><li><p>Tailored</p></li></ul></h2>';
+  const cleaned = cleanArticleHtml(dirty);
+
+  assert.strictEqual(cleaned.includes('<h2><p>'), false, 'Heading must NOT contain nested <p>');
+  assert.strictEqual(cleaned.includes('</p></h2>'), false, 'Heading must NOT close after <p>');
+  assert.strictEqual(cleaned.includes('<h2>Introduction</h2>'), true, 'True heading must be preserved');
+  assert.strictEqual(cleaned.includes('<h2>1. Solutions</h2>'), true, 'Numbered section heading must be preserved');
+  assert.strictEqual(cleaned.includes('<p>In today competitive digital world...</p>'), true, 'Paragraphs must be top-level');
+  assert.strictEqual(cleaned.includes('<li>Tailored</li>'), true, 'Nested <p> in <li> must be unwrapped');
+});
+
+test('Article HTML Cleaner - Strips duplicate leading <h1> matching article headline', () => {
+  const dirty = '<h1>Why Custom Software Development Is Essential in 2026</h1><p>Body paragraph</p>';
+  const cleaned = cleanArticleHtml(dirty, 'Why Custom Software Development Is Essential in 2026');
+
+  assert.strictEqual(cleaned.includes('<h1>'), false, 'Duplicate <h1> matching article title must be stripped');
+  assert.strictEqual(cleaned, '<p>Body paragraph</p>');
+});
+
+test('Article HTML Cleaner - Splits heading with text and nested block elements', () => {
+  const dirty = '<h2>Heading Title<p>Paragraph inside heading</p></h2>';
+  const cleaned = cleanArticleHtml(dirty);
+
+  assert.strictEqual(cleaned, '<h2>Heading Title</h2><p>Paragraph inside heading</p>');
+});
+

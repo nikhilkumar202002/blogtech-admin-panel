@@ -50,6 +50,64 @@ export const sanitizeHtml = (dirtyHtml) => {
 };
 
 /**
+ * Cleans and normalizes article HTML markup:
+ * 1. Strips leading duplicate <h1> title if it duplicates the article headline
+ * 2. Unwraps block elements (<p>, <ul>, <ol>, <div>, <blockquote>, <table>) mistakenly nested inside <h1-h6>
+ * 3. Unwraps unnecessary <p> elements directly inside <li>
+ * 4. Removes empty heading tags and empty paragraphs
+ * @param {string} rawHtml
+ * @param {string} articleTitle
+ * @returns {string} Cleaned HTML string
+ */
+export const cleanArticleHtml = (rawHtml, articleTitle = '') => {
+  if (!rawHtml || typeof rawHtml !== 'string') return '';
+  let clean = rawHtml;
+
+  // 1. Remove duplicate leading <h1> if it matches or resembles the article title
+  if (articleTitle) {
+    const normTitle = articleTitle.trim().toLowerCase();
+    clean = clean.replace(/^\s*<h1[^>]*>([\s\S]*?)<\/h1>/i, (match, inner) => {
+      const text = inner.replace(/<[^>]*>/g, '').trim().toLowerCase();
+      if (text === normTitle || normTitle.includes(text) || text.includes(normTitle)) {
+        return '';
+      }
+      return match;
+    });
+  } else {
+    clean = clean.replace(/^\s*<h1[^>]*>[\s\S]*?<\/h1>/i, '');
+  }
+
+  // 2. Fix block elements mistakenly wrapped inside <h1-h6>
+  clean = clean.replace(/<h([1-6])>([\s\S]*?)<\/h\1>/gi, (match, level, inner) => {
+    const trimmed = inner.trim();
+    // If the entire heading contains only block elements (starts with <p, <ul, <ol, <div, etc.)
+    if (/^<(?:p|ul|ol|div|blockquote|table)[\s\S]*$/i.test(trimmed)) {
+      return trimmed;
+    }
+    // If heading has heading title AND THEN block elements inside it
+    const blockMatch = trimmed.match(/^([\s\S]*?)(<(?:p|ul|ol|div|blockquote|table)[\s\S]*)$/i);
+    if (blockMatch) {
+      const headingPart = blockMatch[1].trim();
+      const bodyPart = blockMatch[2].trim();
+      if (headingPart) {
+        return `<h${level}>${headingPart}</h${level}>${bodyPart}`;
+      }
+      return bodyPart;
+    }
+    return match;
+  });
+
+  // 3. Unwrap redundant <p> inside <li>
+  clean = clean.replace(/<li([^>]*)>\s*<p>([\s\S]*?)<\/p>\s*<\/li>/gi, '<li$1>$2</li>');
+
+  // 4. Remove empty heading tags and empty paragraphs
+  clean = clean.replace(/<h[1-6]>\s*(?:&nbsp;|\s)*<\/h[1-6]>/gi, '');
+  clean = clean.replace(/<p>\s*(?:&nbsp;|\s)*<\/p>/gi, '');
+
+  return clean.trim();
+};
+
+/**
  * Validates whether a user-supplied URL is safe to use in links / redirects.
  * Explicitly rejects dangerous schemes: javascript:, vbscript:, data:
  * @param {string} url

@@ -447,5 +447,196 @@ html, body {
   border-radius: 0 8px 8px 0;
 }
 
+/* Scoped Rich Text Content Renderer for Blog Articles */
+.blog-rich-content {
+  font-family: inherit;
+  color: #1e293b;
+  line-height: 1.8;
+  font-size: 1rem;
+}
+
+.blog-rich-content h1,
+.blog-rich-content h2,
+.blog-rich-content h3,
+.blog-rich-content h4,
+.blog-rich-content h5,
+.blog-rich-content h6 {
+  color: #0f172a;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin-top: 1.85rem;
+  margin-bottom: 0.75rem;
+}
+
+.blog-rich-content h1:first-child,
+.blog-rich-content h2:first-child,
+.blog-rich-content h3:first-child {
+  margin-top: 0;
+}
+
+.blog-rich-content h1 {
+  font-size: 1.625rem;
+  line-height: 1.3;
+}
+
+.blog-rich-content h2 {
+  font-size: 1.35rem;
+  line-height: 1.35;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 0.45rem;
+  color: #0f172a;
+}
+
+.blog-rich-content h3 {
+  font-size: 1.15rem;
+  line-height: 1.4;
+  color: #1e293b;
+}
+
+.blog-rich-content p {
+  margin-bottom: 1.15rem;
+  color: #334155;
+  line-height: 1.8;
+  font-size: 1rem;
+}
+
+.blog-rich-content ul {
+  list-style-type: none;
+  padding-left: 0;
+  margin-top: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.blog-rich-content ul li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.6rem;
+  color: #334155;
+  line-height: 1.7;
+  font-size: 0.975rem;
+}
+
+.blog-rich-content ul li::before {
+  content: '';
+  position: absolute;
+  left: 0.35rem;
+  top: 0.65em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #a34b03;
+}
+
+.blog-rich-content ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin-top: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.blog-rich-content ol li {
+  margin-bottom: 0.6rem;
+  color: #334155;
+  line-height: 1.7;
+  font-size: 0.975rem;
+  padding-left: 0.35rem;
+}
+
+.blog-rich-content strong,
+.blog-rich-content b {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.blog-rich-content em,
+.blog-rich-content i {
+  font-style: italic;
+}
+
+.blog-rich-content a {
+  color: #a34b03;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.blog-rich-content a:hover {
+  color: #844414;
+}
+
+.blog-rich-content blockquote {
+  border-left: 4px solid #a34b03;
+  padding: 0.85rem 1.25rem;
+  margin: 1.5rem 0;
+  color: #475569;
+  font-style: italic;
+  background-color: #fdf6ee;
+  border-radius: 0 10px 10px 0;
+}
+
+.blog-rich-content pre {
+  background-color: #0f172a;
+  color: #10b981;
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  overflow-x: auto;
+  margin: 1.25rem 0;
+  font-size: 0.875rem;
+  font-family: monospace;
+  line-height: 1.6;
+}
+
+.blog-rich-content code {
+  font-family: monospace;
+  font-size: 0.875em;
+  background-color: #f1f5f9;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  color: #844414;
+  border: 1px solid #e2e8f0;
+}
+
+.blog-rich-content pre code {
+  background-color: transparent;
+  color: inherit;
+  padding: 0;
+  border: none;
+}
+
+.blog-rich-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.925rem;
+}
+
+.blog-rich-content th {
+  background-color: #f8fafc;
+  font-weight: 600;
+  color: #0f172a;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e2e8f0;
+}
+
+.blog-rich-content td {
+  padding: 0.75rem 1rem;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+}
+
+.blog-rich-content tr:nth-child(even) {
+  background-color: #fcfcfd;
+}
+
+.blog-rich-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  margin: 1.5rem 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
 
 
