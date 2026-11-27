@@ -309,6 +309,7 @@ export const ProductsView = ({ onNavigate }) => {
     return (
       <CreateProduct
         initialProduct={editingProduct}
+        existingProducts={products}
         onBack={() => {
           setViewMode('list');
           setEditingProduct(null);

@@ -39,13 +39,24 @@ const generateSlug = (text) => {
     .replace(/-+$/, '');
 };
 
+const calculateNextSortOrder = (items) => {
+  if (!Array.isArray(items) || items.length === 0) return 1;
+  const maxOrder = items.reduce((max, item) => {
+    const val = Number(item?.sort_order);
+    return !isNaN(val) ? Math.max(max, val) : max;
+  }, 0);
+  return maxOrder + 1;
+};
+
 export const CreateProduct = ({
   initialProduct = null,
+  existingProducts = [],
   onBack,
   onSuccess,
 }) => {
   const { addToast } = useToast();
   const isEditing = Boolean(initialProduct?.id);
+  const [isAutoCalculated, setIsAutoCalculated] = useState(!initialProduct?.id);
 
   const [formData, setFormData] = useState({
     name: initialProduct?.name || '',
@@ -60,7 +71,7 @@ export const CreateProduct = ({
     description: initialProduct?.description || '',
     content: initialProduct?.content || '',
     status: initialProduct?.status || 'published',
-    sort_order: initialProduct?.sort_order ?? 1,
+    sort_order: initialProduct?.sort_order ?? calculateNextSortOrder(existingProducts),
     meta_title: initialProduct?.meta_title || '',
     meta_description: initialProduct?.meta_description || '',
     published_at: initialProduct?.published_at
@@ -194,6 +205,61 @@ export const CreateProduct = ({
         .catch((err) => console.warn('Could not sync fresh product:', err));
     }
   }, [initialProduct]);
+
+  // Auto-calculate sort_order from database for new products
+  useEffect(() => {
+    if (!isEditing) {
+      const fetchLatestMaxSortOrder = async () => {
+        try {
+          const res = await getProducts({ per_page: 100 });
+          let list = [];
+          if (Array.isArray(res?.data)) list = res.data;
+          else if (Array.isArray(res?.data?.data)) list = res.data.data;
+          else if (Array.isArray(res)) list = res;
+          else if (Array.isArray(res?.products)) list = res.products;
+
+          if (list.length > 0) {
+            const nextOrder = calculateNextSortOrder(list);
+            setFormData((prev) => ({
+              ...prev,
+              sort_order: nextOrder,
+            }));
+            setIsAutoCalculated(true);
+          }
+        } catch (err) {
+          console.warn('Could not auto-calculate next sort order from database:', err);
+        }
+      };
+
+      fetchLatestMaxSortOrder();
+    }
+  }, [isEditing]);
+
+  const handleRecalculateSortOrder = async () => {
+    try {
+      const res = await getProducts({ per_page: 100 });
+      let list = [];
+      if (Array.isArray(res?.data)) list = res.data;
+      else if (Array.isArray(res?.data?.data)) list = res.data.data;
+      else if (Array.isArray(res)) list = res;
+      else if (Array.isArray(res?.products)) list = res.products;
+
+      const nextOrder = calculateNextSortOrder(list);
+      setFormData((prev) => ({ ...prev, sort_order: nextOrder }));
+      setIsAutoCalculated(true);
+      addToast({
+        title: 'Sort Order Updated',
+        message: `Set to #${nextOrder} (next available in database).`,
+        type: 'info',
+      });
+    } catch (err) {
+      addToast({
+        title: 'Recalculation Failed',
+        message: 'Could not query database records.',
+        type: 'error',
+      });
+    }
+  };
 
   useEffect(() => {
     return () => {
@@ -605,9 +671,7 @@ export const CreateProduct = ({
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
               {isEditing ? `Edit: ${activeProduct?.name || formData.name}` : 'Create New Product'}
             </h1>
-            <Badge status={formData.status}>
-              {formData.status ? formData.status.charAt(0).toUpperCase() + formData.status.slice(1) : 'Published'}
-            </Badge>
+       
           </div>
           <p className="text-sm text-slate-500 mt-1">
             {isEditing
@@ -725,9 +789,7 @@ export const CreateProduct = ({
                   <p className="text-xs text-slate-500">Configure promotional headline, CTA buttons, and responsive banner graphics</p>
                 </div>
               </div>
-              <span className="text-[11px] font-semibold text-[#844414] bg-[#edd8bb] border border-[#dfc49f] px-2.5 py-0.5 rounded-full">
-                Hero Section
-              </span>
+         
             </div>
 
             {/* Banner Headline Group */}
@@ -1015,10 +1077,7 @@ export const CreateProduct = ({
                   <p className="text-xs text-slate-500">Rich formatted descriptions, key benefits, modules, and specifications</p>
                 </div>
               </div>
-              <span className="text-xs font-medium text-[#a34b03] bg-[#a34b03]/10 border border-[#a34b03]/25 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#a34b03] animate-pulse" />
-                Word Editor
-              </span>
+        
             </div>
 
             <RichTextEditor
@@ -1108,14 +1167,38 @@ export const CreateProduct = ({
               </select>
             </FormField>
 
-            <FormField label="Catalog Sort Order" hint="Lower rank numbers appear first">
-              <input
-                type="number"
-                min="1"
-                value={formData.sort_order}
-                onChange={(e) => setFormData({ ...formData, sort_order: e.target.value })}
-                className="w-full px-3 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 transition-all font-mono"
-              />
+            <FormField
+              label="Catalog Sort Order"
+              hint={
+                !isEditing && isAutoCalculated
+                  ? 'Auto-calculated from database (highest rank + 1)'
+                  : 'Lower rank numbers appear first in catalog'
+              }
+            >
+              <div className="relative flex items-center">
+                <input
+                  type="number"
+                  min="1"
+                  value={formData.sort_order}
+                  onChange={(e) => {
+                    setIsAutoCalculated(false);
+                    setFormData({ ...formData, sort_order: e.target.value });
+                  }}
+                  className="w-full px-3.5 py-2.5 pr-28 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 transition-all font-mono font-medium"
+                />
+                <div className="absolute right-2 flex items-center gap-1.5">
+                  {!isEditing && (
+                    <button
+                      type="button"
+                      onClick={handleRecalculateSortOrder}
+                      className="text-[10px] font-semibold text-[#844414] bg-[#edd8bb] hover:bg-[#e4cbab] border border-[#dfc49f] px-2 py-0.5 rounded-full transition-colors cursor-pointer"
+                      title="Click to recalculate next sort order from database"
+                    >
+                      {isAutoCalculated ? 'Auto (DB)' : 'Reset Auto'}
+                    </button>
+                  )}
+                </div>
+              </div>
             </FormField>
 
             <FormField label="Publication Date" hint="Schedule or release date">
