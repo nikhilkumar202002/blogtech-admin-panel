@@ -72,13 +72,41 @@ export const deleteProduct = async (id) => {
   return response.data;
 };
 
-// 6. PATCH /admin/products/:id/publish - Publish product
+// 6. DELETE /admin/products - Delete multiple products (Bulk delete via DELETE /admin/products)
+export const deleteProducts = async (ids) => {
+  const payload = Array.isArray(ids) ? ids : [ids];
+  const response = await mainAxios.delete('/admin/products', {
+    data: { ids: payload },
+  });
+  return response.data;
+};
+
+// 7. DELETE /admin/products/bulk-delete - Bulk delete products via DELETE method
+export const bulkDeleteProducts = async (ids) => {
+  const payload = Array.isArray(ids) ? ids : [ids];
+  const response = await mainAxios.delete('/admin/products/bulk-delete', {
+    data: { ids: payload },
+  });
+  return response.data;
+};
+export const bulkDeleteProductsDelete = bulkDeleteProducts;
+
+// 8. POST /admin/products/bulk-delete - Bulk delete products via POST method
+export const bulkDeleteProductsPost = async (ids) => {
+  const payload = Array.isArray(ids) ? ids : [ids];
+  const response = await mainAxios.post('/admin/products/bulk-delete', {
+    ids: payload,
+  });
+  return response.data;
+};
+
+// 9. PATCH /admin/products/:id/publish - Publish product
 export const publishProduct = async (id) => {
   const response = await mainAxios.patch(`/admin/products/${id}/publish`);
   return response.data;
 };
 
-// 7. PATCH /admin/products/:id/unpublish - Unpublish product
+// 10. PATCH /admin/products/:id/unpublish - Unpublish product
 export const unpublishProduct = async (id) => {
   const response = await mainAxios.patch(`/admin/products/${id}/unpublish`);
   return response.data;
@@ -90,6 +118,10 @@ const productService = {
   createProduct,
   updateProduct,
   deleteProduct,
+  deleteProducts,
+  bulkDeleteProducts,
+  bulkDeleteProductsDelete,
+  bulkDeleteProductsPost,
   publishProduct,
   unpublishProduct,
   toFormData,
