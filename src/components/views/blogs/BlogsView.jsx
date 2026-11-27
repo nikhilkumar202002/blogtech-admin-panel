@@ -20,6 +20,7 @@ import { useToast } from '../../ui/ToastContext';
 import { Breadcrumb } from '../../ui/Breadcrumb';
 import { DropdownMenu } from '../../ui/DropdownMenu';
 import { CreateBlog } from './CreateBlog';
+import { BlogSingle } from './BlogSingle';
 import { getStoredUser } from '../../../utils/auth.service';
 import { sanitizeHtml } from '../../../utils/sanitize.helper';
 import { formatImageUrl, handleImageError } from '../../../utils/image.helper';
@@ -258,7 +259,7 @@ export const BlogsView = ({
       key: 'actions',
       align: 'right',
       render: (row) => {
-        const isPublished = row.status === 'Published';
+        const isPublished = String(row.status || '').toLowerCase() === 'published';
         const contextualLabel = isPublished ? 'Unpublish' : 'Publish';
         const contextualIcon = isPublished ? EyeOff : Send;
 
@@ -284,9 +285,8 @@ export const BlogsView = ({
               </button>
             }
             items={[
-              { label: 'View Article', icon: Eye, onClick: () => handleOpenPreview(row) },
+              { label: 'View Details', icon: Eye, onClick: () => handleOpenPreview(row) },
               { label: 'Edit Article', icon: Edit2, onClick: () => handleOpenEdit(row) },
-              { label: 'Preview', icon: Eye, onClick: () => handleOpenPreview(row) },
               {
                 label: contextualLabel,
                 icon: contextualIcon,
@@ -302,220 +302,24 @@ export const BlogsView = ({
   ];
 
   /* -------------------------------------------------------------------------- */
-  /* PREVIEW VIEW: BLOG ARTICLE PREVIEW PAGE                                   */
+  /* SINGLE VIEW: DEDICATED ARTICLE DETAILS & METADATA PAGE                     */
   /* -------------------------------------------------------------------------- */
-  if (viewMode === 'preview' && previewBlog) {
+  if ((viewMode === 'preview' || viewMode === 'single') && previewBlog) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', paddingBottom: '80px' }} className="animate-fade-in">
-        {/* HEADER BAR */}
-        <div
-          style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '16px',
-            border: '1px solid #e2e8f0',
-            padding: '20px 24px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '16px',
-            boxShadow: '0 1px 3px 0 rgba(16, 24, 40, 0.04)',
-          }}
-        >
-          <div>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Preview Mode (Public View Simulator)
-            </div>
-            <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', margin: '2px 0 0 0', letterSpacing: '-0.02em' }}>
-              Preview Article
-            </h1>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Button
-              variant="secondary"
-              icon={ArrowLeft}
-              onClick={() => setViewMode('form')}
-            >
-              Back to Editor
-            </Button>
-            <Button
-              variant="secondary"
-              icon={Edit2}
-              onClick={() => handleOpenEdit(previewBlog)}
-            >
-              Edit
-            </Button>
-            <Button
-              variant="accent"
-              icon={Send}
-              onClick={() => handleToggleArticleStatus(previewBlog)}
-            >
-              {previewBlog.status === 'Published' ? 'Unpublish' : 'Publish'}
-            </Button>
-          </div>
-        </div>
-
-        {/* MAIN PREVIEW & SIDEBAR LAYOUT */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* ARTICLE PREVIEW (LEFT / MAIN AREA) */}
-          <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-5 sm:p-8 md:p-9 shadow-xs">
-            {/* Featured Image */}
-            {(() => {
-              const previewImg = formatImageUrl(
-                previewBlog.coverImage ||
-                previewBlog.featured_image_url ||
-                previewBlog.featured_image ||
-                previewBlog.featured_image_path
-              );
-              return previewImg ? (
-                <div style={{ borderRadius: '12px', overflow: 'hidden', height: '340px', marginBottom: '28px' }}>
-                  <img
-                    src={previewImg}
-                    alt={previewBlog.title}
-                    onError={(e) => handleImageError(e, previewBlog.title || 'Blog Preview', true)}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
-                </div>
-              ) : null;
-            })()}
-
-            {/* Badges & Category */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-              <Badge status="accent">{getCategoryName(previewBlog.category)}</Badge>
-              <Badge status={previewBlog.status}>{previewBlog.status}</Badge>
-            </div>
-
-            {/* Large Article Title */}
-            <h1
-              style={{
-                fontSize: '32px',
-                fontWeight: 800,
-                color: '#0f172a',
-                lineHeight: 1.25,
-                letterSpacing: '-0.025em',
-                marginBottom: '20px',
-              }}
-            >
-              {previewBlog.title}
-            </h1>
-
-            {/* Author Information & Date */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '14px',
-                paddingBottom: '24px',
-                borderBottom: '1px solid #f1f5f9',
-                marginBottom: '28px',
-              }}
-            >
-              <Avatar
-                name={getAuthorName(previewBlog.author, currentUserName)}
-                size="lg"
-                showStatus={false}
-              />
-              <div>
-                <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>
-                  {getAuthorName(previewBlog.author, currentUserName)}
-                </div>
-                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
-                  Published on {previewBlog.publishedAt || previewBlog.published_at || 'Recently'} • {previewBlog.readTime || '5 min read'}
-                </div>
-              </div>
-            </div>
-
-            {/* Article Content Rendered as Public Website */}
-            <div
-              style={{
-                fontSize: '16px',
-                lineHeight: 1.8,
-                color: '#1e293b',
-                fontFamily: 'Inter, sans-serif',
-              }}
-              dangerouslySetInnerHTML={{
-                __html: sanitizeHtml(
-                  previewBlog.content || previewBlog.excerpt || '<p style="color:#94a3b8;font-style:italic;">No article content available to preview.</p>'
-                ),
-              }}
-            />
-          </div>
-
-          {/* SIDEBAR (RIGHT AREA) */}
-          <div className="lg:col-span-1 flex flex-col gap-5">
-            {/* Publishing Status Card */}
-            <div className="card card-padded">
-              <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', margin: '0 0 14px 0' }}>
-                Publishing Status
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ color: '#64748b' }}>Status</span>
-                  <Badge status={previewBlog.status}>{previewBlog.status}</Badge>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ color: '#64748b' }}>Publication Date</span>
-                  <span style={{ color: '#0f172a', fontWeight: 500 }}>
-                    {previewBlog.publishedAt || previewBlog.published_at || '—'}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ color: '#64748b' }}>Last Updated</span>
-                  <span style={{ color: '#0f172a', fontWeight: 500 }}>Recently</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* BOTTOM STICKY ACTION BAR */}
-        <div
-          style={{
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            backgroundColor: '#ffffff',
-            borderTop: '1px solid #e2e8f0',
-            boxShadow: '0 -4px 12px rgba(0,0,0,0.05)',
-            padding: '14px 32px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            gap: '12px',
-            zIndex: 100,
-          }}
-        >
-          <Button
-            variant="secondary"
-            icon={ArrowLeft}
-            onClick={() => setViewMode('form')}
-          >
-            Back to Editor
-          </Button>
-
-          <Button
-            variant="accent"
-            icon={Send}
-            onClick={() => handleToggleArticleStatus(previewBlog)}
-          >
-            {previewBlog.status === 'Published' ? 'Unpublish Article' : 'Publish Article'}
-          </Button>
-        </div>
-
-        {/* DELETE CONFIRMATION MODAL */}
-        <ConfirmDialog
-          isOpen={!!deleteBlogId}
-          onClose={() => setDeleteBlogId(null)}
-          onConfirm={handleConfirmDelete}
-          title="Delete this article?"
-          message="Deleting this article will permanently remove it."
-          confirmLabel="Delete"
-          cancelLabel="Cancel"
-          type="danger"
-        />
-      </div>
+      <BlogSingle
+        blog={previewBlog}
+        currentUser={currentUser}
+        onBack={() => {
+          setViewMode('list');
+          setPreviewBlog(null);
+        }}
+        onEdit={(blogToEdit) => {
+          handleOpenEdit(blogToEdit);
+        }}
+        onRefresh={() => {
+          onRefresh && onRefresh();
+        }}
+      />
     );
   }
 
