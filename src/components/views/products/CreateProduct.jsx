@@ -907,38 +907,37 @@ export const CreateProduct = ({
               </FormField>
             </div>
 
-            {/* Subtitle & Description */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                label="Banner Eyebrow / Subtitle"
-                hint="Top badge or eyebrow tag above headline"
-              >
-                <input
-                  type="text"
-                  value={formData.banner_subtitle}
-                  onChange={(e) =>
-                    setFormData({ ...formData, banner_subtitle: e.target.value })
-                  }
-                  placeholder="e.g. One Software. Complete Management."
-                  className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 font-medium transition-all"
-                />
-              </FormField>
+            {/* Banner Eyebrow / Subtitle */}
+            <FormField
+              label="Banner Eyebrow / Subtitle"
+              hint="Top badge or eyebrow tag above headline"
+            >
+              <input
+                type="text"
+                value={formData.banner_subtitle}
+                onChange={(e) =>
+                  setFormData({ ...formData, banner_subtitle: e.target.value })
+                }
+                placeholder="e.g. One Software. Complete Management."
+                className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 font-medium transition-all"
+              />
+            </FormField>
 
-              <FormField
-                label="Banner Description"
-                hint="Hero introductory paragraph under headline"
-              >
-                <textarea
-                  rows={2}
-                  value={formData.banner_description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, banner_description: e.target.value })
-                  }
-                  placeholder="e.g. AURIX is a comprehensive jewellery management solution built to streamline day-to-day operations."
-                  className="w-full px-3.5 py-2 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 font-sans transition-all"
-                />
-              </FormField>
-            </div>
+            {/* Banner Description */}
+            <FormField
+              label="Banner Description"
+              hint="Hero introductory paragraph under headline"
+            >
+              <textarea
+                rows={3}
+                value={formData.banner_description}
+                onChange={(e) =>
+                  setFormData({ ...formData, banner_description: e.target.value })
+                }
+                placeholder="e.g. AURIX is a comprehensive jewellery management solution built to streamline day-to-day operations."
+                className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 font-sans leading-relaxed transition-all"
+              />
+            </FormField>
 
             {/* CTA Buttons */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1221,8 +1220,8 @@ export const CreateProduct = ({
           </div>
         </div>
 
-        {/* RIGHT COLUMN: ACTIONS & MEDIA ASSETS (1 Col) */}
-        <div className="lg:col-span-1 flex flex-col gap-6">
+        {/* RIGHT COLUMN: ACTIONS & MEDIA ASSETS (1 Col - Sticky & Static on Desktop) */}
+        <div className="lg:col-span-1 lg:sticky lg:top-0 self-start flex flex-col gap-6 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto pr-0.5">
           {/* CARD A: ACTIONS CARD */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col gap-3">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
@@ -1242,22 +1241,22 @@ export const CreateProduct = ({
                 : 'This product is unpublished and archived from the catalog.'}
             </p>
 
-            <div className="pt-2 flex flex-col gap-2">
+            <div className="pt-2 flex items-center gap-2">
               <Button
                 variant="primary"
                 icon={Save}
                 onClick={handleSubmit}
                 isLoading={isSaving}
-                fullWidth
+                className="flex-1"
               >
-                {isEditing ? 'Save Product Changes' : 'Create & Publish'}
+                {isEditing ? 'Save Changes' : 'Create & Publish'}
               </Button>
 
               <Button
                 variant="secondary"
                 onClick={onBack}
                 disabled={isSaving}
-                fullWidth
+                className="px-4 shrink-0"
               >
                 Discard
               </Button>
