@@ -777,7 +777,86 @@ export const CreateProduct = ({
             </FormField>
           </div>
 
-          {/* CARD 2: HERO BANNER & LANDING PRESENTATION */}
+          {/* CARD 2: PUBLISHING SETTINGS (3 IN A ROW) */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
+                  <Globe size={17} />
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold text-slate-900">Publishing Settings</h2>
+                  <p className="text-xs text-slate-500">Publication status, catalog display order, and release timestamp</p>
+                </div>
+              </div>
+              <Badge status={formData.status}>
+                {formData.status ? formData.status.charAt(0).toUpperCase() + formData.status.slice(1) : 'Published'}
+              </Badge>
+            </div>
+
+            {/* 3 Fields arranged in a single horizontal row */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
+              {/* 1. Publication Status */}
+              <FormField label="Publication Status" required>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  className="w-full px-3 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 transition-all font-medium cursor-pointer"
+                >
+                  <option value="published">Published</option>
+                  <option value="draft">Draft</option>
+                  <option value="unpublished">Unpublished</option>
+                </select>
+              </FormField>
+
+              {/* 2. Catalog Sort Order */}
+              <FormField
+                label="Catalog Sort Order"
+                hint={
+                  !isEditing && isAutoCalculated
+                    ? 'Auto-calculated from DB (rank + 1)'
+                    : 'Lower ranks appear first'
+                }
+              >
+                <div className="relative flex items-center">
+                  <input
+                    type="number"
+                    min="1"
+                    value={formData.sort_order}
+                    onChange={(e) => {
+                      setIsAutoCalculated(false);
+                      setFormData({ ...formData, sort_order: e.target.value });
+                    }}
+                    className="w-full px-3.5 py-2.5 pr-24 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 transition-all font-mono font-medium"
+                  />
+                  <div className="absolute right-2 flex items-center gap-1.5">
+                    {!isEditing && (
+                      <button
+                        type="button"
+                        onClick={handleRecalculateSortOrder}
+                        className="text-[10px] font-semibold text-[#844414] bg-[#edd8bb] hover:bg-[#e4cbab] border border-[#dfc49f] px-2 py-0.5 rounded-full transition-colors cursor-pointer"
+                        title="Click to recalculate next sort order from database"
+                      >
+                        {isAutoCalculated ? 'Auto (DB)' : 'Reset'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </FormField>
+
+              {/* 3. Publication Date */}
+              <FormField label="Publication Date" hint="Scheduled release timestamp">
+                <input
+                  type="date"
+                  value={formData.published_at}
+                  onChange={(e) => setFormData({ ...formData, published_at: e.target.value })}
+                  className="w-full px-3 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 transition-all"
+                />
+              </FormField>
+            </div>
+          </div>
+
+          {/* CARD 3: HERO BANNER & LANDING PRESENTATION */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-5">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
@@ -1142,73 +1221,26 @@ export const CreateProduct = ({
           </div>
         </div>
 
-        {/* RIGHT COLUMN: PUBLISHING & MEDIA ASSETS (1 Col) */}
+        {/* RIGHT COLUMN: ACTIONS & MEDIA ASSETS (1 Col) */}
         <div className="lg:col-span-1 flex flex-col gap-6">
-          {/* CARD A: PUBLISHING SETTINGS */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col gap-4">
+          {/* CARD A: ACTIONS CARD */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col gap-3">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <h3 className="text-sm font-semibold text-slate-900">
-                Publishing Settings
+                Actions
               </h3>
               <Badge status={formData.status}>
                 {formData.status ? formData.status.charAt(0).toUpperCase() + formData.status.slice(1) : 'Published'}
               </Badge>
             </div>
 
-            <FormField label="Publication Status" required>
-              <select
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                className="w-full px-3 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 transition-all font-medium"
-              >
-                <option value="published">Published</option>
-                <option value="draft">Draft</option>
-                <option value="unpublished">Unpublished</option>
-              </select>
-            </FormField>
-
-            <FormField
-              label="Catalog Sort Order"
-              hint={
-                !isEditing && isAutoCalculated
-                  ? 'Auto-calculated from database (highest rank + 1)'
-                  : 'Lower rank numbers appear first in catalog'
-              }
-            >
-              <div className="relative flex items-center">
-                <input
-                  type="number"
-                  min="1"
-                  value={formData.sort_order}
-                  onChange={(e) => {
-                    setIsAutoCalculated(false);
-                    setFormData({ ...formData, sort_order: e.target.value });
-                  }}
-                  className="w-full px-3.5 py-2.5 pr-28 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 transition-all font-mono font-medium"
-                />
-                <div className="absolute right-2 flex items-center gap-1.5">
-                  {!isEditing && (
-                    <button
-                      type="button"
-                      onClick={handleRecalculateSortOrder}
-                      className="text-[10px] font-semibold text-[#844414] bg-[#edd8bb] hover:bg-[#e4cbab] border border-[#dfc49f] px-2 py-0.5 rounded-full transition-colors cursor-pointer"
-                      title="Click to recalculate next sort order from database"
-                    >
-                      {isAutoCalculated ? 'Auto (DB)' : 'Reset Auto'}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </FormField>
-
-            <FormField label="Publication Date" hint="Schedule or release date">
-              <input
-                type="date"
-                value={formData.published_at}
-                onChange={(e) => setFormData({ ...formData, published_at: e.target.value })}
-                className="w-full px-3 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 transition-all"
-              />
-            </FormField>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              {formData.status === 'published'
+                ? 'This product will be publicly visible in the live catalog.'
+                : formData.status === 'draft'
+                ? 'This product is saved in draft mode (hidden from clients).'
+                : 'This product is unpublished and archived from the catalog.'}
+            </p>
 
             <div className="pt-2 flex flex-col gap-2">
               <Button
@@ -1220,6 +1252,7 @@ export const CreateProduct = ({
               >
                 {isEditing ? 'Save Product Changes' : 'Create & Publish'}
               </Button>
+
               <Button
                 variant="secondary"
                 onClick={onBack}
@@ -1229,6 +1262,7 @@ export const CreateProduct = ({
                 Discard
               </Button>
             </div>
+
             <p className="text-[11px] text-slate-400 text-center">
               All 20 fields, media, and SEO sync atomically to API.
             </p>
