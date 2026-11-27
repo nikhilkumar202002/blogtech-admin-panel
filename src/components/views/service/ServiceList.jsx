@@ -28,6 +28,9 @@ import {
   publishService,
   unpublishService,
   deleteService,
+  deleteServices,
+  bulkDeleteServices,
+  bulkDeleteServicesPost,
 } from '../../../utils/ourservice.service';
 import { API_BASE_URL } from '../../../utils/main.service';
 import { formatImageUrl, handleImageError } from '../../../utils/image.helper';
@@ -111,6 +114,11 @@ export const ServiceList = ({ onNavigate }) => {
   // Delete Confirm State: DELETE /admin/services/:id
   const [deleteId, setDeleteId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Bulk Selection State
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
   // Status Action Loading tracker (id -> boolean)
   const [statusActionLoading, setStatusActionLoading] = useState({});
@@ -227,6 +235,7 @@ export const ServiceList = ({ onNavigate }) => {
         type: 'success',
       });
       setServices((prev) => prev.filter((s) => s.id !== deleteId));
+      setSelectedRows((prev) => prev.filter((id) => id !== deleteId));
       setDeleteId(null);
     } catch (err) {
       addToast({
@@ -236,6 +245,53 @@ export const ServiceList = ({ onNavigate }) => {
       });
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  // Bulk Selection Handlers
+  const handleSelectRow = (id) => {
+    setSelectedRows((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = (allIds) => {
+    setSelectedRows(allIds);
+  };
+
+  // Bulk Delete Services Handler:
+  // Tries DELETE /admin/services/bulk-delete -> fallback POST /admin/services/bulk-delete -> fallback DELETE /admin/services
+  const handleConfirmBulkDelete = async () => {
+    if (!selectedRows.length) return;
+    setIsBulkDeleting(true);
+    try {
+      let res;
+      try {
+        res = await bulkDeleteServices(selectedRows);
+      } catch (firstErr) {
+        try {
+          res = await bulkDeleteServicesPost(selectedRows);
+        } catch (secondErr) {
+          res = await deleteServices(selectedRows);
+        }
+      }
+
+      addToast({
+        title: 'Services Deleted',
+        message: res?.message || `Successfully removed ${selectedRows.length} service(s).`,
+        type: 'success',
+      });
+      setSelectedRows([]);
+      setIsBulkDeleteOpen(false);
+      fetchServicesList();
+    } catch (err) {
+      addToast({
+        title: 'Bulk Delete Failed',
+        message: err?.response?.data?.message || 'Could not delete the selected services.',
+        type: 'error',
+      });
+    } finally {
+      setIsBulkDeleting(false);
     }
   };
 
@@ -285,7 +341,7 @@ export const ServiceList = ({ onNavigate }) => {
         );
         return (
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0 overflow-hidden shadow-2xs relative">
+            <div className="w-11 h-11 rounded-lg bg-[#a34b03]/10 border border-[#a34b03]/20 flex items-center justify-center shrink-0 overflow-hidden shadow-2xs relative">
               {thumb ? (
                 <img
                   src={thumb}
@@ -302,12 +358,12 @@ export const ServiceList = ({ onNavigate }) => {
                   }}
                 />
               ) : (
-                <Wrench size={20} className="text-indigo-600" />
+                <Wrench size={20} className="text-[#a34b03]" />
               )}
             </div>
             <div className="min-w-0">
               <div
-                className="text-[13.5px] font-semibold text-slate-900 truncate max-w-xs hover:text-indigo-600 cursor-pointer"
+                className="text-[13.5px] font-semibold text-slate-900 truncate max-w-xs hover:text-[#a34b03] cursor-pointer"
                 onClick={() => handleOpenDetails(row)}
                 title="Click to view full service details"
               >
@@ -336,19 +392,11 @@ export const ServiceList = ({ onNavigate }) => {
       header: 'Status',
       key: 'status',
       sortable: true,
-      render: (row) => {
-        const s = (row.status || 'draft').toLowerCase();
-        let badgeType = 'default';
-        if (s === 'published') badgeType = 'Active';
-        else if (s === 'draft') badgeType = 'Draft';
-        else if (s === 'unpublished') badgeType = 'Closed';
-
-        return (
-          <Badge status={badgeType}>
-            {s.charAt(0).toUpperCase() + s.slice(1)}
-          </Badge>
-        );
-      },
+      render: (row) => (
+        <Badge status={row.status}>
+          {row.status ? row.status.charAt(0).toUpperCase() + row.status.slice(1) : 'Published'}
+        </Badge>
+      ),
     },
     {
       header: 'Published Schedule',
@@ -446,7 +494,7 @@ export const ServiceList = ({ onNavigate }) => {
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
               Services Catalog
             </h1>
-            <span className="text-xs font-mono font-semibold px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-100">
+            <span className="text-xs font-mono font-semibold px-2.5 py-0.5 rounded-md bg-[#edd8bb] text-[#844414] border border-[#dfc49f]">
               {services.length} Total
             </span>
           </div>
@@ -497,7 +545,7 @@ export const ServiceList = ({ onNavigate }) => {
               onClick={() => setStatusFilter(tab.id)}
               className={`px-3 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors flex items-center gap-1.5 ${
                 statusFilter === tab.id
-                  ? 'bg-indigo-600 text-white'
+                  ? 'bg-[#a34b03] text-white'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -505,7 +553,7 @@ export const ServiceList = ({ onNavigate }) => {
               <span
                 className={`px-1.5 py-0.5 rounded-full text-[10.5px] ${
                   statusFilter === tab.id
-                    ? 'bg-indigo-700/60 text-white'
+                    ? 'bg-[#8a3f02] text-white'
                     : 'bg-slate-100 text-slate-600'
                 }`}
               >
@@ -521,6 +569,20 @@ export const ServiceList = ({ onNavigate }) => {
         columns={columns}
         data={filteredServices}
         isLoading={isLoading}
+        selectable={true}
+        selectedRows={selectedRows}
+        onSelectRow={handleSelectRow}
+        onSelectAll={handleSelectAll}
+        bulkActions={
+          <Button
+            size="sm"
+            variant="danger"
+            icon={Trash2}
+            onClick={() => setIsBulkDeleteOpen(true)}
+          >
+            Delete Selected ({selectedRows.length})
+          </Button>
+        }
         emptyTitle="No Services Found"
         emptyDescription={
           search || statusFilter !== 'all'
@@ -583,16 +645,8 @@ export const ServiceList = ({ onNavigate }) => {
                   Status
                 </span>
                 <div className="mt-1">
-                  <Badge
-                    status={
-                      viewingService.status === 'published'
-                        ? 'Active'
-                        : viewingService.status === 'draft'
-                        ? 'Draft'
-                        : 'Closed'
-                    }
-                  >
-                    {viewingService.status || 'Draft'}
+                  <Badge status={viewingService.status}>
+                    {viewingService.status || 'Published'}
                   </Badge>
                 </div>
               </div>
@@ -627,9 +681,9 @@ export const ServiceList = ({ onNavigate }) => {
 
             {/* Short Description */}
             {viewingService.short_description && (
-              <div className="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-100 flex items-start gap-3">
-                <Sparkles size={18} className="text-indigo-600 shrink-0 mt-0.5" />
-                <div className="text-xs text-indigo-950 font-medium leading-relaxed">
+              <div className="p-3.5 rounded-xl bg-[#edd8bb]/30 border border-[#dfc49f] flex items-start gap-3">
+                <Sparkles size={18} className="text-[#a34b03] shrink-0 mt-0.5" />
+                <div className="text-xs text-slate-800 font-medium leading-relaxed">
                   {viewingService.short_description}
                 </div>
               </div>
@@ -673,6 +727,18 @@ export const ServiceList = ({ onNavigate }) => {
         confirmLabel="Delete Service"
         type="danger"
         isLoading={isDeleting}
+      />
+
+      {/* CONFIRM BULK DELETE DIALOG */}
+      <ConfirmDialog
+        isOpen={isBulkDeleteOpen}
+        onClose={() => setIsBulkDeleteOpen(false)}
+        onConfirm={handleConfirmBulkDelete}
+        title={`Delete ${selectedRows.length} Services?`}
+        message={`Are you sure you want to permanently delete ${selectedRows.length} selected service(s)? All service specifications and associated assets will be permanently removed.`}
+        confirmLabel={isBulkDeleting ? 'Deleting...' : `Delete ${selectedRows.length} Services`}
+        type="danger"
+        isLoading={isBulkDeleting}
       />
     </div>
   );

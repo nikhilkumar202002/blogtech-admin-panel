@@ -79,6 +79,34 @@ export const deleteService = async (id) => {
   return response.data;
 };
 
+// 8. DELETE /admin/services - Delete multiple services (Bulk delete via DELETE /admin/services)
+export const deleteServices = async (ids) => {
+  const payload = Array.isArray(ids) ? ids : [ids];
+  const response = await mainAxios.delete('/admin/services', {
+    data: { ids: payload },
+  });
+  return response.data;
+};
+
+// 9. DELETE /admin/services/bulk-delete - Bulk delete services via DELETE method
+export const bulkDeleteServices = async (ids) => {
+  const payload = Array.isArray(ids) ? ids : [ids];
+  const response = await mainAxios.delete('/admin/services/bulk-delete', {
+    data: { ids: payload },
+  });
+  return response.data;
+};
+export const bulkDeleteServicesDelete = bulkDeleteServices;
+
+// 10. POST /admin/services/bulk-delete - Bulk delete services via POST method
+export const bulkDeleteServicesPost = async (ids) => {
+  const payload = Array.isArray(ids) ? ids : [ids];
+  const response = await mainAxios.post('/admin/services/bulk-delete', {
+    ids: payload,
+  });
+  return response.data;
+};
+
 const ourServiceService = {
   getServices,
   getService,
@@ -87,6 +115,10 @@ const ourServiceService = {
   publishService,
   unpublishService,
   deleteService,
+  deleteServices,
+  bulkDeleteServices,
+  bulkDeleteServicesDelete,
+  bulkDeleteServicesPost,
 };
 
 export default ourServiceService;
