@@ -39,6 +39,14 @@ const generateSlug = (text) => {
     .replace(/-+$/, '');
 };
 
+const getTodayDateString = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const calculateNextSortOrder = (items) => {
   if (!Array.isArray(items) || items.length === 0) return 1;
   const maxOrder = items.reduce((max, item) => {
@@ -76,7 +84,7 @@ export const CreateProduct = ({
     meta_description: initialProduct?.meta_description || '',
     published_at: initialProduct?.published_at
       ? initialProduct.published_at.split('T')[0]
-      : '',
+      : getTodayDateString(),
   });
 
   const [formErrors, setFormErrors] = useState({});
@@ -172,7 +180,7 @@ export const CreateProduct = ({
               sort_order: fresh.sort_order ?? 1,
               meta_title: fresh.meta_title || '',
               meta_description: fresh.meta_description || '',
-              published_at: fresh.published_at ? fresh.published_at.split('T')[0] : '',
+              published_at: fresh.published_at ? fresh.published_at.split('T')[0] : getTodayDateString(),
             });
             const freshImg = formatImageUrl(
               fresh.featured_image_path ||
@@ -845,14 +853,44 @@ export const CreateProduct = ({
               </FormField>
 
               {/* 3. Publication Date */}
-              <FormField label="Publication Date" hint="Scheduled release timestamp">
+              <div className="flex flex-col gap-1.5 w-full mb-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-[13px] font-medium text-slate-700">
+                    Publication Date
+                  </label>
+                  {formData.published_at !== getTodayDateString() ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormData({ ...formData, published_at: getTodayDateString() })
+                      }
+                      className="text-[11px] font-medium text-[#a34b03] hover:underline cursor-pointer"
+                      title="Reset date to today"
+                    >
+                      Reset to Today
+                    </button>
+                  ) : (
+                    <span className="text-[10px] font-semibold text-[#844414] bg-[#edd8bb] border border-[#dfc49f] px-2 py-0.5 rounded-full">
+                      Today (Auto)
+                    </span>
+                  )}
+                </div>
+
                 <input
                   type="date"
                   value={formData.published_at}
-                  onChange={(e) => setFormData({ ...formData, published_at: e.target.value })}
-                  className="w-full px-3 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 transition-all"
+                  onChange={(e) =>
+                    setFormData({ ...formData, published_at: e.target.value })
+                  }
+                  className="w-full px-3.5 py-2.5 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-[#a34b03] focus:ring-2 focus:ring-[#a34b03]/15 transition-all font-medium cursor-pointer"
                 />
-              </FormField>
+
+                <span className="text-xs text-slate-500">
+                  {formData.published_at === getTodayDateString()
+                    ? "Automatically set to today • Click calendar to modify"
+                    : `Custom release date: ${formData.published_at}`}
+                </span>
+              </div>
             </div>
           </div>
 

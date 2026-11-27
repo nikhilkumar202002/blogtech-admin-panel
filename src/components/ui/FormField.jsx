@@ -4,11 +4,13 @@ export const FormField = ({
   label,
   required = false,
   helperText,
+  hint,
   error,
   children,
   className = '',
   id,
 }) => {
+  const helpText = helperText || hint;
   return (
     <div className={`flex flex-col gap-1.5 w-full mb-4 ${className}`}>
       {label && (
@@ -27,9 +29,9 @@ export const FormField = ({
         <span className="text-xs text-rose-600 font-medium">
           {error}
         </span>
-      ) : helperText ? (
+      ) : helpText ? (
         <span className="text-xs text-slate-500">
-          {helperText}
+          {helpText}
         </span>
       ) : null}
     </div>
