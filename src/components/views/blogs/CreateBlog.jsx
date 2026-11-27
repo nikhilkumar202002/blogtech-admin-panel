@@ -16,6 +16,7 @@ import { ImageUploader } from '../../ui/ImageUploader';
 import { useToast } from '../../ui/ToastContext';
 import { BLOG_CATEGORIES } from '../../../mockData';
 import { getStoredUser } from '../../../utils/auth.service';
+import { formatImageUrl } from '../../../utils/image.helper';
 
 export const CreateBlog = ({
   initialBlog = null,
@@ -38,25 +39,40 @@ export const CreateBlog = ({
 
   // SEO Accordion Collapse State
   const [isSeoOpen, setIsSeoOpen] = useState(
-    Boolean(initialBlog?.seoTitle || initialBlog?.seoDescription)
+    Boolean(initialBlog?.seoTitle || initialBlog?.seoDescription || initialBlog?.meta_title || initialBlog?.meta_description)
   );
 
   // Form State initialized from initialBlog
   const [formData, setFormData] = useState({
     title: initialBlog?.title || '',
     slug: initialBlog?.slug || '',
-    category: initialBlog?.category || 'Engineering',
-    author: currentUserName,
+    category:
+      typeof initialBlog?.category === 'object'
+        ? initialBlog.category?.name || initialBlog.category?.title || 'Engineering'
+        : initialBlog?.category || 'Engineering',
+    author:
+      typeof initialBlog?.author === 'object'
+        ? initialBlog.author?.name || currentUserName
+        : initialBlog?.author || currentUserName,
     status: initialBlog?.status || 'Published',
-    coverImage: initialBlog?.coverImage || '',
-    excerpt: initialBlog?.excerpt || '',
+    coverImage:
+      formatImageUrl(
+        initialBlog?.coverImage ||
+        initialBlog?.featured_image_url ||
+        initialBlog?.featured_image ||
+        initialBlog?.featured_image_path
+      ) || '',
+    excerpt: initialBlog?.excerpt || initialBlog?.short_description || '',
     content:
       initialBlog?.content !== undefined
         ? initialBlog.content
         : '<h2>Introduction</h2><p>Write your detailed article body content here...</p>',
-    seoTitle: initialBlog?.seoTitle || '',
-    seoDescription: initialBlog?.seoDescription || '',
-    publishedAt: initialBlog?.publishedAt || new Date().toISOString().split('T')[0],
+    seoTitle: initialBlog?.seoTitle || initialBlog?.meta_title || '',
+    seoDescription: initialBlog?.seoDescription || initialBlog?.meta_description || '',
+    publishedAt:
+      (initialBlog?.publishedAt || initialBlog?.published_at)
+        ? String(initialBlog.publishedAt || initialBlog.published_at).split('T')[0]
+        : new Date().toISOString().split('T')[0],
   });
 
   // Inline Validation Errors

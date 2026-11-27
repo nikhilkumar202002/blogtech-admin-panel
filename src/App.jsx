@@ -7,6 +7,7 @@ import { Modal } from './components/ui/Modal';
 import { Button } from './components/ui/Button';
 import { ConfirmDialog } from './components/ui/ConfirmDialog';
 import { Badge } from './components/ui/Badge';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { canAccessTab, formatRoleLabel, isEditor } from './utils/rbac.helper';
 
 import {
@@ -502,99 +503,101 @@ const MainApp = () => {
         publishingStatus={stats.publishingStatus}
         onToggleMobileSidebar={() => setIsMobileOpen(!isMobileOpen)}
       >
-        {activeTab === 'dashboard' && (
-          <DashboardView
-            jobs={jobs}
-            blogs={blogs}
-            products={productsList}
-            services={servicesList}
-            activityLog={activityLog}
-            currentUser={currentUser}
-            isLoading={isDataLoading}
-            onRefresh={refreshAllData}
-            onNavigate={setActiveTab}
-            onOpenNewJobModal={() => {
-              setActiveTab('careers');
-              setQuickCreateJob(true);
-            }}
-            onOpenNewBlogModal={() => {
-              setActiveTab('blogs');
-              setQuickCreateBlog(true);
-            }}
-          />
-        )}
-
-        {activeTab === 'products' && (
-          canAccessTab(currentUser?.role, 'products') ? (
-            <ProductsView onNavigate={setActiveTab} />
-          ) : (
-            <AccessDeniedNotice
-              role={currentUser?.role}
-              moduleName="Products catalog"
-              onBack={() => setActiveTab('dashboard')}
+        <ErrorBoundary key={activeTab}>
+          {activeTab === 'dashboard' && (
+            <DashboardView
+              jobs={jobs}
+              blogs={blogs}
+              products={productsList}
+              services={servicesList}
+              activityLog={activityLog}
+              currentUser={currentUser}
+              isLoading={isDataLoading}
+              onRefresh={refreshAllData}
+              onNavigate={setActiveTab}
+              onOpenNewJobModal={() => {
+                setActiveTab('careers');
+                setQuickCreateJob(true);
+              }}
+              onOpenNewBlogModal={() => {
+                setActiveTab('blogs');
+                setQuickCreateBlog(true);
+              }}
             />
-          )
-        )}
+          )}
 
-        {activeTab === 'services' && (
-          canAccessTab(currentUser?.role, 'services') ? (
-            <ServicesView onNavigate={setActiveTab} />
-          ) : (
-            <AccessDeniedNotice
-              role={currentUser?.role}
-              moduleName="Services catalog"
-              onBack={() => setActiveTab('dashboard')}
+          {activeTab === 'products' && (
+            canAccessTab(currentUser?.role, 'products') ? (
+              <ProductsView onNavigate={setActiveTab} />
+            ) : (
+              <AccessDeniedNotice
+                role={currentUser?.role}
+                moduleName="Products catalog"
+                onBack={() => setActiveTab('dashboard')}
+              />
+            )
+          )}
+
+          {activeTab === 'services' && (
+            canAccessTab(currentUser?.role, 'services') ? (
+              <ServicesView onNavigate={setActiveTab} />
+            ) : (
+              <AccessDeniedNotice
+                role={currentUser?.role}
+                moduleName="Services catalog"
+                onBack={() => setActiveTab('dashboard')}
+              />
+            )
+          )}
+
+          {activeTab === 'careers' && (
+            <CareersView
+              jobs={jobs}
+              applicants={applicants}
+              onAddJob={handleAddJob}
+              onUpdateJob={handleUpdateJob}
+              onDeleteJob={handleDeleteJob}
+              isCreateOpen={quickCreateJob}
+              onCloseCreateOpen={() => setQuickCreateJob(false)}
             />
-          )
-        )}
+          )}
 
-        {activeTab === 'careers' && (
-          <CareersView
-            jobs={jobs}
-            applicants={applicants}
-            onAddJob={handleAddJob}
-            onUpdateJob={handleUpdateJob}
-            onDeleteJob={handleDeleteJob}
-            isCreateOpen={quickCreateJob}
-            onCloseCreateOpen={() => setQuickCreateJob(false)}
-          />
-        )}
-
-        {activeTab === 'blogs' && (
-          <BlogsView
-            blogs={blogs}
-            currentUser={currentUser}
-            onAddBlog={handleAddBlog}
-            onUpdateBlog={handleUpdateBlog}
-            onDeleteBlog={handleDeleteBlog}
-            isCreateOpen={quickCreateBlog}
-            onCloseCreateOpen={() => setQuickCreateBlog(false)}
-          />
-        )}
-
-        {activeTab === 'enquiries' && (
-          canAccessTab(currentUser?.role, 'enquiries') ? (
-            <EnquiriesView
-              enquiries={enquiries}
-              onUpdateEnquiry={handleUpdateEnquiry}
-              onDeleteEnquiry={handleDeleteEnquiry}
+          {activeTab === 'blogs' && (
+            <BlogsView
+              blogs={blogs}
+              currentUser={currentUser}
+              onAddBlog={handleAddBlog}
+              onUpdateBlog={handleUpdateBlog}
+              onDeleteBlog={handleDeleteBlog}
+              isCreateOpen={quickCreateBlog}
+              onCloseCreateOpen={() => setQuickCreateBlog(false)}
             />
-          ) : (
-            <AccessDeniedNotice
-              role={currentUser?.role}
-              moduleName="Customer enquiries"
-              onBack={() => setActiveTab('dashboard')}
-            />
-          )
-        )}
+          )}
 
-        {activeTab === 'settings' && (
-          <SettingsView
-            user={currentUser}
-            onUserUpdated={(updated) => setCurrentUser(updated)}
-            onLogoutAll={() => setIsLogoutConfirmOpen(true)}
-          />
-        )}
+          {activeTab === 'enquiries' && (
+            canAccessTab(currentUser?.role, 'enquiries') ? (
+              <EnquiriesView
+                enquiries={enquiries}
+                onUpdateEnquiry={handleUpdateEnquiry}
+                onDeleteEnquiry={handleDeleteEnquiry}
+              />
+            ) : (
+              <AccessDeniedNotice
+                role={currentUser?.role}
+                moduleName="Customer enquiries"
+                onBack={() => setActiveTab('dashboard')}
+              />
+            )
+          )}
+
+          {activeTab === 'settings' && (
+            <SettingsView
+              user={currentUser}
+              onUserUpdated={(updated) => setCurrentUser(updated)}
+              onLogoutAll={() => setIsLogoutConfirmOpen(true)}
+            />
+          )}
+        </ErrorBoundary>
       </Layout>
 
       {/* Global Command Palette (Cmd + K) */}

@@ -802,8 +802,8 @@ export const CreateProduct = ({
               </Badge>
             </div>
 
-            {/* 3 Fields arranged in a single horizontal row */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
+            {/* 3 Fields arranged in 3 separate rows */}
+            <div className="grid grid-cols-1 gap-4">
               {/* 1. Publication Status */}
               <FormField label="Publication Status" required>
                 <select
@@ -1259,7 +1259,7 @@ export const CreateProduct = ({
         </div>
 
         {/* RIGHT COLUMN: ACTIONS & MEDIA ASSETS (1 Col - Sticky & Static on Desktop) */}
-        <div className="lg:col-span-1 lg:sticky lg:top-0 self-start flex flex-col gap-6 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto pr-0.5">
+        <div className="lg:col-span-1 lg:sticky lg:top-4 self-start flex flex-col gap-6 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto pr-0.5">
           {/* CARD A: ACTIONS CARD */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col gap-3">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
@@ -1294,7 +1294,7 @@ export const CreateProduct = ({
                 variant="secondary"
                 onClick={onBack}
                 disabled={isSaving}
-                className="px-4 shrink-0"
+                className="flex-1"
               >
                 Discard
               </Button>

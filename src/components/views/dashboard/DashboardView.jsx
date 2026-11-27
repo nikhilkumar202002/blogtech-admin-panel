@@ -281,7 +281,7 @@ export const DashboardView = ({
                 {row.title}
               </div>
               <div style={{ fontSize: '11px', color: '#64748b', marginTop: '1px' }}>
-                Category: {row.category?.name || row.category || 'General'}
+                Category: {typeof row.category === 'object' ? (row.category?.name || row.category?.title || 'General') : (row.category || 'General')}
               </div>
             </div>
           </div>

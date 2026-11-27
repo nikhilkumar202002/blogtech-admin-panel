@@ -22,6 +22,21 @@ import { DropdownMenu } from '../../ui/DropdownMenu';
 import { CreateBlog } from './CreateBlog';
 import { getStoredUser } from '../../../utils/auth.service';
 import { sanitizeHtml } from '../../../utils/sanitize.helper';
+import { formatImageUrl, handleImageError } from '../../../utils/image.helper';
+
+// Safe helper to extract category name whether string or object { id, name, slug }
+const getCategoryName = (category) => {
+  if (!category) return 'General';
+  if (typeof category === 'object') return category.name || category.title || 'General';
+  return String(category);
+};
+
+// Safe helper to extract author name whether string or object { id, name, email }
+const getAuthorName = (author, fallback = 'Administrator') => {
+  if (!author) return fallback;
+  if (typeof author === 'object') return author.name || fallback;
+  return String(author);
+};
 
 export const BlogsView = ({
   blogs = [],
@@ -122,20 +137,30 @@ export const BlogsView = ({
 
   // Filtered & Sorted Blogs
   const filteredBlogs = blogs.filter((blog) => {
-    const matchesSearch =
-      blog.title.toLowerCase().includes(search.toLowerCase()) ||
-      blog.slug.toLowerCase().includes(search.toLowerCase()) ||
-      (blog.author && blog.author.toLowerCase().includes(search.toLowerCase())) ||
-      (blog.category && blog.category.toLowerCase().includes(search.toLowerCase()));
+    const categoryName = getCategoryName(blog.category);
+    const authorName = getAuthorName(blog.author, currentUserName);
+    const title = blog.title || '';
+    const slug = blog.slug || '';
+    const q = (search || '').toLowerCase();
 
-    const matchesStatus = !statusFilter || blog.status === statusFilter;
+    const matchesSearch =
+      !search ||
+      title.toLowerCase().includes(q) ||
+      slug.toLowerCase().includes(q) ||
+      authorName.toLowerCase().includes(q) ||
+      categoryName.toLowerCase().includes(q);
+
+    const blogStatus = (blog.status || '').toLowerCase();
+    const matchesStatus = !statusFilter || blogStatus === statusFilter.toLowerCase();
     return matchesSearch && matchesStatus;
   });
 
   const sortedBlogs = [...filteredBlogs].sort((a, b) => {
-    if (sortBy === 'newest') return (b.publishedAt || '').localeCompare(a.publishedAt || '');
-    if (sortBy === 'oldest') return (a.publishedAt || '').localeCompare(b.publishedAt || '');
-    if (sortBy === 'updated') return (b.publishedAt || '').localeCompare(a.publishedAt || '');
+    const dateA = a.publishedAt || a.published_at || a.created_at || '';
+    const dateB = b.publishedAt || b.published_at || b.created_at || '';
+    if (sortBy === 'newest') return String(dateB).localeCompare(String(dateA));
+    if (sortBy === 'oldest') return String(dateA).localeCompare(String(dateB));
+    if (sortBy === 'updated') return String(dateB).localeCompare(String(dateA));
     return 0;
   });
 
@@ -144,20 +169,25 @@ export const BlogsView = ({
     {
       header: 'Featured Image',
       key: 'coverImage',
-      render: (row) => (
-        <img
-          src={row.coverImage}
-          alt={row.title}
-          style={{
-            width: '56px',
-            height: '38px',
-            borderRadius: '6px',
-            objectFit: 'cover',
-            border: '1px solid #e2e8f0',
-            backgroundColor: '#f8fafc',
-          }}
-        />
-      ),
+      render: (row) => {
+        const rawUrl = row.coverImage || row.featured_image_url || row.featured_image || row.featured_image_path;
+        const imgUrl = formatImageUrl(rawUrl);
+        return (
+          <img
+            src={imgUrl || ''}
+            alt={row.title || 'Blog cover'}
+            onError={(e) => handleImageError(e, row.title || 'Blog', true)}
+            style={{
+              width: '56px',
+              height: '38px',
+              borderRadius: '6px',
+              objectFit: 'cover',
+              border: '1px solid #e2e8f0',
+              backgroundColor: '#f8fafc',
+            }}
+          />
+        );
+      },
     },
     {
       header: 'Article Title',
@@ -174,12 +204,12 @@ export const BlogsView = ({
               overflow: 'hidden',
               textOverflow: 'ellipsis',
             }}
-            title={row.title}
+            title={typeof row.title === 'object' ? (row.title?.rendered || row.title?.name || '') : String(row.title || '')}
           >
-            {row.title}
+            {typeof row.title === 'object' ? (row.title?.rendered || row.title?.name || '') : String(row.title || '')}
           </div>
           <div style={{ fontSize: '11px', color: '#64748b', marginTop: '1px' }}>
-            Category: {row.category} • /{row.slug}
+            Category: {getCategoryName(row.category)} • /{typeof row.slug === 'object' ? (row.slug?.slug || row.slug?.name || '') : String(row.slug || '')}
           </div>
         </div>
       ),
@@ -188,13 +218,21 @@ export const BlogsView = ({
       header: 'Publication Date',
       key: 'publishedAt',
       sortable: true,
-      render: (row) => <span style={{ fontSize: '13px', color: '#334155', whiteSpace: 'nowrap' }}>{row.publishedAt}</span>,
+      render: (row) => {
+        const rawDate = row.publishedAt || row.published_at || row.created_at || '';
+        const displayDate = rawDate ? String(rawDate).split('T')[0] : '—';
+        return <span style={{ fontSize: '13px', color: '#334155', whiteSpace: 'nowrap' }}>{displayDate}</span>;
+      },
     },
     {
       header: 'Status',
       key: 'status',
       sortable: true,
-      render: (row) => <Badge status={row.status}>{row.status}</Badge>,
+      render: (row) => {
+        const rawStatus = row.status || 'Draft';
+        const label = String(rawStatus).charAt(0).toUpperCase() + String(rawStatus).slice(1);
+        return <Badge status={rawStatus}>{label}</Badge>;
+      },
     },
     {
       header: 'Last Updated',
@@ -310,19 +348,28 @@ export const BlogsView = ({
           {/* ARTICLE PREVIEW (LEFT / MAIN AREA) */}
           <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-5 sm:p-8 md:p-9 shadow-xs">
             {/* Featured Image */}
-            {previewBlog.coverImage && (
-              <div style={{ borderRadius: '12px', overflow: 'hidden', height: '340px', marginBottom: '28px' }}>
-                <img
-                  src={previewBlog.coverImage}
-                  alt={previewBlog.title}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              </div>
-            )}
+            {(() => {
+              const previewImg = formatImageUrl(
+                previewBlog.coverImage ||
+                previewBlog.featured_image_url ||
+                previewBlog.featured_image ||
+                previewBlog.featured_image_path
+              );
+              return previewImg ? (
+                <div style={{ borderRadius: '12px', overflow: 'hidden', height: '340px', marginBottom: '28px' }}>
+                  <img
+                    src={previewImg}
+                    alt={previewBlog.title}
+                    onError={(e) => handleImageError(e, previewBlog.title || 'Blog Preview', true)}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                </div>
+              ) : null;
+            })()}
 
             {/* Badges & Category */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-              <Badge status="accent">{previewBlog.category || 'Engineering'}</Badge>
+              <Badge status="accent">{getCategoryName(previewBlog.category)}</Badge>
               <Badge status={previewBlog.status}>{previewBlog.status}</Badge>
             </div>
 
@@ -352,16 +399,16 @@ export const BlogsView = ({
               }}
             >
               <Avatar
-                name={currentUserName}
+                name={getAuthorName(previewBlog.author, currentUserName)}
                 size="lg"
                 showStatus={false}
               />
               <div>
                 <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>
-                  {currentUserName}
+                  {getAuthorName(previewBlog.author, currentUserName)}
                 </div>
                 <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
-                  Published on {previewBlog.publishedAt} • {previewBlog.readTime || '5 min read'}
+                  Published on {previewBlog.publishedAt || previewBlog.published_at || 'Recently'} • {previewBlog.readTime || '5 min read'}
                 </div>
               </div>
             </div>
@@ -396,7 +443,9 @@ export const BlogsView = ({
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ color: '#64748b' }}>Publication Date</span>
-                  <span style={{ color: '#0f172a', fontWeight: 500 }}>{previewBlog.publishedAt}</span>
+                  <span style={{ color: '#0f172a', fontWeight: 500 }}>
+                    {previewBlog.publishedAt || previewBlog.published_at || '—'}
+                  </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ color: '#64748b' }}>Last Updated</span>

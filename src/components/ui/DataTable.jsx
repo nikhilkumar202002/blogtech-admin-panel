@@ -225,7 +225,11 @@ export const DataTable = ({
                           col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'
                         }`}
                       >
-                        {col.render ? col.render(row, rIdx) : row[col.key]}
+                        {col.render
+                          ? col.render(row, rIdx)
+                          : typeof row[col.key] === 'object' && row[col.key] !== null
+                          ? (row[col.key].name || row[col.key].title || row[col.key].label || '')
+                          : row[col.key]}
                       </td>
                     ))}
                   </tr>
