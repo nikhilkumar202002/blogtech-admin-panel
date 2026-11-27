@@ -23,6 +23,8 @@ import {
   ChevronRight,
   Code2,
   CheckCircle2,
+  Phone,
+  Link as LinkIcon,
 } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import { Badge } from '../../ui/Badge';
@@ -35,7 +37,6 @@ import {
   unpublishProduct,
   deleteProduct,
 } from '../../../utils/product.service';
-import { API_BASE_URL } from '../../../utils/main.service';
 import { formatImageUrl, handleImageError } from '../../../utils/image.helper';
 import { sanitizeHtml } from '../../../utils/sanitize.helper';
 
@@ -96,6 +97,9 @@ export const ViewDetails = ({
   const [showJsonInspector, setShowJsonInspector] = useState(false);
   const [hasCopiedJson, setHasCopiedJson] = useState(false);
 
+  // 1-Click Copy state
+  const [hasCopiedSlug, setHasCopiedSlug] = useState(false);
+
   // Interactive Lightbox State
   const [lightboxState, setLightboxState] = useState({
     isOpen: false,
@@ -103,16 +107,55 @@ export const ViewDetails = ({
     items: [],
   });
 
-  // 1-Click Copy state
-  const [hasCopiedSlug, setHasCopiedSlug] = useState(false);
+  // Extract Hero Banner copy & image assets with deep API compatibility
+  const bannerDesktopImage = formatImageUrl(
+    product?.banner_image_desktop_path ||
+    product?.banner_image_desktop_url ||
+    product?.banner_image_desktop ||
+    product?.banner?.image_desktop_path ||
+    product?.banner?.image_desktop_url ||
+    product?.banner?.image_desktop
+  );
+
+  const bannerMobileImage = formatImageUrl(
+    product?.banner_image_mobile_path ||
+    product?.banner_image_mobile_url ||
+    product?.banner_image_mobile ||
+    product?.banner?.image_mobile_path ||
+    product?.banner?.image_mobile_url ||
+    product?.banner?.image_mobile
+  );
+
+  const bannerTitle = product?.banner_title || product?.banner?.title || '';
+  const bannerTitleHighlight = product?.banner_title_highlight || product?.banner?.title_highlight || '';
+  const bannerSubtitle = product?.banner_subtitle || product?.banner?.subtitle || '';
+  const bannerDescription = product?.banner_description || product?.banner?.description || '';
+  const bannerButtonText = product?.banner_button_text || product?.banner_cta_text || product?.banner?.button_text || product?.banner?.cta_text || '';
+  const bannerButtonLink = product?.banner_button_link || product?.banner_cta_link || product?.banner?.button_link || product?.banner?.cta_link || '';
 
   // Parse Gallery Images into structured objects
-  const rawGalleryUrls = product?.gallery_image_urls || product?.gallery_images || [];
-  const rawGalleryPaths = product?.gallery_image_paths || [];
+  let rawGalleryUrls = product?.gallery_image_urls || product?.gallery_images || [];
+  if (typeof rawGalleryUrls === 'string') {
+    try {
+      rawGalleryUrls = JSON.parse(rawGalleryUrls);
+    } catch {
+      rawGalleryUrls = [rawGalleryUrls];
+    }
+  }
+
+  let rawGalleryPaths = product?.gallery_image_paths || [];
+  if (typeof rawGalleryPaths === 'string') {
+    try {
+      rawGalleryPaths = JSON.parse(rawGalleryPaths);
+    } catch {
+      rawGalleryPaths = [rawGalleryPaths];
+    }
+  }
+
   const galleryItems = Array.isArray(rawGalleryUrls)
     ? rawGalleryUrls.map((url, idx) => ({
         url: formatImageUrl(rawGalleryPaths[idx] || (typeof url === 'string' ? url : url?.url || '')),
-        path: rawGalleryPaths[idx] || (typeof url === 'object' ? url?.path : null) || `gallery-image-${idx + 1}.jpg`,
+        path: rawGalleryPaths[idx] || (typeof url === 'object' ? url?.path : null) || `gallery-image-${idx + 1}.webp`,
         index: idx + 1,
       }))
     : [];
@@ -121,13 +164,27 @@ export const ViewDetails = ({
     product?.featured_image_path || product?.featured_image_url || product?.featured_image
   );
 
-  // All viewable media items for lightbox (featured + gallery)
+  // All viewable media items for lightbox (featured + desktop banner + mobile banner + gallery)
   const allMediaItems = [];
   if (featuredImage) {
     allMediaItems.push({
       url: featuredImage,
-      title: 'Featured Image (Hero)',
+      title: 'Featured Image (Thumbnail)',
       path: product?.featured_image_path || 'Featured Image',
+    });
+  }
+  if (bannerDesktopImage) {
+    allMediaItems.push({
+      url: bannerDesktopImage,
+      title: 'Hero Banner Graphic (Desktop 1920×600)',
+      path: product?.banner_image_desktop_path || product?.banner?.image_desktop_path || 'Desktop Banner',
+    });
+  }
+  if (bannerMobileImage) {
+    allMediaItems.push({
+      url: bannerMobileImage,
+      title: 'Hero Banner Graphic (Mobile 750×600)',
+      path: product?.banner_image_mobile_path || product?.banner?.image_mobile_path || 'Mobile Banner',
     });
   }
   galleryItems.forEach((g, idx) => {
@@ -306,13 +363,6 @@ export const ViewDetails = ({
     });
   };
 
-  // Status Badge Logic
-  const statusLabel = (product?.status || 'draft').toLowerCase();
-  let badgeType = 'default';
-  if (statusLabel === 'published') badgeType = 'Active';
-  else if (statusLabel === 'draft') badgeType = 'Draft';
-  else if (statusLabel === 'unpublished') badgeType = 'Closed';
-
   // Calculate approximate word count & read time from HTML content
   const cleanContentText = (product?.content || '').replace(/<[^>]*>/g, ' ').trim();
   const wordCount = cleanContentText ? cleanContentText.split(/\s+/).filter(Boolean).length : 0;
@@ -344,17 +394,17 @@ export const ViewDetails = ({
               {product?.name || 'Product Specifications'}
             </h1>
 
-            <Badge status={badgeType}>
-              {statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}
+            <Badge status={product?.status}>
+              {product?.status ? product.status.charAt(0).toUpperCase() + product.status.slice(1) : 'Published'}
             </Badge>
 
             {product?.id && (
-              <span className="text-xs font-mono font-semibold px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200">
+              <span className="text-xs font-mono font-semibold px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
                 ID #{product.id}
               </span>
             )}
 
-            <span className="text-xs font-mono font-semibold px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-100">
+            <span className="text-xs font-mono font-semibold px-2.5 py-0.5 rounded-md bg-[#edd8bb] text-[#844414] border border-[#dfc49f]">
               Order #{product?.sort_order ?? 1}
             </span>
           </div>
@@ -382,7 +432,7 @@ export const ViewDetails = ({
           </Button>
 
           <Button
-            variant="secondary"
+            variant="primary"
             icon={Edit2}
             onClick={() => onEdit && onEdit(product)}
           >
@@ -417,7 +467,7 @@ export const ViewDetails = ({
               }`}
             />
             <span className="text-sm font-bold text-slate-800 capitalize">
-              {product?.status || 'Draft'}
+              {product?.status || 'Published'}
             </span>
           </div>
           <span className="text-[11px] text-slate-400">
@@ -431,12 +481,12 @@ export const ViewDetails = ({
             Listing Order
           </span>
           <div className="flex items-center gap-1.5">
-            <Hash size={16} className="text-indigo-600" />
+            <Hash size={16} className="text-[#a34b03]" />
             <span className="text-sm font-bold text-slate-800 font-mono">
               Position #{product?.sort_order ?? 1}
             </span>
           </div>
-          <span className="text-[11px] text-slate-400">Controls catalog hierarchy</span>
+          <span className="text-[11px] text-slate-400">Catalog priority rank</span>
         </div>
 
         {/* Media Assets Count */}
@@ -445,13 +495,15 @@ export const ViewDetails = ({
             Media Assets
           </span>
           <div className="flex items-center gap-1.5">
-            <ImageIcon size={16} className="text-indigo-600" />
+            <ImageIcon size={16} className="text-[#a34b03]" />
             <span className="text-sm font-bold text-slate-800">
               {allMediaItems.length} Total {allMediaItems.length === 1 ? 'Asset' : 'Assets'}
             </span>
           </div>
-          <span className="text-[11px] text-slate-400">
-            1 Hero + {galleryItems.length} Gallery
+          <span className="text-[11px] text-slate-400 truncate">
+            {featuredImage ? '1 Cover • ' : ''}
+            {(bannerDesktopImage || bannerMobileImage) ? '2 Banners • ' : ''}
+            {galleryItems.length} Gallery
           </span>
         </div>
 
@@ -467,7 +519,7 @@ export const ViewDetails = ({
             <button
               type="button"
               onClick={handleCopySlug}
-              className="p-1 rounded text-slate-400 hover:text-indigo-600 hover:bg-slate-100 transition-colors cursor-pointer"
+              className="p-1 rounded text-slate-400 hover:text-[#a34b03] hover:bg-slate-100 transition-colors cursor-pointer"
               title="Copy public route URL"
             >
               {hasCopiedSlug ? (
@@ -478,7 +530,7 @@ export const ViewDetails = ({
             </button>
           </div>
           <span className="text-[11px] text-slate-400 truncate">
-            https://blogtech.com/products/...
+            https://blogtech.com/products/{product?.slug}
           </span>
         </div>
       </div>
@@ -489,17 +541,192 @@ export const ViewDetails = ({
         <div className="lg:col-span-2 flex flex-col gap-6">
           {/* SHORT DESCRIPTION BANNER */}
           {product?.short_description && (
-            <div className="p-4 rounded-xl bg-gradient-to-r from-indigo-50/90 via-indigo-50/50 to-white border border-indigo-100 flex items-start gap-3.5 shadow-xs">
-              <div className="p-2 rounded-lg bg-indigo-600 text-white shrink-0 mt-0.5 shadow-xs">
+            <div className="p-4 sm:p-5 rounded-xl bg-gradient-to-r from-[#edd8bb]/40 via-[#edd8bb]/15 to-white border border-[#dfc49f] flex items-start gap-3.5 shadow-xs">
+              <div className="p-2 rounded-lg bg-[#a34b03] text-white shrink-0 mt-0.5 shadow-xs">
                 <Sparkles size={16} />
               </div>
               <div className="flex flex-col gap-0.5">
-                <span className="text-[11px] font-bold text-indigo-900 uppercase tracking-wider">
+                <span className="text-[11px] font-bold text-[#844414] uppercase tracking-wider">
                   Elevator Pitch / Tagline
                 </span>
-                <p className="text-sm text-indigo-950 font-medium leading-relaxed">
+                <p className="text-sm text-slate-800 font-medium leading-relaxed">
                   {product.short_description}
                 </p>
+              </div>
+            </div>
+          )}
+
+          {/* HERO BANNER & LANDING PRESENTATION CARD */}
+          {(bannerTitle || bannerSubtitle || bannerDescription || bannerDesktopImage || bannerMobileImage) && (
+            <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-5">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100 flex-wrap gap-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#cb9706]/15 border border-[#cb9706]/30 flex items-center justify-center text-[#cb9706]">
+                    <Sparkles size={17} />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-semibold text-slate-900">
+                      Hero Banner & Landing Presentation
+                    </h2>
+                    <p className="text-xs text-slate-500">
+                      Headline copy, CTA callout, and responsive banner graphics
+                    </p>
+                  </div>
+                </div>
+
+                {bannerButtonText && (
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#a34b03]/10 text-[#a34b03] border border-[#a34b03]/20 flex items-center gap-1.5">
+                    <span>CTA:</span>
+                    <span className="font-bold">{bannerButtonText}</span>
+                  </span>
+                )}
+              </div>
+
+              {/* Banner Headline Preview Card */}
+              <div className="p-4 sm:p-5 rounded-xl bg-slate-50 border border-slate-200/90 flex flex-col gap-2.5">
+                {bannerSubtitle && (
+                  <div className="inline-flex items-center self-start px-2.5 py-0.5 rounded-full text-xs font-bold tracking-wide uppercase bg-[#edd8bb] text-[#844414] border border-[#dfc49f]">
+                    {bannerSubtitle}
+                  </div>
+                )}
+
+                <div className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">
+                  {bannerTitle}{' '}
+                  {bannerTitleHighlight && (
+                    <span className="text-[#a34b03] font-extrabold">
+                      {bannerTitleHighlight}
+                    </span>
+                  )}
+                </div>
+
+                {bannerDescription && (
+                  <p className="text-sm text-slate-600 leading-relaxed font-sans">
+                    {bannerDescription}
+                  </p>
+                )}
+
+                {/* Banner CTA Button & Target */}
+                {bannerButtonText && (
+                  <div className="pt-2 flex items-center gap-3 flex-wrap">
+                    <a
+                      href={bannerButtonLink || '#'}
+                      target={bannerButtonLink?.startsWith('http') ? '_blank' : undefined}
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#a34b03] hover:bg-[#8a3f02] text-white text-xs font-semibold shadow-xs transition-colors"
+                    >
+                      {bannerButtonLink?.startsWith('tel:') ? (
+                        <Phone size={13} />
+                      ) : (
+                        <LinkIcon size={13} />
+                      )}
+                      <span>{bannerButtonText}</span>
+                      <ExternalLink size={12} className="opacity-75" />
+                    </a>
+
+                    {bannerButtonLink && (
+                      <span className="text-xs font-mono text-slate-600 bg-white px-2.5 py-1 rounded border border-slate-200">
+                        Target: {bannerButtonLink}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Responsive Banners (Desktop 1920x600 & Mobile 750x600) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                {/* Desktop Banner Graphic */}
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold text-slate-700 flex items-center gap-1.5">
+                      <ImageIcon size={14} className="text-[#a34b03]" />
+                      Desktop Banner Graphic
+                    </span>
+                    <span className="text-[11px] text-slate-400 font-mono">1920×600 (16:5)</span>
+                  </div>
+
+                  {bannerDesktopImage ? (
+                    <div
+                      onClick={() => {
+                        const idx = allMediaItems.findIndex((m) => m.url === bannerDesktopImage);
+                        if (idx !== -1) openLightbox(idx);
+                      }}
+                      className="group relative rounded-xl border border-slate-200 overflow-hidden bg-slate-950 h-36 flex items-center justify-center cursor-pointer shadow-xs hover:border-[#a34b03] transition-colors"
+                    >
+                      <img
+                        src={bannerDesktopImage}
+                        alt="Desktop Banner"
+                        className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-200"
+                        onError={(e) => handleImageError(e, 'Desktop Banner', true)}
+                      />
+                      <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                        <div className="p-2 rounded-full bg-slate-900/80 text-white">
+                          <Maximize2 size={18} />
+                        </div>
+                      </div>
+                      <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded bg-slate-950/80 backdrop-blur-xs text-[10px] text-white font-mono">
+                        Desktop 1920×600
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="h-36 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center gap-1.5 text-slate-400 text-xs text-center p-3">
+                      <ImageIcon size={20} className="text-slate-300" />
+                      <span>No desktop banner uploaded</span>
+                    </div>
+                  )}
+
+                  {product?.banner_image_desktop_path && (
+                    <span className="text-[10px] font-mono text-slate-400 truncate">
+                      {product.banner_image_desktop_path}
+                    </span>
+                  )}
+                </div>
+
+                {/* Mobile Banner Graphic */}
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold text-slate-700 flex items-center gap-1.5">
+                      <ImageIcon size={14} className="text-[#a34b03]" />
+                      Mobile Banner Graphic
+                    </span>
+                    <span className="text-[11px] text-slate-400 font-mono">750×600 (5:4)</span>
+                  </div>
+
+                  {bannerMobileImage ? (
+                    <div
+                      onClick={() => {
+                        const idx = allMediaItems.findIndex((m) => m.url === bannerMobileImage);
+                        if (idx !== -1) openLightbox(idx);
+                      }}
+                      className="group relative rounded-xl border border-slate-200 overflow-hidden bg-slate-950 h-36 flex items-center justify-center cursor-pointer shadow-xs hover:border-[#a34b03] transition-colors"
+                    >
+                      <img
+                        src={bannerMobileImage}
+                        alt="Mobile Banner"
+                        className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-200"
+                        onError={(e) => handleImageError(e, 'Mobile Banner', true)}
+                      />
+                      <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                        <div className="p-2 rounded-full bg-slate-900/80 text-white">
+                          <Maximize2 size={18} />
+                        </div>
+                      </div>
+                      <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded bg-slate-950/80 backdrop-blur-xs text-[10px] text-white font-mono">
+                        Mobile 750×600
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="h-36 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center gap-1.5 text-slate-400 text-xs text-center p-3">
+                      <ImageIcon size={20} className="text-slate-300" />
+                      <span>No mobile banner uploaded</span>
+                    </div>
+                  )}
+
+                  {product?.banner_image_mobile_path && (
+                    <span className="text-[10px] font-mono text-slate-400 truncate">
+                      {product.banner_image_mobile_path}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -509,7 +736,7 @@ export const ViewDetails = ({
             <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-3">
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                 <div className="flex items-center gap-2">
-                  <FileText size={17} className="text-indigo-600" />
+                  <FileText size={17} className="text-[#a34b03]" />
                   <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
                     Executive Summary & Solution Overview
                   </h2>
@@ -526,7 +753,7 @@ export const ViewDetails = ({
           <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 flex-wrap gap-2">
               <div className="flex items-center gap-2">
-                <Sparkles size={17} className="text-indigo-600" />
+                <Sparkles size={17} className="text-[#a34b03]" />
                 <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
                   Product Content & Features Guide
                 </h2>
@@ -604,7 +831,7 @@ export const ViewDetails = ({
           <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
-                <Layers size={17} className="text-indigo-600" />
+                <Layers size={17} className="text-[#a34b03]" />
                 <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
                   Photo Gallery ({galleryItems.length})
                 </h2>
@@ -615,11 +842,11 @@ export const ViewDetails = ({
             {galleryItems.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5">
                 {galleryItems.map((item, idx) => {
-                  const mediaIndex = featuredImage ? idx + 1 : idx;
+                  const mediaIndex = allMediaItems.findIndex((m) => m.url === item.url);
                   return (
                     <div
                       key={idx}
-                      onClick={() => openLightbox(mediaIndex)}
+                      onClick={() => openLightbox(mediaIndex !== -1 ? mediaIndex : 0)}
                       className="group relative rounded-xl border border-slate-200 overflow-hidden bg-slate-100 aspect-square cursor-pointer hover:shadow-md transition-all shadow-2xs"
                     >
                       <img
@@ -660,7 +887,7 @@ export const ViewDetails = ({
           <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Code2 size={16} className="text-indigo-600" />
+                <Code2 size={16} className="text-[#a34b03]" />
                 <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
                   Raw API Payload Inspector
                 </h3>
@@ -669,7 +896,7 @@ export const ViewDetails = ({
                 <button
                   type="button"
                   onClick={handleCopyJson}
-                  className="text-xs font-medium text-slate-500 hover:text-indigo-600 flex items-center gap-1 cursor-pointer transition-colors"
+                  className="text-xs font-medium text-slate-500 hover:text-[#a34b03] flex items-center gap-1 cursor-pointer transition-colors"
                 >
                   {hasCopiedJson ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
                   <span>{hasCopiedJson ? 'Copied!' : 'Copy JSON'}</span>
@@ -677,7 +904,7 @@ export const ViewDetails = ({
                 <button
                   type="button"
                   onClick={() => setShowJsonInspector(!showJsonInspector)}
-                  className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 cursor-pointer"
+                  className="text-xs font-semibold text-[#a34b03] hover:text-[#8a3f02] cursor-pointer"
                 >
                   {showJsonInspector ? 'Hide Payload' : 'Show Payload'}
                 </button>
@@ -702,13 +929,61 @@ export const ViewDetails = ({
           </div>
         </div>
 
-        {/* RIGHT COLUMN: FEATURED MEDIA, SEO & AUDIT (1 Col) */}
-        <div className="lg:col-span-1 flex flex-col gap-6">
+        {/* RIGHT COLUMN: ACTIONS, FEATURED MEDIA, SEO & AUDIT (1 Col - Sticky on Desktop) */}
+        <div className="lg:col-span-1 lg:sticky lg:top-0 self-start flex flex-col gap-6">
+          {/* QUICK ACTIONS CARD */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col gap-3">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <h3 className="text-sm font-semibold text-slate-900">
+                Product Actions
+              </h3>
+              <Badge status={product?.status}>
+                {product?.status ? product.status.charAt(0).toUpperCase() + product.status.slice(1) : 'Published'}
+              </Badge>
+            </div>
+
+            <div className="flex flex-col gap-2 pt-1">
+              <Button
+                variant="primary"
+                icon={Edit2}
+                onClick={() => onEdit && onEdit(product)}
+                fullWidth
+              >
+                Edit Product Specifications
+              </Button>
+
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  variant="secondary"
+                  icon={product?.status === 'published' ? EyeOff : Globe}
+                  onClick={handleTogglePublish}
+                  isLoading={isStatusBusy}
+                  fullWidth
+                >
+                  {product?.status === 'published' ? 'Unpublish' : 'Publish'}
+                </Button>
+
+                <Button
+                  variant="danger"
+                  icon={Trash2}
+                  onClick={() => setIsConfirmDeleteOpen(true)}
+                  fullWidth
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-slate-400 text-center pt-1">
+              Actions sync atomically to backend catalog API.
+            </p>
+          </div>
+
           {/* FEATURED MEDIA HERO CARD */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col gap-4">
             <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
               <div className="flex items-center gap-1.5">
-                <ImageIcon size={15} className="text-indigo-600" />
+                <ImageIcon size={15} className="text-[#a34b03]" />
                 <h3 className="text-sm font-bold text-slate-900">Featured Media Hero</h3>
               </div>
               <span className="text-[11px] text-slate-400 font-mono">Catalog Cover</span>
@@ -741,7 +1016,7 @@ export const ViewDetails = ({
                       href={featuredImage}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-1 text-slate-400 hover:text-indigo-600 transition-colors ml-1 shrink-0"
+                      className="p-1 text-slate-400 hover:text-[#a34b03] transition-colors ml-1 shrink-0"
                       title="Open in new tab"
                     >
                       <ExternalLink size={13} />
@@ -761,7 +1036,7 @@ export const ViewDetails = ({
           <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col gap-3.5">
             <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
               <div className="flex items-center gap-1.5">
-                <Globe size={15} className="text-indigo-600" />
+                <Globe size={15} className="text-[#a34b03]" />
                 <h3 className="text-sm font-bold text-slate-900">Google SERP Snippet</h3>
               </div>
               <span className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
@@ -772,13 +1047,13 @@ export const ViewDetails = ({
 
             <div className="flex flex-col gap-1.5 p-4 rounded-xl bg-slate-50 border border-slate-200">
               <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
-                <div className="w-3.5 h-3.5 rounded-full bg-indigo-600 flex items-center justify-center text-[8px] text-white font-bold">
+                <div className="w-3.5 h-3.5 rounded-full bg-[#a34b03] flex items-center justify-center text-[8px] text-white font-bold">
                   B
                 </div>
                 <span className="truncate font-sans">blogtech.com › products › {product?.slug}</span>
               </div>
 
-              <div className="text-sm font-semibold text-indigo-700 hover:underline cursor-pointer line-clamp-1">
+              <div className="text-sm font-semibold text-[#a34b03] hover:underline cursor-pointer line-clamp-1">
                 {product?.meta_title || `${product?.name} | BLOGTECH`}
               </div>
 
@@ -815,7 +1090,7 @@ export const ViewDetails = ({
           <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col gap-3">
             <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
               <div className="flex items-center gap-1.5">
-                <Clock size={15} className="text-indigo-600" />
+                <Clock size={15} className="text-[#a34b03]" />
                 <h3 className="text-sm font-bold text-slate-900">System Timestamps</h3>
               </div>
               <span className="text-[11px] text-slate-400 font-mono">Audit Log</span>
